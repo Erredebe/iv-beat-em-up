@@ -11,6 +11,7 @@ export const DEFAULT_CONTROL_HINTS: ControlHints = {
     "Especial: C (consume vida)",
     "Pausa/Ayuda: ESC",
     "Debug hitboxes: F1",
+    "Editor niveles: F2",
   ],
   gamepad: [
     "Mover: D-Pad / Stick izq.",
@@ -20,4 +21,3 @@ export const DEFAULT_CONTROL_HINTS: ControlHints = {
     "Pausa/Ayuda: Start / Options",
   ],
 };
-

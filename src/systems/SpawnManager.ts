@@ -1,13 +1,6 @@
 import type { EnemyBasic } from "../entities/EnemyBasic";
+import { cloneSpawnZones, street95Zone1Spawns, type StageSpawnZoneConfig } from "../config/levels/street95Zone1Spawns";
 import type { GroundObstacle, CollisionSystem } from "./CollisionSystem";
-
-interface ZoneConfig {
-  id: string;
-  triggerX: number;
-  leftBarrierX: number;
-  rightBarrierX: number;
-  spawns: Array<{ x: number; y: number }>;
-}
 
 interface ZoneRuntime {
   id: string;
@@ -27,26 +20,15 @@ export class SpawnManager {
   private readonly collisionSystem: CollisionSystem;
   private activeZoneId: string | null = null;
 
-  constructor(collisionSystem: CollisionSystem, createEnemy: (x: number, y: number) => EnemyBasic) {
+  constructor(
+    collisionSystem: CollisionSystem,
+    createEnemy: (x: number, y: number) => EnemyBasic,
+    zoneConfig: StageSpawnZoneConfig[] = street95Zone1Spawns,
+  ) {
     this.collisionSystem = collisionSystem;
     this.createEnemy = createEnemy;
 
-    const configs: ZoneConfig[] = [
-      {
-        id: "zone_1",
-        triggerX: 300,
-        leftBarrierX: 60,
-        rightBarrierX: 860,
-        spawns: [{ x: 640, y: 204 }],
-      },
-      {
-        id: "zone_2",
-        triggerX: 1080,
-        leftBarrierX: 1040,
-        rightBarrierX: 1680,
-        spawns: [{ x: 1460, y: 208 }],
-      },
-    ];
+    const configs = cloneSpawnZones(zoneConfig);
 
     const walkLane = this.collisionSystem.getWalkLane();
     const barrierHeight = walkLane.bottomY - walkLane.topY;

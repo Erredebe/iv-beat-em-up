@@ -17,6 +17,7 @@ import {
   WORLD_WIDTH,
 } from "../config/constants";
 import { street95Zone1Layout } from "../config/levels/street95Zone1";
+import { street95Zone1Spawns } from "../config/levels/street95Zone1Spawns";
 import { fighterVisualProfiles } from "../config/visual/fighterVisualProfiles";
 import { EnemyBasic, buildEnemyAttackData } from "../entities/EnemyBasic";
 import { Player, buildPlayerAttackData } from "../entities/Player";
@@ -27,6 +28,7 @@ import { DepthSystem } from "../systems/DepthSystem";
 import { EnemyAI } from "../systems/EnemyAI";
 import { HitStopSystem } from "../systems/HitStopSystem";
 import { InputManager } from "../systems/InputManager";
+import { LevelEditor } from "../systems/LevelEditor";
 import { SpawnManager } from "../systems/SpawnManager";
 import { StageRenderer } from "../systems/StageRenderer";
 import type { AttackFrameData, AttackId } from "../types/combat";
@@ -53,6 +55,7 @@ export class StreetScene extends Phaser.Scene {
   private debugEnabled = false;
   private enemyAttackData!: Record<AttackId, AttackFrameData>;
   private stageRenderer!: StageRenderer;
+  private levelEditor!: LevelEditor;
   private flashOverlay!: Phaser.GameObjects.Rectangle;
   private isPausedByPlayer = false;
   private controlsHintVisible = true;
@@ -122,10 +125,16 @@ export class StreetScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.game.events.off("combat:hit", this.onCombatHit, this);
       this.stageRenderer.destroy();
+      this.levelEditor.destroy();
     });
 
-    this.spawnManager = new SpawnManager(this.collisionSystem, (x, y) => this.spawnEnemy(x, y));
+    this.spawnManager = new SpawnManager(this.collisionSystem, (x, y) => this.spawnEnemy(x, y), street95Zone1Spawns);
     this.enemies.push(...this.spawnManager.startWave("zone_1"));
+
+    this.levelEditor = new LevelEditor(this, {
+      layout: street95Zone1Layout,
+      spawnZones: street95Zone1Spawns,
+    });
 
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, BASE_HEIGHT);
     this.cameras.main.setRoundPixels(true);
@@ -155,6 +164,16 @@ export class StreetScene extends Phaser.Scene {
   update(time: number, delta: number): void {
     this.inputManager.update(time);
     this.handleDebugToggle();
+    this.levelEditor.update(time, delta, this.cameras.main);
+    if (this.levelEditor.isActive()) {
+      this.stopActorsMotion();
+      this.controlsHintVisible = false;
+      this.updateParallax();
+      this.updateHud();
+      this.renderDebug(delta);
+      return;
+    }
+
     this.handlePauseToggle();
 
     if (this.inputManager.hasAnyInputDown()) {
@@ -336,6 +355,17 @@ export class StreetScene extends Phaser.Scene {
     }
     this.isPausedByPlayer = !this.isPausedByPlayer;
 
+    const playerBody = this.player.footCollider.body as Phaser.Physics.Arcade.Body;
+    playerBody.setVelocity(0, 0);
+    this.player.clearMoveIntent();
+    for (const enemy of this.enemies) {
+      const body = enemy.footCollider.body as Phaser.Physics.Arcade.Body;
+      body.setVelocity(0, 0);
+      enemy.clearMoveIntent();
+    }
+  }
+
+  private stopActorsMotion(): void {
     const playerBody = this.player.footCollider.body as Phaser.Physics.Arcade.Body;
     playerBody.setVelocity(0, 0);
     this.player.clearMoveIntent();

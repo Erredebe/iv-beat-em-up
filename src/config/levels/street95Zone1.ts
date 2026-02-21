@@ -64,6 +64,64 @@ export interface StageLayoutConfig {
   neonLabels: StageNeonLabel[];
 }
 
+export function cloneStageLayoutConfig(layout: StageLayoutConfig): StageLayoutConfig {
+  return {
+    tileSize: layout.tileSize,
+    mapWidthTiles: layout.mapWidthTiles,
+    mapHeightTiles: layout.mapHeightTiles,
+    sourceTilesPerRow: layout.sourceTilesPerRow,
+    tilesetKey: layout.tilesetKey,
+    walkLane: layout.walkLane
+      ? {
+          topY: layout.walkLane.topY,
+          bottomY: layout.walkLane.bottomY,
+          playerSpawnY: layout.walkLane.playerSpawnY,
+        }
+      : undefined,
+    layers: layout.layers.map((layer) => ({
+      id: layer.id,
+      depth: layer.depth,
+      alpha: layer.alpha,
+      targetRows: [...layer.targetRows],
+      sourceRows: [...layer.sourceRows],
+    })),
+    props: layout.props.map((prop) => ({
+      id: prop.id,
+      textureKey: prop.textureKey,
+      x: prop.x,
+      y: prop.y,
+      originX: prop.originX,
+      originY: prop.originY,
+      scale: prop.scale,
+      depthOffset: prop.depthOffset,
+    })),
+    collisionFootprints: layout.collisionFootprints.map((footprint) => ({
+      id: footprint.id,
+      x: footprint.x,
+      y: footprint.y,
+      width: footprint.width,
+      height: footprint.height,
+      color: footprint.color,
+    })),
+    parallaxBands: layout.parallaxBands.map((band) => ({
+      id: band.id,
+      textureKey: band.textureKey,
+      y: band.y,
+      height: band.height,
+      depth: band.depth,
+      alpha: band.alpha,
+      scrollFactor: band.scrollFactor,
+    })),
+    neonLabels: layout.neonLabels.map((label) => ({
+      x: label.x,
+      y: label.y,
+      text: label.text,
+      color: label.color,
+      fontSize: label.fontSize,
+    })),
+  };
+}
+
 export const street95Zone1Layout: StageLayoutConfig = {
   tileSize: 16,
   mapWidthTiles: 160,
