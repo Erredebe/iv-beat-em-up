@@ -81,7 +81,7 @@ export class StageRenderer {
         layer.setAlpha(layerConfig.alpha);
       }
       if (layerConfig.id === "facade") {
-        layer.setTint(0xbf9b9b);
+        layer.setTint(0xd2aaa4);
       }
       if (layerConfig.id === "foreground_deco") {
         layer.setTint(0x8b8d96);
@@ -198,7 +198,7 @@ export class StageRenderer {
     gradient.setDepth(0);
     this.backgroundGradient = gradient;
 
-    const grade = this.scene.add.rectangle(worldWidth * 0.5, BASE_HEIGHT * 0.5, worldWidth, BASE_HEIGHT, 0x1a1130, 0.3);
+    const grade = this.scene.add.rectangle(worldWidth * 0.5, BASE_HEIGHT * 0.5, worldWidth, BASE_HEIGHT, 0x1a1130, 0.24);
     grade.setDepth(3200);
     grade.setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.gradeOverlay = grade;
