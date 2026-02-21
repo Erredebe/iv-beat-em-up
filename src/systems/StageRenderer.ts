@@ -81,7 +81,7 @@ export class StageRenderer {
         layer.setAlpha(layerConfig.alpha);
       }
       if (layerConfig.id === "facade") {
-        layer.setTint(0xbf9b9b);
+        layer.setTint(0xcda79d);
       }
       if (layerConfig.id === "foreground_deco") {
         layer.setTint(0x8b8d96);
