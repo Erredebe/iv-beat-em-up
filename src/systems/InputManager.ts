@@ -40,6 +40,12 @@ export class InputManager {
       pause: Phaser.Input.Keyboard.KeyCodes.ESC,
       ui_confirm: Phaser.Input.Keyboard.KeyCodes.ENTER,
     }) as Record<InputAction, Phaser.Input.Keyboard.Key>;
+
+    keyboard.on("keydown", (event: KeyboardEvent) => {
+      if (event.code === "NumpadEnter") {
+        this.bufferedAt.set("ui_confirm", this.nowMs);
+      }
+    });
   }
 
   update(timeMs: number): void {

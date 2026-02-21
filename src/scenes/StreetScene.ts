@@ -64,6 +64,7 @@ export class StreetScene extends Phaser.Scene {
   private targetEnemy: TargetEnemyTracker | null = null;
   private zoneMessage: string | null = null;
   private zoneMessageUntil = 0;
+  private announcedZoneId: string | null = null;
   private readonly walkLane = street95Zone1Layout.walkLane ?? {
     topY: LANE_TOP,
     bottomY: LANE_BOTTOM,
@@ -137,6 +138,7 @@ export class StreetScene extends Phaser.Scene {
 
     this.spawnManager = new SpawnManager(this.collisionSystem, (x, y) => this.spawnEnemy(x, y), street95Zone1Spawns);
     this.enemies.push(...this.spawnManager.startWave("zone_1"));
+    this.announceZoneLock("zone_1", this.time.now);
 
     this.levelEditor = new LevelEditor(this, {
       layout: street95Zone1Layout,
@@ -246,8 +248,13 @@ export class StreetScene extends Phaser.Scene {
       for (const enemy of spawnedEnemies) {
         this.enemies.push(enemy);
       }
-      this.zoneMessage = "¡Zona bloqueada! Derrota a los enemigos";
-      this.zoneMessageUntil = time + 2600;
+    }
+
+    const activeZoneId = this.spawnManager.getActiveZoneId();
+    if (activeZoneId && this.announcedZoneId !== activeZoneId) {
+      this.announceZoneLock(activeZoneId, time);
+    } else if (!activeZoneId) {
+      this.announcedZoneId = null;
     }
 
     this.combatSystem.resolveHits([this.player, ...this.enemies], time);
@@ -371,6 +378,43 @@ export class StreetScene extends Phaser.Scene {
       zoneMessage: this.zoneMessage,
       bindingHints: this.inputManager.getBindingHints(),
     });
+  }
+
+
+  private announceZoneLock(zoneId: string, now: number): void {
+    this.announcedZoneId = zoneId;
+    this.zoneMessage = "¡Zona bloqueada! Derrota a los enemigos para avanzar";
+    this.zoneMessageUntil = now + 3400;
+    this.playBarrierLockFx(zoneId);
+    this.audioSystem.playZoneLock();
+  }
+
+  private playBarrierLockFx(zoneId: string): void {
+    const zoneConfig = street95Zone1Spawns.find((zone) => zone.id === zoneId);
+    if (!zoneConfig) {
+      return;
+    }
+
+    const laneHeight = this.walkLane.bottomY - this.walkLane.topY;
+    const fxY = this.walkLane.topY + laneHeight * 0.5;
+    const fxDepth = this.walkLane.bottomY + 26;
+    const barriers = [zoneConfig.leftBarrierX, zoneConfig.rightBarrierX].map((x) =>
+      this.add
+        .rectangle(x, fxY, 16, laneHeight + 8, 0xff4b89, 0.28)
+        .setDepth(fxDepth),
+    );
+
+    for (const barrier of barriers) {
+      this.tweens.add({
+        targets: barrier,
+        alpha: { from: 0.45, to: 0 },
+        scaleX: { from: 1.1, to: 0.92 },
+        duration: 320,
+        yoyo: true,
+        repeat: 1,
+        onComplete: () => barrier.destroy(),
+      });
+    }
   }
 
   private handleDebugToggle(): void {

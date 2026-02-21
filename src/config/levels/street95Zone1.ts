@@ -129,7 +129,7 @@ export const street95Zone1Layout: StageLayoutConfig = {
   sourceTilesPerRow: 46,
   tilesetKey: "street_clean_tileset",
   walkLane: {
-    topY: 148,
+    topY: 152,
     bottomY: 224,
     playerSpawnY: 198,
   },
@@ -178,10 +178,10 @@ export const street95Zone1Layout: StageLayoutConfig = {
       id: "crate",
       textureKey: "prop_crate",
       x: 920,
-      y: 192,
+      y: 180,
       originX: 0.5,
       originY: 1,
-      scale: 3,
+      scale: 2,
       depthOffset: -10,
     },
     {
@@ -207,9 +207,9 @@ export const street95Zone1Layout: StageLayoutConfig = {
     {
       id: "crate_feet",
       x: 920,
-      y: 192,
-      width: 54,
-      height: 10,
+      y: 180,
+      width: 32,
+      height: 8,
       color: 0x6eff66,
     },
     {

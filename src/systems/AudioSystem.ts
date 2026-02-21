@@ -58,6 +58,10 @@ export class AudioSystem {
     this.playSfx("sfx_knockdown", 0.44, 1.0);
   }
 
+  playZoneLock(): void {
+    this.playSfx("sfx_special", 0.28, 0.92);
+  }
+
   private playSfx(key: string, volume: number, rate: number): void {
     if (!this.started) {
       return;
