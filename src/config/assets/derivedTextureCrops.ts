@@ -11,9 +11,9 @@ export const derivedTextureCrops: DerivedTextureCrop[] = [
   {
     sourceKey: "street_sheet",
     targetKey: "street_clean_tileset",
-    sx: 24,
+    sx: 64,
     sy: 20,
-    width: 800,
+    width: 736,
     height: 192,
   },
   {

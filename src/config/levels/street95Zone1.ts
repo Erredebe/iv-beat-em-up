@@ -126,7 +126,7 @@ export const street95Zone1Layout: StageLayoutConfig = {
   tileSize: 16,
   mapWidthTiles: 160,
   mapHeightTiles: 15,
-  sourceTilesPerRow: 50,
+  sourceTilesPerRow: 46,
   tilesetKey: "street_clean_tileset",
   walkLane: {
     topY: 136,
@@ -160,7 +160,7 @@ export const street95Zone1Layout: StageLayoutConfig = {
       depth: 232,
       alpha: 0.94,
       targetRows: [14],
-      sourceRows: [11],
+      sourceRows: [10],
     },
   ],
   props: [
