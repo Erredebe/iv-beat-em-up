@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { assetManifest, requiredAssetKeys } from "../config/assets/assetManifest";
+import { derivedTextureCrops } from "../config/assets/derivedTextureCrops";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -56,16 +57,9 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createDerivedTextures(): void {
-    this.createCanvasFromImage("street_sheet", "street_clean_tileset", 24, 20, 800, 192);
-    this.createCanvasFromImage("street_props", "prop_booth", 0, 0, 48, 58);
-    this.createCanvasFromImage("street_props", "prop_crate", 64, 0, 48, 58);
-    this.createCanvasFromImage("street_props", "prop_car", 0, 64, 48, 64);
-    this.createCanvasFromImage("city_far", "city_far_band", 0, 300, 1024, 120);
-    this.createCanvasFromImage("city_mid", "city_mid_band", 0, 360, 1024, 120);
-    this.createCanvasFromImage("city_close", "city_close_band", 0, 420, 1024, 120);
-    this.createCanvasFromImage("street_tileset", "hud_frame", 0, 0, 16, 16);
-    this.createCanvasFromImage("street_tileset", "ui_btn", 16, 16, 16, 16);
-    this.createCanvasFromImage("street_tileset", "hit_spark", 80, 64, 16, 16);
+    for (const crop of derivedTextureCrops) {
+      this.createCanvasFromImage(crop.sourceKey, crop.targetKey, crop.sx, crop.sy, crop.width, crop.height);
+    }
   }
 
   private validateAssets(): void {

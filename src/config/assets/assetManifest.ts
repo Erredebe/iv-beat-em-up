@@ -1,3 +1,6 @@
+import { derivedAssetKeys } from "./derivedTextureCrops";
+export { derivedAssetKeys };
+
 export type AssetType = "image" | "spritesheet" | "audio";
 export type AssetRole = "character" | "tileset" | "prop" | "background" | "audio";
 
@@ -358,19 +361,6 @@ export const assetManifest: AssetManifestEntry[] = [
     scaleProfile: "audio-sfx",
   },
 ];
-
-export const derivedAssetKeys = [
-  "street_clean_tileset",
-  "prop_booth",
-  "prop_crate",
-  "prop_car",
-  "city_far_band",
-  "city_mid_band",
-  "city_close_band",
-  "hud_frame",
-  "ui_btn",
-  "hit_spark",
-] as const;
 
 export const requiredAssetKeys = [
   ...assetManifest.filter((entry) => entry.critical).map((entry) => entry.key),

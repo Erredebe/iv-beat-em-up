@@ -7,7 +7,7 @@ import {
   JUMP_GRAVITY,
   JUMP_INITIAL_VELOCITY,
 } from "../config/constants";
-import type { FighterVisualProfile } from "../config/visual/fighterVisualProfiles";
+import type { FighterVisualProfile, SpritePixelOffset, TextureStateId } from "../config/visual/fighterVisualProfiles";
 import { isFrameActive, isFrameInComboWindow } from "../systems/combatMath";
 import type { AttackFrameData, AttackId, DamageEvent, FighterState, Rect, Team } from "../types/combat";
 
@@ -19,6 +19,40 @@ interface AttackRuntime {
   hitTargets: Set<string>;
   queuedNextAttack: AttackId | null;
 }
+
+interface ResolvedTextureState {
+  key: string;
+  frame: number;
+  textureStateId: TextureStateId;
+}
+
+export interface FighterVisualDebugInfo {
+  textureKey: string;
+  frame: number;
+  textureStateId: TextureStateId;
+  appliedOffset: SpritePixelOffset;
+  baselineY: number;
+  footY: number;
+  shadowY: number;
+  spriteY: number;
+  spriteDepth: number;
+}
+
+const ZERO_OFFSET: SpritePixelOffset = { x: 0, y: 0 };
+const FIGHTER_STATES: FighterState[] = [
+  "IDLE",
+  "WALK",
+  "ATTACK_1",
+  "ATTACK_2",
+  "ATTACK_3",
+  "JUMP",
+  "AIR_ATTACK",
+  "HIT",
+  "KNOCKDOWN",
+  "GETUP",
+  "DEAD",
+  "SPECIAL",
+];
 
 interface FighterOptions {
   id: string;
@@ -60,6 +94,9 @@ export class BaseFighter {
   private visualProfile: FighterVisualProfile;
   private animationElapsed = 0;
   private walkFrame = 0;
+  private currentTextureState: ResolvedTextureState;
+  private lastAppliedOffset: SpritePixelOffset = { x: 0, y: 0 };
+  private lastBaselineY = 0;
 
   constructor(scene: Phaser.Scene, options: FighterOptions) {
     this.id = options.id;
@@ -69,27 +106,13 @@ export class BaseFighter {
     this.moveSpeed = options.moveSpeed;
     this.attackData = options.attackData;
     this.skinPrefix = options.texture;
-    this.visualProfile = options.visualProfile ?? {
-      scale: CHARACTER_SCALE as 1 | 2 | 3,
-      shadowWidth: 22,
-      shadowHeight: 8,
-      spriteAnchorOffsetY: -2,
-      shadowOffsetY: 3,
-      baselineOffsetByState: {
-        IDLE: 0,
-        WALK: 0,
-        ATTACK_1: 0,
-        ATTACK_2: 0,
-        ATTACK_3: 0,
-        JUMP: 0,
-        AIR_ATTACK: 0,
-        HIT: 0,
-        KNOCKDOWN: 0,
-        GETUP: 0,
-        DEAD: 0,
-        SPECIAL: 0,
-      },
+    this.visualProfile = options.visualProfile ?? this.createDefaultVisualProfile();
+    this.currentTextureState = {
+      key: `${this.skinPrefix}_idle_strip4`,
+      frame: 0,
+      textureStateId: "idle_strip4",
     };
+    this.lastBaselineY = options.y + this.visualProfile.spriteAnchorOffsetY;
 
     this.shadow = scene.add
       .ellipse(
@@ -164,8 +187,8 @@ export class BaseFighter {
     this.updateJump(deltaMs);
     this.updateAttack(deltaMs);
     this.applyVelocity(deltaMs);
-    this.syncVisual();
     this.updateSpriteAnimation(deltaMs);
+    this.syncVisual();
     this.updateVisualTone(nowMs);
   }
 
@@ -382,6 +405,42 @@ export class BaseFighter {
     return `${this.id} ${this.state}${attack} HP:${this.hp}/${this.maxHp}`;
   }
 
+  getVisualDebugInfo(): FighterVisualDebugInfo {
+    return {
+      textureKey: this.currentTextureState.key,
+      frame: this.currentTextureState.frame,
+      textureStateId: this.currentTextureState.textureStateId,
+      appliedOffset: {
+        x: this.lastAppliedOffset.x,
+        y: this.lastAppliedOffset.y,
+      },
+      baselineY: this.lastBaselineY,
+      footY: this.y,
+      shadowY: this.shadow.y,
+      spriteY: this.sprite.y,
+      spriteDepth: this.sprite.depth,
+    };
+  }
+
+  private createDefaultVisualProfile(): FighterVisualProfile {
+    const stateOffsetByState = {} as Record<FighterState, SpritePixelOffset>;
+    const baselineOffsetByState = {} as Record<FighterState, number>;
+    for (const state of FIGHTER_STATES) {
+      stateOffsetByState[state] = { x: 0, y: 0 };
+      baselineOffsetByState[state] = 0;
+    }
+    return {
+      scale: CHARACTER_SCALE as 1 | 2 | 3,
+      shadowWidth: 22,
+      shadowHeight: 8,
+      spriteAnchorOffsetY: -2,
+      shadowOffsetY: 3,
+      baselineOffsetByState,
+      stateOffsetByState,
+      frameOffsetByTexture: {},
+    };
+  }
+
   private updateTimers(nowMs: number): void {
     if (this.state === "HIT" && nowMs >= this.hitUntil) {
       this.state = this.airborne ? "JUMP" : "IDLE";
@@ -490,13 +549,40 @@ export class BaseFighter {
     this.shadow.setPosition(Math.round(this.x), Math.round(this.y + this.visualProfile.shadowOffsetY));
     this.shadow.setAlpha(Phaser.Math.Clamp(1 - this.jumpHeight / 120, 0.25, 1));
 
-    const baselineY = this.y + this.visualProfile.spriteAnchorOffsetY - this.jumpHeight + this.getVisualBaselineY(this.state);
-    this.sprite.setPosition(Math.round(this.x), Math.round(baselineY));
+    const stateOffset = this.getStateOffset(this.state);
+    const frameOffset = this.getFrameOffset(this.currentTextureState.textureStateId, this.currentTextureState.frame);
+    const totalOffsetX = stateOffset.x + frameOffset.x;
+    const appliedOffsetX = this.facing < 0 ? -totalOffsetX : totalOffsetX;
+    const appliedOffsetY = stateOffset.y + frameOffset.y;
+    this.lastAppliedOffset = { x: appliedOffsetX, y: appliedOffsetY };
+
+    const baselineY = this.y + this.visualProfile.spriteAnchorOffsetY - this.jumpHeight + appliedOffsetY;
+    this.lastBaselineY = baselineY;
+    this.sprite.setPosition(Math.round(this.x + appliedOffsetX), Math.round(baselineY));
     this.sprite.setFlipX(this.facing < 0);
   }
 
-  private getVisualBaselineY(state: FighterState): number {
-    return this.visualProfile.baselineOffsetByState[state] ?? 0;
+  private getStateOffset(state: FighterState): SpritePixelOffset {
+    const offset = this.visualProfile.stateOffsetByState[state];
+    if (offset) {
+      return offset;
+    }
+    const legacyY = this.visualProfile.baselineOffsetByState?.[state];
+    if (legacyY !== undefined) {
+      return {
+        x: 0,
+        y: legacyY,
+      };
+    }
+    return ZERO_OFFSET;
+  }
+
+  private getFrameOffset(textureStateId: TextureStateId, frame: number): SpritePixelOffset {
+    const offsets = this.visualProfile.frameOffsetByTexture[textureStateId];
+    if (!offsets || offsets.length === 0) {
+      return ZERO_OFFSET;
+    }
+    return offsets[frame] ?? ZERO_OFFSET;
   }
 
   private updateVisualTone(nowMs: number): void {
@@ -531,41 +617,42 @@ export class BaseFighter {
     }
 
     const stateTexture = this.resolveTextureForState(this.state);
+    this.currentTextureState = stateTexture;
     const currentFrame = Number(this.sprite.frame.name);
     if (this.sprite.texture.key !== stateTexture.key || Number.isNaN(currentFrame) || currentFrame !== stateTexture.frame) {
       this.sprite.setTexture(stateTexture.key, stateTexture.frame);
     }
   }
 
-  private resolveTextureForState(state: FighterState): { key: string; frame: number } {
+  private resolveTextureForState(state: FighterState): ResolvedTextureState {
     if (state === "WALK") {
-      return { key: `${this.skinPrefix}_walk_strip4`, frame: this.walkFrame };
+      return { key: `${this.skinPrefix}_walk_strip4`, frame: this.walkFrame, textureStateId: "walk_strip4" };
     }
     if (state === "IDLE" || state === "JUMP") {
-      return { key: `${this.skinPrefix}_idle_strip4`, frame: this.walkFrame };
+      return { key: `${this.skinPrefix}_idle_strip4`, frame: this.walkFrame, textureStateId: "idle_strip4" };
     }
     if (state === "ATTACK_1") {
-      return { key: `${this.skinPrefix}_punch1`, frame: 0 };
+      return { key: `${this.skinPrefix}_punch1`, frame: 0, textureStateId: "punch1" };
     }
     if (state === "ATTACK_2" || state === "ATTACK_3") {
-      return { key: `${this.skinPrefix}_punch2`, frame: 0 };
+      return { key: `${this.skinPrefix}_punch2`, frame: 0, textureStateId: "punch2" };
     }
     if (state === "AIR_ATTACK") {
-      return { key: `${this.skinPrefix}_kick1`, frame: 0 };
+      return { key: `${this.skinPrefix}_kick1`, frame: 0, textureStateId: "kick1" };
     }
     if (state === "SPECIAL") {
-      return { key: `${this.skinPrefix}_kick2`, frame: 0 };
+      return { key: `${this.skinPrefix}_kick2`, frame: 0, textureStateId: "kick2" };
     }
     if (state === "HIT") {
-      return { key: `${this.skinPrefix}_hurt`, frame: 0 };
+      return { key: `${this.skinPrefix}_hurt`, frame: 0, textureStateId: "hurt" };
     }
     if (state === "KNOCKDOWN" || state === "DEAD") {
-      return { key: `${this.skinPrefix}_knockdown`, frame: 0 };
+      return { key: `${this.skinPrefix}_knockdown`, frame: 0, textureStateId: "knockdown" };
     }
     if (state === "GETUP") {
-      return { key: `${this.skinPrefix}_getup`, frame: 0 };
+      return { key: `${this.skinPrefix}_getup`, frame: 0, textureStateId: "getup" };
     }
-    return { key: `${this.skinPrefix}_idle_strip4`, frame: 0 };
+    return { key: `${this.skinPrefix}_idle_strip4`, frame: 0, textureStateId: "idle_strip4" };
   }
 
   private applyStateForAttack(attackId: AttackId): void {

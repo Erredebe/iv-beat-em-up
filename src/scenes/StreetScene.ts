@@ -102,8 +102,8 @@ export class StreetScene extends Phaser.Scene {
     this.collisionSystem.attachFootCollider(this.player);
     this.collisionSystem.applyWorldBounds(this.player);
 
-    this.depthSystem.register(this.player.shadow, -1);
-    this.depthSystem.register(this.player.sprite, 0);
+    this.depthSystem.register(this.player.shadow, -1, () => this.player.y);
+    this.depthSystem.register(this.player.sprite, 0, () => this.player.y);
 
     this.combatSystem = new CombatSystem({
       hitStopSystem: this.hitStopSystem,
@@ -254,8 +254,8 @@ export class StreetScene extends Phaser.Scene {
     });
     this.collisionSystem.attachFootCollider(enemy);
     this.collisionSystem.applyWorldBounds(enemy);
-    this.depthSystem.register(enemy.shadow, -1);
-    this.depthSystem.register(enemy.sprite, 0);
+    this.depthSystem.register(enemy.shadow, -1, () => enemy.y);
+    this.depthSystem.register(enemy.sprite, 0, () => enemy.y);
     return enemy;
   }
 
@@ -397,6 +397,21 @@ export class StreetScene extends Phaser.Scene {
         this.debugGraphics.lineStyle(1, 0xff0066, 1);
         this.debugGraphics.strokeRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
       }
+
+      const visual = fighter.getVisualDebugInfo();
+      const isPlayer = fighter === this.player;
+      const footColor = isPlayer ? 0xf8ff66 : 0xff9a66;
+      const baselineColor = isPlayer ? 0x7ce8ff : 0xff66c9;
+      const shadowColor = 0x0f0f0f;
+
+      this.debugGraphics.lineStyle(1, baselineColor, 0.5);
+      this.debugGraphics.lineBetween(fighter.x, fighter.y, fighter.sprite.x, visual.baselineY);
+      this.debugGraphics.fillStyle(footColor, 1);
+      this.debugGraphics.fillCircle(fighter.x, fighter.y, 2);
+      this.debugGraphics.fillStyle(baselineColor, 1);
+      this.debugGraphics.fillCircle(fighter.sprite.x, visual.baselineY, 2);
+      this.debugGraphics.fillStyle(shadowColor, 0.95);
+      this.debugGraphics.fillCircle(fighter.shadow.x, fighter.shadow.y, 2);
     }
 
     this.debugGraphics.lineStyle(1, 0x4cd7ff, 0.8);
@@ -404,23 +419,27 @@ export class StreetScene extends Phaser.Scene {
     this.debugGraphics.lineStyle(1, 0xffaf5a, 0.8);
     this.debugGraphics.lineBetween(cam.scrollX, this.walkLane.bottomY, cam.scrollX + cam.width, this.walkLane.bottomY);
 
-    this.debugGraphics.fillStyle(0xf8ff66, 1);
-    this.debugGraphics.fillCircle(this.player.x, this.player.y, 2);
-    this.debugGraphics.fillStyle(0x0f0f0f, 0.95);
-    this.debugGraphics.fillCircle(this.player.shadow.x, this.player.shadow.y, 2);
-
     const fps = this.game.loop.actualFps.toFixed(1);
     const dt = deltaMs.toFixed(2);
     const playerAttack = this.player.getCurrentAttackId() ?? "-";
     const playerFrame = this.player.getAttackFrame();
-    const footY = Math.round(this.player.y);
-    const shadowY = Math.round(this.player.shadow.y);
-    const shadowGap = shadowY - footY;
+    const playerVisual = this.player.getVisualDebugInfo();
+    const playerDepth = this.depthSystem.getResolvedDepth(this.player.sprite) ?? this.player.sprite.depth;
+
+    const leadEnemy = this.enemies.find((enemy) => enemy.isAlive()) ?? null;
+    const leadEnemyVisual = leadEnemy ? leadEnemy.getVisualDebugInfo() : null;
+    const leadEnemyDepth = leadEnemy ? (this.depthSystem.getResolvedDepth(leadEnemy.sprite) ?? leadEnemy.sprite.depth) : null;
+
     this.debugText.setText([
       `FPS ${fps} | dt ${dt}ms`,
       this.player.getDebugText(),
       `ATK ${playerAttack} FRAME ${playerFrame}`,
-      `LANE ${this.walkLane.topY}-${this.walkLane.bottomY} | FOOT ${footY} | SHADOW ${shadowY} | GAP ${shadowGap}`,
+      `P1 TEX ${playerVisual.textureStateId}:${playerVisual.frame} OFF ${playerVisual.appliedOffset.x},${playerVisual.appliedOffset.y}`,
+      `P1 DEPTH ${Math.round(playerDepth)} | FOOT ${Math.round(playerVisual.footY)} BASE ${Math.round(playerVisual.baselineY)} SHADOW ${Math.round(playerVisual.shadowY)}`,
+      leadEnemyVisual
+        ? `E1 TEX ${leadEnemyVisual.textureStateId}:${leadEnemyVisual.frame} OFF ${leadEnemyVisual.appliedOffset.x},${leadEnemyVisual.appliedOffset.y} DEPTH ${Math.round(leadEnemyDepth ?? 0)}`
+        : "E1 TEX -",
+      `LANE ${this.walkLane.topY}-${this.walkLane.bottomY}`,
       `ENEMIES ${this.enemies.length} | PAUSE ${this.isPausedByPlayer ? "ON" : "OFF"}`,
     ]);
   }
