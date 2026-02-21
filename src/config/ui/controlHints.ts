@@ -10,7 +10,7 @@ export const DEFAULT_CONTROL_HINTS: ControlHints = {
     "Salto: X",
     "Especial: C (consume vida)",
     "Pausa/Ayuda: ESC",
-    "Debug hitboxes: F1",
+    "Depurar colisiones: F1",
     "Editor niveles: F2",
   ],
   gamepad: [
