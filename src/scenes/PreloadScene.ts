@@ -27,8 +27,7 @@ export class PreloadScene extends Phaser.Scene {
   create(): void {
     this.createDerivedTextures();
     this.validateAssets();
-    this.scene.start("StreetScene");
-    this.scene.launch("HudScene");
+    this.scene.start("TitleScene");
   }
 
   private createLoadingUi(): void {

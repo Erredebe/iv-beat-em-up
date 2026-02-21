@@ -182,7 +182,7 @@ export const street95Zone1Layout: StageLayoutConfig = {
       originX: 0.5,
       originY: 1,
       scale: 2,
-      depthOffset: 0,
+      depthOffset: -6,
     },
     {
       id: "car",
@@ -262,7 +262,7 @@ export const street95Zone1Layout: StageLayoutConfig = {
       x: 688,
       y: 74,
       text: "CONCIERTO PUNK",
-      color: "#00ebff",
+      color: "#5cbfd1",
       fontSize: "10px",
     },
     {

@@ -57,6 +57,7 @@ export class StreetScene extends Phaser.Scene {
   private stageRenderer!: StageRenderer;
   private levelEditor!: LevelEditor;
   private flashOverlay!: Phaser.GameObjects.Rectangle;
+  private damageFlashOverlay!: Phaser.GameObjects.Rectangle;
   private isPausedByPlayer = false;
   private controlsHintVisible = true;
   private controlsHintUntil = 0;
@@ -105,6 +106,7 @@ export class StreetScene extends Phaser.Scene {
     this.collisionSystem.applyWorldBounds(this.player);
 
     this.depthSystem.register(this.player.shadow, -1, () => this.player.y);
+    this.depthSystem.register(this.player.spriteOutline, -0.2, () => this.player.y);
     this.depthSystem.register(this.player.sprite, 0, () => this.player.y);
 
     this.combatSystem = new CombatSystem({
@@ -120,6 +122,9 @@ export class StreetScene extends Phaser.Scene {
           this.audioSystem.playKnockdown();
         }
         this.cameras.main.shake(42, 0.0022);
+        if (target.team === "player") {
+          this.flashDamage();
+        }
       },
     });
 
@@ -147,6 +152,12 @@ export class StreetScene extends Phaser.Scene {
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(6100);
+
+    this.damageFlashOverlay = this.add
+      .rectangle(0, 0, BASE_WIDTH, BASE_HEIGHT, 0xff1f3a, 0)
+      .setOrigin(0)
+      .setScrollFactor(0)
+      .setDepth(6095);
 
     this.debugGraphics = this.add.graphics();
     this.debugText = this.add
@@ -275,6 +286,7 @@ export class StreetScene extends Phaser.Scene {
     this.collisionSystem.attachFootCollider(enemy);
     this.collisionSystem.applyWorldBounds(enemy);
     this.depthSystem.register(enemy.shadow, -1, () => enemy.y);
+    this.depthSystem.register(enemy.spriteOutline, -0.2, () => enemy.y);
     this.depthSystem.register(enemy.sprite, 0, () => enemy.y);
     return enemy;
   }
@@ -288,6 +300,7 @@ export class StreetScene extends Phaser.Scene {
       }
       this.enemyAI.releaseAttackToken(enemy.id);
       this.depthSystem.unregister(enemy.shadow);
+      this.depthSystem.unregister(enemy.spriteOutline);
       this.depthSystem.unregister(enemy.sprite);
       if (this.targetEnemy?.id === enemy.id) {
         this.targetEnemy = null;
@@ -478,6 +491,17 @@ export class StreetScene extends Phaser.Scene {
       scale: { from: 3, to: 4 },
       duration: 110,
       onComplete: () => spark.destroy(),
+    });
+  }
+
+  private flashDamage(): void {
+    this.damageFlashOverlay.setAlpha(0.16);
+    this.tweens.killTweensOf(this.damageFlashOverlay);
+    this.tweens.add({
+      targets: this.damageFlashOverlay,
+      alpha: 0,
+      duration: 120,
+      ease: "Quad.Out",
     });
   }
 

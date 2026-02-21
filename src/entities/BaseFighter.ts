@@ -71,6 +71,7 @@ export class BaseFighter {
   readonly team: Team;
   readonly footCollider: Phaser.Physics.Arcade.Image;
   readonly sprite: Phaser.GameObjects.Image;
+  readonly spriteOutline: Phaser.GameObjects.Image;
   readonly shadow: Phaser.GameObjects.Ellipse;
   state: FighterState = "IDLE";
   facing: 1 | -1 = 1;
@@ -118,12 +119,18 @@ export class BaseFighter {
       .ellipse(
         options.x,
         options.y + this.visualProfile.shadowOffsetY,
-        this.visualProfile.shadowWidth,
-        this.visualProfile.shadowHeight,
+        this.visualProfile.shadowWidth + 2,
+        this.visualProfile.shadowHeight + 1,
         0x101010,
-        0.45,
+        0.56,
       )
       .setOrigin(0.5, 0.5);
+
+    this.spriteOutline = scene.add.image(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, `${this.skinPrefix}_idle_strip4`, 0);
+    this.spriteOutline.setOrigin(0.5, 1);
+    this.spriteOutline.setScale(this.visualProfile.scale);
+    this.spriteOutline.setTint(0x101010);
+    this.spriteOutline.setAlpha(0.6);
 
     this.sprite = scene.add.image(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, `${this.skinPrefix}_idle_strip4`, 0);
     this.sprite.setOrigin(0.5, 1);
@@ -140,7 +147,8 @@ export class BaseFighter {
 
   setVisualProfile(profile: FighterVisualProfile): void {
     this.visualProfile = profile;
-    this.shadow.setSize(profile.shadowWidth, profile.shadowHeight);
+    this.shadow.setSize(profile.shadowWidth + 2, profile.shadowHeight + 1);
+    this.spriteOutline.setScale(profile.scale);
     this.sprite.setScale(profile.scale);
   }
 
@@ -194,6 +202,7 @@ export class BaseFighter {
 
   destroy(): void {
     this.sprite.destroy();
+    this.spriteOutline.destroy();
     this.shadow.destroy();
     this.footCollider.destroy();
   }
@@ -558,7 +567,11 @@ export class BaseFighter {
 
     const baselineY = this.y + this.visualProfile.spriteAnchorOffsetY - this.jumpHeight + appliedOffsetY;
     this.lastBaselineY = baselineY;
-    this.sprite.setPosition(Math.round(this.x + appliedOffsetX), Math.round(baselineY));
+    const spriteX = Math.round(this.x + appliedOffsetX);
+    const spriteY = Math.round(baselineY);
+    this.spriteOutline.setPosition(spriteX + 1, spriteY + 1);
+    this.spriteOutline.setFlipX(this.facing < 0);
+    this.sprite.setPosition(spriteX, spriteY);
     this.sprite.setFlipX(this.facing < 0);
   }
 
@@ -588,25 +601,30 @@ export class BaseFighter {
   private updateVisualTone(nowMs: number): void {
     if (!this.isAlive()) {
       this.sprite.setTint(0x4a4a4a);
+      this.spriteOutline.setAlpha(0.45);
       return;
     }
 
     if (this.state === "KNOCKDOWN" || this.state === "GETUP") {
       this.sprite.setTint(0x7799aa);
+      this.spriteOutline.setAlpha(0.65);
       return;
     }
 
     if (this.state === "HIT") {
       this.sprite.setTint(0xff8080);
+      this.spriteOutline.setAlpha(0.78);
       return;
     }
 
     if (nowMs < this.invulnerableUntil && Math.floor(nowMs / 50) % 2 === 0) {
       this.sprite.setTint(0xffffff);
+      this.spriteOutline.setAlpha(0.6);
       return;
     }
 
     this.sprite.clearTint();
+    this.spriteOutline.setAlpha(0.6);
   }
 
   private updateSpriteAnimation(deltaMs: number): void {
@@ -621,6 +639,7 @@ export class BaseFighter {
     const currentFrame = Number(this.sprite.frame.name);
     if (this.sprite.texture.key !== stateTexture.key || Number.isNaN(currentFrame) || currentFrame !== stateTexture.frame) {
       this.sprite.setTexture(stateTexture.key, stateTexture.frame);
+      this.spriteOutline.setTexture(stateTexture.key, stateTexture.frame);
     }
   }
 

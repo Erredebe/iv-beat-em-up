@@ -44,6 +44,13 @@ export class StageRenderer {
         .setOrigin(0, 0)
         .setDepth(band.depth)
         .setAlpha(band.alpha);
+      if (band.id === "skyline_far") {
+        sprite.setTint(0x7a89a8);
+      } else if (band.id === "skyline_mid") {
+        sprite.setTint(0x7f8ea8);
+      } else {
+        sprite.setTint(0x9f8f94);
+      }
       return {
         sprite,
         factor: band.scrollFactor,
@@ -73,6 +80,12 @@ export class StageRenderer {
       if (layerConfig.alpha !== undefined) {
         layer.setAlpha(layerConfig.alpha);
       }
+      if (layerConfig.id === "facade") {
+        layer.setTint(0xbf9b9b);
+      }
+      if (layerConfig.id === "foreground_deco") {
+        layer.setTint(0x8b8d96);
+      }
       tileLayers.push(layer);
     }
 
@@ -81,6 +94,9 @@ export class StageRenderer {
         .image(config.x, config.y, config.textureKey)
         .setOrigin(config.originX, config.originY)
         .setScale(config.scale);
+      if (config.id === "crate") {
+        image.setTint(0x6f8f68).setAlpha(0.86);
+      }
       depthSystem.register(image, config.depthOffset);
       return image;
     });
@@ -182,7 +198,7 @@ export class StageRenderer {
     gradient.setDepth(0);
     this.backgroundGradient = gradient;
 
-    const grade = this.scene.add.rectangle(worldWidth * 0.5, BASE_HEIGHT * 0.5, worldWidth, BASE_HEIGHT, 0x1a1130, 0.22);
+    const grade = this.scene.add.rectangle(worldWidth * 0.5, BASE_HEIGHT * 0.5, worldWidth, BASE_HEIGHT, 0x1a1130, 0.3);
     grade.setDepth(3200);
     grade.setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.gradeOverlay = grade;
