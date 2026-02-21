@@ -1,7 +1,17 @@
 import Phaser from "phaser";
 import { INPUT_BUFFER_MS } from "../config/constants";
+import { DEFAULT_CONTROL_HINTS } from "../config/ui/controlHints";
 
-export type InputAction = "up" | "down" | "left" | "right" | "attack" | "jump" | "special";
+export type InputAction =
+  | "up"
+  | "down"
+  | "left"
+  | "right"
+  | "attack"
+  | "jump"
+  | "special"
+  | "pause"
+  | "ui_confirm";
 
 const GAMEPAD_AXES_DEADZONE = 0.24;
 
@@ -27,6 +37,8 @@ export class InputManager {
       attack: Phaser.Input.Keyboard.KeyCodes.Z,
       jump: Phaser.Input.Keyboard.KeyCodes.X,
       special: Phaser.Input.Keyboard.KeyCodes.C,
+      pause: Phaser.Input.Keyboard.KeyCodes.ESC,
+      ui_confirm: Phaser.Input.Keyboard.KeyCodes.ENTER,
     }) as Record<InputAction, Phaser.Input.Keyboard.Key>;
   }
 
@@ -50,7 +62,7 @@ export class InputManager {
     return true;
   }
 
-  consumeChord(actions: InputAction[], windowMs = INPUT_BUFFER_MS): boolean {
+  consumeBufferedChord(actions: InputAction[], windowMs = INPUT_BUFFER_MS): boolean {
     for (const action of actions) {
       const pressedAt = this.bufferedAt.get(action);
       if (pressedAt === undefined || this.nowMs - pressedAt > windowMs) {
@@ -62,6 +74,10 @@ export class InputManager {
       this.bufferedAt.delete(action);
     }
     return true;
+  }
+
+  consumeChord(actions: InputAction[], windowMs = INPUT_BUFFER_MS): boolean {
+    return this.consumeBufferedChord(actions, windowMs);
   }
 
   getMoveVector(): Phaser.Math.Vector2 {
@@ -110,8 +126,17 @@ export class InputManager {
       this.isDown("down") ||
       this.isDown("attack") ||
       this.isDown("jump") ||
-      this.isDown("special")
+      this.isDown("special") ||
+      this.isDown("pause") ||
+      this.isDown("ui_confirm")
     );
+  }
+
+  getBindingHints(): { keyboard: string[]; gamepad: string[] } {
+    return {
+      keyboard: [...DEFAULT_CONTROL_HINTS.keyboard],
+      gamepad: [...DEFAULT_CONTROL_HINTS.gamepad],
+    };
   }
 
   private captureKeyboardEdges(): void {
@@ -149,6 +174,10 @@ export class InputManager {
       this.bufferedAt.set("jump", this.nowMs);
     } else if (buttonIndex === 2 || buttonIndex === 4 || buttonIndex === 6) {
       this.bufferedAt.set("special", this.nowMs);
+    } else if (buttonIndex === 9) {
+      this.bufferedAt.set("pause", this.nowMs);
+    } else if (buttonIndex === 3) {
+      this.bufferedAt.set("ui_confirm", this.nowMs);
     }
   }
 
@@ -178,6 +207,12 @@ export class InputManager {
         return true;
       }
       if (action === "special" && (pad.buttons[2]?.pressed || pad.buttons[4]?.pressed || pad.buttons[6]?.pressed)) {
+        return true;
+      }
+      if (action === "pause" && pad.buttons[9]?.pressed) {
+        return true;
+      }
+      if (action === "ui_confirm" && pad.buttons[3]?.pressed) {
         return true;
       }
     }

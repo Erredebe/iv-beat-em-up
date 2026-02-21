@@ -77,7 +77,7 @@ export class Player extends BaseFighter {
       return;
     }
 
-    const chordPressed = input.consumeChord(["jump", "attack"]);
+    const chordPressed = input.consumeBufferedChord(["jump", "attack"]);
     const singleAttack = input.consumeBuffered("attack");
     if (chordPressed || singleAttack) {
       events.attackStarted = this.tryStartAttack("AIR_ATTACK");
@@ -95,4 +95,3 @@ export function buildPlayerAttackData(raw: Record<string, AttackFrameData>): Rec
     ENEMY_ATTACK: raw.ATTACK_1,
   };
 }
-

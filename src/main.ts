@@ -10,6 +10,7 @@ if (!root) {
 root.innerHTML = `<div id="game-root" aria-label="Spain 90 Beat Em Up"></div>`;
 
 const game = new Phaser.Game(createGameConfig());
+(window as unknown as { __SPAIN90_GAME?: Phaser.Game }).__SPAIN90_GAME = game;
 
 function applyIntegerScale(): void {
   const canvas = game.canvas;
@@ -30,4 +31,3 @@ function applyIntegerScale(): void {
 
 window.addEventListener("resize", applyIntegerScale);
 setTimeout(applyIntegerScale, 0);
-

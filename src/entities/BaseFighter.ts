@@ -1,12 +1,14 @@
 import Phaser from "phaser";
 import {
   ATTACK_FRAME_MS,
+  CHARACTER_SCALE,
   FOOT_COLLIDER_HEIGHT,
   FOOT_COLLIDER_WIDTH,
   JUMP_GRAVITY,
   JUMP_INITIAL_VELOCITY,
   VISUAL_FEET_OFFSET,
 } from "../config/constants";
+import type { FighterVisualProfile } from "../config/visual/fighterVisualProfiles";
 import { isFrameActive, isFrameInComboWindow } from "../systems/combatMath";
 import type { AttackFrameData, AttackId, DamageEvent, FighterState, Rect, Team } from "../types/combat";
 
@@ -28,6 +30,7 @@ interface FighterOptions {
   maxHp: number;
   moveSpeed: number;
   attackData: Record<AttackId, AttackFrameData>;
+  visualProfile?: FighterVisualProfile;
 }
 
 export class BaseFighter {
@@ -35,7 +38,7 @@ export class BaseFighter {
   readonly team: Team;
   readonly footCollider: Phaser.Physics.Arcade.Image;
   readonly sprite: Phaser.GameObjects.Image;
-  readonly shadow: Phaser.GameObjects.Image;
+  readonly shadow: Phaser.GameObjects.Ellipse;
   state: FighterState = "IDLE";
   facing: 1 | -1 = 1;
   readonly maxHp: number;
@@ -54,6 +57,10 @@ export class BaseFighter {
   private jumpHeight = 0;
   private jumpVelocity = 0;
   private airborne = false;
+  private readonly skinPrefix: string;
+  private visualProfile: FighterVisualProfile;
+  private animationElapsed = 0;
+  private walkFrame = 0;
 
   constructor(scene: Phaser.Scene, options: FighterOptions) {
     this.id = options.id;
@@ -62,20 +69,48 @@ export class BaseFighter {
     this.hp = options.maxHp;
     this.moveSpeed = options.moveSpeed;
     this.attackData = options.attackData;
+    this.skinPrefix = options.texture;
+    this.visualProfile = options.visualProfile ?? {
+      scale: CHARACTER_SCALE as 1 | 2 | 3,
+      shadowWidth: 22,
+      shadowHeight: 8,
+      baselineOffsetByState: {
+        IDLE: 0,
+        WALK: 0,
+        ATTACK_1: 0,
+        ATTACK_2: 0,
+        ATTACK_3: 0,
+        JUMP: 0,
+        AIR_ATTACK: 0,
+        HIT: 0,
+        KNOCKDOWN: 0,
+        GETUP: 0,
+        DEAD: 0,
+        SPECIAL: 0,
+      },
+    };
 
-    this.shadow = scene.add.image(options.x, options.y, "shadow");
-    this.shadow.setOrigin(0.5, 0.5);
+    this.shadow = scene.add
+      .ellipse(options.x, options.y + 2, this.visualProfile.shadowWidth, this.visualProfile.shadowHeight, 0x101010, 0.45)
+      .setOrigin(0.5, 0.5);
 
-    this.sprite = scene.add.image(options.x, options.y - VISUAL_FEET_OFFSET, options.texture);
+    this.sprite = scene.add.image(options.x, options.y - VISUAL_FEET_OFFSET, `${this.skinPrefix}_idle_strip4`, 0);
     this.sprite.setOrigin(0.5, 1);
+    this.sprite.setScale(this.visualProfile.scale);
 
-    this.footCollider = scene.physics.add.image(options.x, options.y, "pixel");
+    this.footCollider = scene.physics.add.image(options.x, options.y, "utility-white");
     this.footCollider.setDisplaySize(FOOT_COLLIDER_WIDTH, FOOT_COLLIDER_HEIGHT);
     this.footCollider.setSize(FOOT_COLLIDER_WIDTH, FOOT_COLLIDER_HEIGHT);
     this.footCollider.setVisible(false);
     const body = this.footCollider.body as Phaser.Physics.Arcade.Body;
     body.setAllowGravity(false);
     body.setImmovable(false);
+  }
+
+  setVisualProfile(profile: FighterVisualProfile): void {
+    this.visualProfile = profile;
+    this.shadow.setSize(profile.shadowWidth, profile.shadowHeight);
+    this.sprite.setScale(profile.scale);
   }
 
   get x(): number {
@@ -122,6 +157,7 @@ export class BaseFighter {
     this.updateAttack(deltaMs);
     this.applyVelocity(deltaMs);
     this.syncVisual();
+    this.updateSpriteAnimation(deltaMs);
     this.updateVisualTone(nowMs);
   }
 
@@ -443,11 +479,16 @@ export class BaseFighter {
   }
 
   private syncVisual(): void {
-    this.shadow.setPosition(this.x, this.y + 2);
+    this.shadow.setPosition(Math.round(this.x), Math.round(this.y + 3));
     this.shadow.setAlpha(Phaser.Math.Clamp(1 - this.jumpHeight / 120, 0.25, 1));
 
-    this.sprite.setPosition(this.x, this.y - VISUAL_FEET_OFFSET - this.jumpHeight);
+    const baselineY = this.y - VISUAL_FEET_OFFSET - this.jumpHeight + this.getVisualBaselineY(this.state);
+    this.sprite.setPosition(Math.round(this.x), Math.round(baselineY));
     this.sprite.setFlipX(this.facing < 0);
+  }
+
+  private getVisualBaselineY(state: FighterState): number {
+    return this.visualProfile.baselineOffsetByState[state] ?? 0;
   }
 
   private updateVisualTone(nowMs: number): void {
@@ -472,6 +513,51 @@ export class BaseFighter {
     }
 
     this.sprite.clearTint();
+  }
+
+  private updateSpriteAnimation(deltaMs: number): void {
+    this.animationElapsed += deltaMs;
+    if (this.animationElapsed >= 130) {
+      this.walkFrame = (this.walkFrame + 1) % 4;
+      this.animationElapsed = 0;
+    }
+
+    const stateTexture = this.resolveTextureForState(this.state);
+    const currentFrame = Number(this.sprite.frame.name);
+    if (this.sprite.texture.key !== stateTexture.key || Number.isNaN(currentFrame) || currentFrame !== stateTexture.frame) {
+      this.sprite.setTexture(stateTexture.key, stateTexture.frame);
+    }
+  }
+
+  private resolveTextureForState(state: FighterState): { key: string; frame: number } {
+    if (state === "WALK") {
+      return { key: `${this.skinPrefix}_walk_strip4`, frame: this.walkFrame };
+    }
+    if (state === "IDLE" || state === "JUMP") {
+      return { key: `${this.skinPrefix}_idle_strip4`, frame: this.walkFrame };
+    }
+    if (state === "ATTACK_1") {
+      return { key: `${this.skinPrefix}_punch1`, frame: 0 };
+    }
+    if (state === "ATTACK_2" || state === "ATTACK_3") {
+      return { key: `${this.skinPrefix}_punch2`, frame: 0 };
+    }
+    if (state === "AIR_ATTACK") {
+      return { key: `${this.skinPrefix}_kick1`, frame: 0 };
+    }
+    if (state === "SPECIAL") {
+      return { key: `${this.skinPrefix}_kick2`, frame: 0 };
+    }
+    if (state === "HIT") {
+      return { key: `${this.skinPrefix}_hurt`, frame: 0 };
+    }
+    if (state === "KNOCKDOWN" || state === "DEAD") {
+      return { key: `${this.skinPrefix}_knockdown`, frame: 0 };
+    }
+    if (state === "GETUP") {
+      return { key: `${this.skinPrefix}_getup`, frame: 0 };
+    }
+    return { key: `${this.skinPrefix}_idle_strip4`, frame: 0 };
   }
 
   private applyStateForAttack(attackId: AttackId): void {

@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import type { BaseFighter } from "../entities/BaseFighter";
 import type { HitStopSystem } from "./HitStopSystem";
 import { rectIntersects } from "./combatMath";
@@ -12,15 +13,18 @@ export interface CombatHitResult {
 
 interface CombatSystemOptions {
   hitStopSystem: HitStopSystem;
+  eventBus?: Phaser.Events.EventEmitter;
   onHit?: (result: CombatHitResult) => void;
 }
 
 export class CombatSystem {
   private readonly hitStopSystem: HitStopSystem;
+  private readonly eventBus?: Phaser.Events.EventEmitter;
   private readonly onHit?: (result: CombatHitResult) => void;
 
   constructor(options: CombatSystemOptions) {
     this.hitStopSystem = options.hitStopSystem;
+    this.eventBus = options.eventBus;
     this.onHit = options.onHit;
   }
 
@@ -76,6 +80,14 @@ export class CombatSystem {
         }
 
         this.hitStopSystem.trigger(attackData.hitStopMs);
+        this.eventBus?.emit("combat:hit", {
+          attackerId: attacker.id,
+          targetId: target.id,
+          targetHp: target.hp,
+          targetMaxHp: target.maxHp,
+          at: nowMs,
+          attackId,
+        });
         this.onHit?.({
           attacker,
           target,

@@ -2,9 +2,9 @@ import type { AttackFrameData, AttackId } from "../types/combat";
 
 export const BASE_WIDTH = 426;
 export const BASE_HEIGHT = 240;
-export const WORLD_WIDTH = 2556;
+export const WORLD_WIDTH = 2560;
 
-export const LANE_TOP = 96;
+export const LANE_TOP = 128;
 export const LANE_BOTTOM = 220;
 
 export const PLAYER_SPAWN_X = 112;
@@ -17,7 +17,8 @@ export const ENEMY_MOVE_SPEED = 96;
 
 export const FOOT_COLLIDER_WIDTH = 14;
 export const FOOT_COLLIDER_HEIGHT = 8;
-export const VISUAL_FEET_OFFSET = 18;
+export const VISUAL_FEET_OFFSET = 2;
+export const CHARACTER_SCALE = 3;
 
 export const JUMP_INITIAL_VELOCITY = 360;
 export const JUMP_GRAVITY = 860;
@@ -27,6 +28,8 @@ export const INPUT_BUFFER_MS = 100;
 export const DEFAULT_HITSTOP_MS = 80;
 export const SPECIAL_HP_COST_RATIO = 0.1;
 export const SPECIAL_COOLDOWN_MS = 900;
+export const TARGET_ENEMY_TTL_MS = 2500;
+export const CONTROLS_HINT_DURATION_MS = 4500;
 
 export const DEBUG_TOGGLE_KEY = "F1";
 
@@ -78,4 +81,3 @@ export const ENEMY_ATTACK_DATA: Record<AttackId, AttackFrameData> = {
   AIR_ATTACK: DEFAULT_ATTACK_DATA,
   SPECIAL: DEFAULT_ATTACK_DATA,
 };
-
