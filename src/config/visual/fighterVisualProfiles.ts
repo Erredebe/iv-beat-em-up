@@ -4,6 +4,8 @@ export interface FighterVisualProfile {
   scale: 1 | 2 | 3;
   shadowWidth: number;
   shadowHeight: number;
+  spriteAnchorOffsetY: number;
+  shadowOffsetY: number;
   baselineOffsetByState: Record<FighterState, number>;
 }
 
@@ -38,6 +40,8 @@ export const fighterVisualProfiles: Record<"player" | "enemy", FighterVisualProf
     scale: 3,
     shadowWidth: 24,
     shadowHeight: 8,
+    spriteAnchorOffsetY: 0,
+    shadowOffsetY: 1,
     baselineOffsetByState: createBaselineOffsets({
       ATTACK_1: 1,
       ATTACK_2: 1,
@@ -54,6 +58,8 @@ export const fighterVisualProfiles: Record<"player" | "enemy", FighterVisualProf
     scale: 3,
     shadowWidth: 24,
     shadowHeight: 8,
+    spriteAnchorOffsetY: 0,
+    shadowOffsetY: 1,
     baselineOffsetByState: createBaselineOffsets({
       ATTACK_1: 1,
       ATTACK_2: 1,

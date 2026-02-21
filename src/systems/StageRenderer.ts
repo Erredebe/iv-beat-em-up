@@ -167,8 +167,7 @@ export class StageRenderer {
       const sourceY = sourceRows[Math.min(rowIndex, sourceRows.length - 1)];
       const rowBase = sourceY * this.layout.sourceTilesPerRow;
       for (let x = 0; x < this.layout.mapWidthTiles; x += 1) {
-        const chunkOffset = Math.floor(x / this.layout.sourceTilesPerRow) * 7;
-        const sourceX = (x + chunkOffset) % this.layout.sourceTilesPerRow;
+        const sourceX = x % this.layout.sourceTilesPerRow;
         layerData[targetY][x] = rowBase + sourceX;
       }
     }

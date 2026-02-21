@@ -44,12 +44,19 @@ export interface StageNeonLabel {
   fontSize: string;
 }
 
+export interface StageWalkLaneConfig {
+  topY: number;
+  bottomY: number;
+  playerSpawnY: number;
+}
+
 export interface StageLayoutConfig {
   tileSize: number;
   mapWidthTiles: number;
   mapHeightTiles: number;
   sourceTilesPerRow: number;
   tilesetKey: string;
+  walkLane?: StageWalkLaneConfig;
   layers: StageLayerConfig[];
   props: StagePropConfig[];
   collisionFootprints: StageCollisionFootprint[];
@@ -63,31 +70,36 @@ export const street95Zone1Layout: StageLayoutConfig = {
   mapHeightTiles: 15,
   sourceTilesPerRow: 50,
   tilesetKey: "street_clean_tileset",
+  walkLane: {
+    topY: 136,
+    bottomY: 228,
+    playerSpawnY: 204,
+  },
   layers: [
     {
       id: "facade",
-      depth: 26,
+      depth: 80,
       alpha: 1,
       targetRows: [2, 3, 4, 5, 6, 7],
       sourceRows: [0, 1, 2, 3, 4, 5],
     },
     {
       id: "sidewalk",
-      depth: 27,
+      depth: 92,
       alpha: 1,
       targetRows: [8],
       sourceRows: [6],
     },
     {
       id: "road",
-      depth: 28,
+      depth: 104,
       alpha: 1,
       targetRows: [9, 10, 11, 12, 13],
       sourceRows: [7, 8, 9, 10, 11],
     },
     {
       id: "foreground_deco",
-      depth: 29,
+      depth: 232,
       alpha: 0.94,
       targetRows: [14],
       sourceRows: [11],
@@ -118,7 +130,7 @@ export const street95Zone1Layout: StageLayoutConfig = {
       id: "car",
       textureKey: "prop_car",
       x: 1010,
-      y: 216,
+      y: 214,
       originX: 0.5,
       originY: 1,
       scale: 2,
@@ -145,8 +157,8 @@ export const street95Zone1Layout: StageLayoutConfig = {
     {
       id: "car_feet",
       x: 1010,
-      y: 216,
-      width: 78,
+      y: 214,
+      width: 34,
       height: 12,
       color: 0xff5f7c,
     },

@@ -57,9 +57,9 @@ export class PreloadScene extends Phaser.Scene {
 
   private createDerivedTextures(): void {
     this.createCanvasFromImage("street_sheet", "street_clean_tileset", 24, 20, 800, 192);
-    this.createCanvasFromImage("street_sheet", "prop_booth", 625, 301, 25, 30);
-    this.createCanvasFromImage("street_sheet", "prop_crate", 521, 301, 24, 22);
-    this.createCanvasFromImage("police_car_sheet", "prop_car", 6, 71, 53, 26);
+    this.createCanvasFromImage("street_props", "prop_booth", 0, 0, 48, 58);
+    this.createCanvasFromImage("street_props", "prop_crate", 64, 0, 48, 58);
+    this.createCanvasFromImage("street_props", "prop_car", 0, 64, 48, 64);
     this.createCanvasFromImage("city_far", "city_far_band", 0, 300, 1024, 120);
     this.createCanvasFromImage("city_mid", "city_mid_band", 0, 360, 1024, 120);
     this.createCanvasFromImage("city_close", "city_close_band", 0, 420, 1024, 120);

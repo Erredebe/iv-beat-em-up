@@ -1,6 +1,5 @@
 import type { EnemyBasic } from "../entities/EnemyBasic";
 import type { GroundObstacle, CollisionSystem } from "./CollisionSystem";
-import { LANE_BOTTOM, LANE_TOP } from "../config/constants";
 
 interface ZoneConfig {
   id: string;
@@ -38,23 +37,24 @@ export class SpawnManager {
         triggerX: 300,
         leftBarrierX: 60,
         rightBarrierX: 860,
-        spawns: [{ x: 640, y: 194 }],
+        spawns: [{ x: 640, y: 204 }],
       },
       {
         id: "zone_2",
         triggerX: 1080,
         leftBarrierX: 1040,
         rightBarrierX: 1680,
-        spawns: [{ x: 1460, y: 198 }],
+        spawns: [{ x: 1460, y: 208 }],
       },
     ];
 
-    const barrierHeight = LANE_BOTTOM - LANE_TOP;
+    const walkLane = this.collisionSystem.getWalkLane();
+    const barrierHeight = walkLane.bottomY - walkLane.topY;
     this.zones = configs.map((config) => {
       const leftBarrier = this.collisionSystem.registerGroundObstacle({
         id: `${config.id}_left`,
         x: config.leftBarrierX,
-        y: LANE_TOP + barrierHeight * 0.5,
+        y: walkLane.topY + barrierHeight * 0.5,
         width: 12,
         height: barrierHeight,
         color: 0xff00ff,
@@ -62,7 +62,7 @@ export class SpawnManager {
       const rightBarrier = this.collisionSystem.registerGroundObstacle({
         id: `${config.id}_right`,
         x: config.rightBarrierX,
-        y: LANE_TOP + barrierHeight * 0.5,
+        y: walkLane.topY + barrierHeight * 0.5,
         width: 12,
         height: barrierHeight,
         color: 0x00ffff,

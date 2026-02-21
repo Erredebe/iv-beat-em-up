@@ -1,6 +1,16 @@
 import Phaser from "phaser";
 import { LANE_BOTTOM, LANE_TOP, WORLD_WIDTH } from "../config/constants";
 
+export interface WalkLaneBounds {
+  topY: number;
+  bottomY: number;
+}
+
+const DEFAULT_WALK_LANE: WalkLaneBounds = {
+  topY: LANE_TOP,
+  bottomY: LANE_BOTTOM,
+};
+
 export interface FootColliderOwner {
   footCollider: Phaser.Physics.Arcade.Image;
 }
@@ -24,12 +34,21 @@ interface GroundObstacleConfig {
 export class CollisionSystem {
   private readonly scene: Phaser.Scene;
   private readonly obstacles: Phaser.Physics.Arcade.StaticGroup;
+  private readonly walkLane: WalkLaneBounds;
   private debugEnabled = false;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, walkLane: WalkLaneBounds = DEFAULT_WALK_LANE) {
     this.scene = scene;
-    this.scene.physics.world.setBounds(0, LANE_TOP, WORLD_WIDTH, LANE_BOTTOM - LANE_TOP);
+    this.walkLane = {
+      topY: walkLane.topY,
+      bottomY: walkLane.bottomY,
+    };
+    this.scene.physics.world.setBounds(0, this.walkLane.topY, WORLD_WIDTH, this.walkLane.bottomY - this.walkLane.topY);
     this.obstacles = scene.physics.add.staticGroup();
+  }
+
+  getWalkLane(): WalkLaneBounds {
+    return this.walkLane;
   }
 
   registerGroundObstacle(config: GroundObstacleConfig): GroundObstacle {
@@ -78,4 +97,3 @@ export class CollisionSystem {
     }
   }
 }
-

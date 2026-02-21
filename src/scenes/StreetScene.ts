@@ -7,6 +7,8 @@ import {
   DEBUG_TOGGLE_KEY,
   ENEMY_MAX_HP,
   ENEMY_MOVE_SPEED,
+  LANE_BOTTOM,
+  LANE_TOP,
   PLAYER_MAX_HP,
   PLAYER_MOVE_SPEED,
   PLAYER_SPAWN_X,
@@ -56,6 +58,11 @@ export class StreetScene extends Phaser.Scene {
   private controlsHintVisible = true;
   private controlsHintUntil = 0;
   private targetEnemy: TargetEnemyTracker | null = null;
+  private readonly walkLane = street95Zone1Layout.walkLane ?? {
+    topY: LANE_TOP,
+    bottomY: LANE_BOTTOM,
+    playerSpawnY: PLAYER_SPAWN_Y,
+  };
 
   constructor() {
     super("StreetScene");
@@ -63,7 +70,7 @@ export class StreetScene extends Phaser.Scene {
 
   create(): void {
     this.inputManager = new InputManager(this);
-    this.collisionSystem = new CollisionSystem(this);
+    this.collisionSystem = new CollisionSystem(this, this.walkLane);
     this.depthSystem = new DepthSystem();
     this.hitStopSystem = new HitStopSystem(this);
     this.enemyAI = new EnemyAI();
@@ -82,7 +89,7 @@ export class StreetScene extends Phaser.Scene {
       id: "P1",
       team: "player",
       x: PLAYER_SPAWN_X,
-      y: PLAYER_SPAWN_Y,
+      y: this.walkLane.playerSpawnY,
       texture: "player",
       maxHp: PLAYER_MAX_HP,
       moveSpeed: PLAYER_MOVE_SPEED,
@@ -132,7 +139,7 @@ export class StreetScene extends Phaser.Scene {
 
     this.debugGraphics = this.add.graphics();
     this.debugText = this.add
-      .text(8, BASE_HEIGHT - 46, "", {
+      .text(8, BASE_HEIGHT - 58, "", {
         fontFamily: "monospace",
         fontSize: "10px",
         color: "#ffffff",
@@ -345,6 +352,7 @@ export class StreetScene extends Phaser.Scene {
     }
 
     this.debugGraphics.clear();
+    const cam = this.cameras.main;
 
     const fighters = [this.player, ...this.enemies];
     for (const fighter of fighters) {
@@ -361,14 +369,28 @@ export class StreetScene extends Phaser.Scene {
       }
     }
 
+    this.debugGraphics.lineStyle(1, 0x4cd7ff, 0.8);
+    this.debugGraphics.lineBetween(cam.scrollX, this.walkLane.topY, cam.scrollX + cam.width, this.walkLane.topY);
+    this.debugGraphics.lineStyle(1, 0xffaf5a, 0.8);
+    this.debugGraphics.lineBetween(cam.scrollX, this.walkLane.bottomY, cam.scrollX + cam.width, this.walkLane.bottomY);
+
+    this.debugGraphics.fillStyle(0xf8ff66, 1);
+    this.debugGraphics.fillCircle(this.player.x, this.player.y, 2);
+    this.debugGraphics.fillStyle(0x0f0f0f, 0.95);
+    this.debugGraphics.fillCircle(this.player.shadow.x, this.player.shadow.y, 2);
+
     const fps = this.game.loop.actualFps.toFixed(1);
     const dt = deltaMs.toFixed(2);
     const playerAttack = this.player.getCurrentAttackId() ?? "-";
     const playerFrame = this.player.getAttackFrame();
+    const footY = Math.round(this.player.y);
+    const shadowY = Math.round(this.player.shadow.y);
+    const shadowGap = shadowY - footY;
     this.debugText.setText([
       `FPS ${fps} | dt ${dt}ms`,
       this.player.getDebugText(),
       `ATK ${playerAttack} FRAME ${playerFrame}`,
+      `LANE ${this.walkLane.topY}-${this.walkLane.bottomY} | FOOT ${footY} | SHADOW ${shadowY} | GAP ${shadowGap}`,
       `ENEMIES ${this.enemies.length} | PAUSE ${this.isPausedByPlayer ? "ON" : "OFF"}`,
     ]);
   }

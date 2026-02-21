@@ -6,7 +6,6 @@ import {
   FOOT_COLLIDER_WIDTH,
   JUMP_GRAVITY,
   JUMP_INITIAL_VELOCITY,
-  VISUAL_FEET_OFFSET,
 } from "../config/constants";
 import type { FighterVisualProfile } from "../config/visual/fighterVisualProfiles";
 import { isFrameActive, isFrameInComboWindow } from "../systems/combatMath";
@@ -74,6 +73,8 @@ export class BaseFighter {
       scale: CHARACTER_SCALE as 1 | 2 | 3,
       shadowWidth: 22,
       shadowHeight: 8,
+      spriteAnchorOffsetY: -2,
+      shadowOffsetY: 3,
       baselineOffsetByState: {
         IDLE: 0,
         WALK: 0,
@@ -91,10 +92,17 @@ export class BaseFighter {
     };
 
     this.shadow = scene.add
-      .ellipse(options.x, options.y + 2, this.visualProfile.shadowWidth, this.visualProfile.shadowHeight, 0x101010, 0.45)
+      .ellipse(
+        options.x,
+        options.y + this.visualProfile.shadowOffsetY,
+        this.visualProfile.shadowWidth,
+        this.visualProfile.shadowHeight,
+        0x101010,
+        0.45,
+      )
       .setOrigin(0.5, 0.5);
 
-    this.sprite = scene.add.image(options.x, options.y - VISUAL_FEET_OFFSET, `${this.skinPrefix}_idle_strip4`, 0);
+    this.sprite = scene.add.image(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, `${this.skinPrefix}_idle_strip4`, 0);
     this.sprite.setOrigin(0.5, 1);
     this.sprite.setScale(this.visualProfile.scale);
 
@@ -479,10 +487,10 @@ export class BaseFighter {
   }
 
   private syncVisual(): void {
-    this.shadow.setPosition(Math.round(this.x), Math.round(this.y + 3));
+    this.shadow.setPosition(Math.round(this.x), Math.round(this.y + this.visualProfile.shadowOffsetY));
     this.shadow.setAlpha(Phaser.Math.Clamp(1 - this.jumpHeight / 120, 0.25, 1));
 
-    const baselineY = this.y - VISUAL_FEET_OFFSET - this.jumpHeight + this.getVisualBaselineY(this.state);
+    const baselineY = this.y + this.visualProfile.spriteAnchorOffsetY - this.jumpHeight + this.getVisualBaselineY(this.state);
     this.sprite.setPosition(Math.round(this.x), Math.round(baselineY));
     this.sprite.setFlipX(this.facing < 0);
   }
