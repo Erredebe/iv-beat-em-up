@@ -61,6 +61,8 @@ export class StreetScene extends Phaser.Scene {
   private controlsHintVisible = true;
   private controlsHintUntil = 0;
   private targetEnemy: TargetEnemyTracker | null = null;
+  private zoneMessage: string | null = null;
+  private zoneMessageUntil = 0;
   private readonly walkLane = street95Zone1Layout.walkLane ?? {
     topY: LANE_TOP,
     bottomY: LANE_BOTTOM,
@@ -180,6 +182,18 @@ export class StreetScene extends Phaser.Scene {
       this.audioSystem.ensureStarted();
     }
 
+    if (!this.player.isAlive()) {
+      this.controlsHintVisible = false;
+      if (this.inputManager.consumeBuffered("ui_confirm")) {
+        this.scene.restart();
+        return;
+      }
+      this.updateParallax();
+      this.updateHud();
+      this.renderDebug(delta);
+      return;
+    }
+
     if (this.controlsHintVisible && (time >= this.controlsHintUntil || this.inputManager.consumeBuffered("ui_confirm"))) {
       this.controlsHintVisible = false;
     }
@@ -221,6 +235,8 @@ export class StreetScene extends Phaser.Scene {
       for (const enemy of spawnedEnemies) {
         this.enemies.push(enemy);
       }
+      this.zoneMessage = "¡Zona bloqueada! Derrota a los enemigos";
+      this.zoneMessageUntil = time + 2600;
     }
 
     this.combatSystem.resolveHits([this.player, ...this.enemies], time);
@@ -230,6 +246,10 @@ export class StreetScene extends Phaser.Scene {
       this.audioSystem.switchTheme("theme_b");
     } else {
       this.audioSystem.switchTheme("theme_a");
+    }
+
+    if (this.zoneMessage && time >= this.zoneMessageUntil) {
+      this.zoneMessage = null;
     }
 
     this.depthSystem.update();
@@ -334,6 +354,8 @@ export class StreetScene extends Phaser.Scene {
       visibleEnemies,
       controlsHintVisible: this.controlsHintVisible,
       isPaused: this.isPausedByPlayer,
+      isGameOver: !this.player.isAlive(),
+      zoneMessage: this.zoneMessage,
       bindingHints: this.inputManager.getBindingHints(),
     });
   }
@@ -350,6 +372,10 @@ export class StreetScene extends Phaser.Scene {
   }
 
   private handlePauseToggle(): void {
+    if (!this.player.isAlive()) {
+      this.isPausedByPlayer = false;
+      return;
+    }
     if (!this.inputManager.consumeBuffered("pause")) {
       return;
     }
