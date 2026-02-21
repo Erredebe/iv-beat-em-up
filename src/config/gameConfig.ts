@@ -3,6 +3,7 @@ import { BASE_HEIGHT, BASE_WIDTH } from "./constants";
 import { BootScene } from "../scenes/BootScene";
 import { PreloadScene } from "../scenes/PreloadScene";
 import { StreetScene } from "../scenes/StreetScene";
+import { TitleScene } from "../scenes/TitleScene";
 import { HudScene } from "../ui/HudScene";
 
 export function createGameConfig(): Phaser.Types.Core.GameConfig {
@@ -26,7 +27,7 @@ export function createGameConfig(): Phaser.Types.Core.GameConfig {
       target: 60,
       forceSetTimeOut: true,
     },
-    scene: [BootScene, PreloadScene, StreetScene, HudScene],
+    scene: [BootScene, PreloadScene, TitleScene, StreetScene, HudScene],
   };
 }
 

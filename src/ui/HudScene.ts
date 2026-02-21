@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
 
 interface HudPayload {
   playerHp: number;
@@ -15,6 +16,7 @@ interface HudPayload {
 
 export class HudScene extends Phaser.Scene {
   private hpLabel!: Phaser.GameObjects.Text;
+  private hpValue!: Phaser.GameObjects.Text;
   private zoneLabel!: Phaser.GameObjects.Text;
   private hpFill!: Phaser.GameObjects.Rectangle;
   private hpLag!: Phaser.GameObjects.Rectangle;
@@ -27,12 +29,16 @@ export class HudScene extends Phaser.Scene {
   private tutorialPanel!: Phaser.GameObjects.Container;
   private zoneMessagePanel!: Phaser.GameObjects.Container;
   private gameOverPanel!: Phaser.GameObjects.Container;
+  private gameOverDim!: Phaser.GameObjects.Rectangle;
+  private pauseDim!: Phaser.GameObjects.Rectangle;
   private maxBarWidth = 148;
   private targetBarWidth = 116;
   private currentPayload: HudPayload | null = null;
   private displayedPlayerHp = 0;
   private renderedHintsKey = "";
   private zoneMessageText!: Phaser.GameObjects.Text;
+  private wasGameOverVisible = false;
+  private previousPlayerHp = 0;
 
   constructor() {
     super("HudScene");
@@ -48,6 +54,7 @@ export class HudScene extends Phaser.Scene {
     this.createTutorialPanel();
     this.createZoneMessagePanel();
     this.createGameOverPanel();
+    this.createCrtOverlay();
 
     this.enemyBarsGraphics = this.add.graphics().setScrollFactor(0).setDepth(5800);
     this.game.events.on("hud:update", this.onHudUpdate, this);
@@ -65,12 +72,18 @@ export class HudScene extends Phaser.Scene {
     this.displayedPlayerHp = Phaser.Math.Linear(this.displayedPlayerHp, this.currentPayload.playerHp, 0.18);
     const lagRatio = Phaser.Math.Clamp(this.displayedPlayerHp / this.currentPayload.playerMaxHp, 0, 1);
 
+    const roundedHp = Math.ceil(this.currentPayload.playerHp);
+    if (this.previousPlayerHp > 0 && roundedHp < this.previousPlayerHp) {
+      this.pulseHpBar();
+    }
+    this.previousPlayerHp = roundedHp;
+
     this.hpFill.width = Math.floor(this.maxBarWidth * hpRatio);
     this.hpLag.width = Math.floor(this.maxBarWidth * lagRatio);
-    this.hpFill.fillColor = hpRatio < 0.25 ? 0xff466a : 0xf0bf45;
-    this.hpLabel.setText(`VIDA ${Math.ceil(this.currentPayload.playerHp)} / ${this.currentPayload.playerMaxHp}`);
+    this.hpFill.fillColor = hpRatio < 0.25 ? 0xff466a : 0xf06b3b;
+    this.hpValue.setText(`${roundedHp} / ${this.currentPayload.playerMaxHp}`);
     const zoneLabel = this.currentPayload.zoneId ? this.formatZoneLabel(this.currentPayload.zoneId) : "CALLE LIBRE";
-    this.zoneLabel.setText(`ZONA: ${zoneLabel}`);
+    this.zoneLabel.setText(zoneLabel);
 
     this.updateTargetBar();
     this.drawEnemyBars();
@@ -80,33 +93,66 @@ export class HudScene extends Phaser.Scene {
     this.zoneMessagePanel.setVisible(Boolean(this.currentPayload.zoneMessage) && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
     this.zoneMessageText.setText(this.currentPayload.zoneMessage ?? "");
     this.gameOverPanel.setVisible(this.currentPayload.isGameOver);
+
+    this.pauseDim.setVisible(this.currentPayload.isPaused && !this.currentPayload.isGameOver);
+    if (this.currentPayload.isGameOver && !this.wasGameOverVisible) {
+      this.wasGameOverVisible = true;
+      this.gameOverPanel.setAlpha(0);
+      this.gameOverDim.setAlpha(0);
+      this.gameOverDim.setVisible(true);
+      this.tweens.add({
+        targets: [this.gameOverPanel, this.gameOverDim],
+        alpha: 1,
+        duration: 240,
+        ease: "Quad.Out",
+      });
+    } else if (!this.currentPayload.isGameOver) {
+      this.wasGameOverVisible = false;
+      this.gameOverDim.setVisible(false);
+      this.gameOverDim.setAlpha(0);
+    }
   }
 
   private createMainHud(): void {
     const frame = this.add.container(0, 0).setScrollFactor(0).setDepth(5600);
-    frame.add(this.add.rectangle(8, 6, 188, 46, 0x0a0a11, 0.7).setOrigin(0, 0));
-    frame.add(this.add.rectangle(14, 12, 176, 14, 0x1f1a2f, 1).setOrigin(0, 0));
-    frame.add(this.add.tileSprite(14, 12, 176, 2, "hud_frame").setOrigin(0, 0).setTint(0x3ad5ff));
+    frame.add(this.add.rectangle(8, 8, 196, 54, 0x070a12, 0.78).setOrigin(0, 0));
+    frame.add(this.add.rectangle(8, 8, 196, 54, 0x3f5c7a, 0).setOrigin(0, 0).setStrokeStyle(1, 0x6f89a3, 0.9));
+    frame.add(this.add.rectangle(18, 28, 174, 12, 0x161522, 1).setOrigin(0, 0));
+    frame.add(this.add.rectangle(18, 28, 174, 12, 0x5e5b72, 0).setOrigin(0, 0).setStrokeStyle(1, 0x54526b, 1));
 
-    this.hpLag = this.add.rectangle(18, 19, this.maxBarWidth, 8, 0x5c2143, 0.9).setOrigin(0, 0.5).setDepth(5602);
-    this.hpFill = this.add.rectangle(18, 19, this.maxBarWidth, 8, 0xf0bf45, 1).setOrigin(0, 0.5).setDepth(5603);
+    this.hpLag = this.add.rectangle(21, 34, this.maxBarWidth, 8, 0x5c2143, 0.92).setOrigin(0, 0.5).setDepth(5602);
+    this.hpFill = this.add.rectangle(21, 34, this.maxBarWidth, 8, 0xf06b3b, 1).setOrigin(0, 0.5).setDepth(5603);
     this.hpLabel = this.add
-      .text(18, 24, "VIDA 120 / 120", {
+      .text(18, 13, "VIDA", {
         fontFamily: "monospace",
-        fontSize: "10px",
+        fontSize: "11px",
+        color: "#d4dee7",
+        stroke: "#06080d",
+        strokeThickness: 2,
+      })
+      .setDepth(5604);
+    this.hpValue = this.add
+      .text(58, 13, "120 / 120", {
+        fontFamily: "monospace",
+        fontSize: "11px",
         color: "#ffffff",
+        stroke: "#06080d",
+        strokeThickness: 2,
       })
       .setDepth(5604);
     this.zoneLabel = this.add
-      .text(18, 8, "ZONA: CALLE LIBRE", {
+      .text(18, 46, "CALLE LIBRE", {
         fontFamily: "monospace",
-        fontSize: "10px",
-        color: "#89f6ff",
+        fontSize: "11px",
+        color: "#9fd6e3",
+        stroke: "#06080d",
+        strokeThickness: 2,
       })
       .setDepth(5604);
     this.hpLag.setScrollFactor(0);
     this.hpFill.setScrollFactor(0);
     this.hpLabel.setScrollFactor(0);
+    this.hpValue.setScrollFactor(0);
     this.zoneLabel.setScrollFactor(0);
   }
 
@@ -133,13 +179,15 @@ export class HudScene extends Phaser.Scene {
 
   private createControlsPanel(): void {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5900);
-    panel.add(this.add.rectangle(20, 56, 388, 72, 0x090910, 0.82).setOrigin(0, 0));
+    panel.add(this.add.rectangle(20, 56, 388, 88, 0x07090f, 0.9).setOrigin(0, 0));
     panel.add(this.add.tileSprite(20, 56, 388, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
     panel.add(
       this.add.text(26, 62, "CONTROLES", {
         fontFamily: "monospace",
-        fontSize: "10px",
+        fontSize: "11px",
         color: "#ffffff",
+        stroke: "#030408",
+        strokeThickness: 2,
       }),
     );
     this.controlsPanel = panel;
@@ -164,12 +212,14 @@ export class HudScene extends Phaser.Scene {
 
   private createZoneMessagePanel(): void {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5970);
-    panel.add(this.add.rectangle(98, 42, 234, 22, 0x05050a, 0.88).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(98, 42, 234, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
-    this.zoneMessageText = this.add.text(106, 48, "", {
+    panel.add(this.add.rectangle(84, 40, 262, 26, 0x040409, 0.94).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(84, 40, 262, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
+    this.zoneMessageText = this.add.text(92, 47, "", {
       fontFamily: "monospace",
-      fontSize: "10px",
-      color: "#ffd8ed",
+      fontSize: "11px",
+      color: "#ffe7f4",
+      stroke: "#060309",
+      strokeThickness: 2,
     });
     panel.add(this.zoneMessageText);
     this.zoneMessagePanel = panel;
@@ -177,21 +227,33 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createGameOverPanel(): void {
+    this.gameOverDim = this.add
+      .rectangle(0, 0, BASE_WIDTH, BASE_HEIGHT, 0x000000, 0.84)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(6040)
+      .setVisible(false);
+
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(6050);
-    panel.add(this.add.rectangle(82, 54, 252, 92, 0x05050a, 0.9).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(82, 54, 252, 2, "hud_frame").setOrigin(0, 0).setTint(0xff466a));
+    const panelX = Math.floor((BASE_WIDTH - 252) * 0.5);
+    const panelY = Math.floor((BASE_HEIGHT - 96) * 0.5);
+    panel.add(this.add.rectangle(panelX, panelY, 252, 96, 0x05050a, 0.94).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(panelX, panelY, 252, 2, "hud_frame").setOrigin(0, 0).setTint(0xff466a));
+    panel.add(this.add.rectangle(panelX + 24, panelY + 53, 204, 1, 0x6f465b, 0.9).setOrigin(0, 0));
     panel.add(
-      this.add.text(142, 72, "DERROTA", {
+      this.add.text(panelX + 76, panelY + 20, "DERROTA", {
         fontFamily: "monospace",
-        fontSize: "16px",
+        fontSize: "22px",
         color: "#ff8da8",
       }),
     );
     panel.add(
-      this.add.text(94, 102, "Pulsa ENTER para reiniciar la calle", {
+      this.add.text(panelX + 44, panelY + 64, "Pulsa ENTER para reiniciar", {
         fontFamily: "monospace",
-        fontSize: "10px",
-        color: "#ffe8ef",
+        fontSize: "11px",
+        color: "#fff8fb",
+        stroke: "#1d0f16",
+        strokeThickness: 2,
       }),
     );
     this.gameOverPanel = panel;
@@ -199,16 +261,24 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createPausePanel(): void {
+    this.pauseDim = this.add
+      .rectangle(0, 0, BASE_WIDTH, BASE_HEIGHT, 0x000000, 0.66)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(5990)
+      .setVisible(false);
+
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(6000);
-    panel.add(this.add.rectangle(26, 38, 376, 162, 0x05050a, 0.9).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(26, 38, 376, 2, "hud_frame").setOrigin(0, 0).setTint(0xff6fb5));
+    panel.add(this.add.rectangle(32, 32, 364, 172, 0x06070c, 0.95).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(32, 32, 364, 2, "hud_frame").setOrigin(0, 0).setTint(0xff6fb5));
     panel.add(
-      this.add.text(34, 46, "PAUSA - AYUDA CONTROLES", {
+      this.add.text(48, 48, "PAUSA", {
         fontFamily: "monospace",
-        fontSize: "12px",
-        color: "#fff3fb",
+        fontSize: "16px",
+        color: "#f2dbe6",
       }),
     );
+    panel.add(this.add.rectangle(48, 72, 332, 1, 0x5f5160, 0.95).setOrigin(0, 0));
     this.pausePanel = panel;
     panel.setVisible(false);
   }
@@ -233,40 +303,80 @@ export class HudScene extends Phaser.Scene {
     }
 
     const compact = this.add
-      .text(26, 76, `${hints.keyboard[0]}  |  ${hints.keyboard[1]}  |  ${hints.keyboard[2]}  |  ${hints.keyboard[3]}`, {
+      .text(26, 78, `${hints.keyboard[0]}  |  ${hints.keyboard[1]}  |  ${hints.keyboard[2]}`, {
         fontFamily: "monospace",
-        fontSize: "10px",
-        color: "#d5f5ff",
+        fontSize: "11px",
+        color: "#e8f7ff",
+        stroke: "#04070b",
+        strokeThickness: 2,
       })
       .setName("dynamic-control");
     const compact2 = this.add
-      .text(26, 92, `${hints.keyboard[4]}  |  ${hints.gamepad[0]}  |  ${hints.gamepad[1]}`, {
+      .text(26, 96, `${hints.keyboard[3]}  |  ${hints.keyboard[4]}`, {
         fontFamily: "monospace",
-        fontSize: "10px",
-        color: "#ffcfde",
+        fontSize: "11px",
+        color: "#ffdeea",
+        stroke: "#080307",
+        strokeThickness: 2,
       })
       .setName("dynamic-control");
-    this.controlsPanel.add([compact, compact2]);
+    const compact3 = this.add
+      .text(26, 114, `${hints.gamepad[0]}  |  ${hints.gamepad[1]}`, {
+        fontFamily: "monospace",
+        fontSize: "11px",
+        color: "#ffd6e7",
+        stroke: "#080307",
+        strokeThickness: 2,
+      })
+      .setName("dynamic-control");
+    this.controlsPanel.add([compact, compact2, compact3]);
 
-    let y = 68;
+    this.pausePanel.add(
+      this.add
+        .text(48, 82, "TECLADO", {
+          fontFamily: "monospace",
+          fontSize: "11px",
+          color: "#a9deea",
+          stroke: "#04070b",
+          strokeThickness: 2,
+        })
+        .setName("dynamic-control"),
+    );
+    this.pausePanel.add(
+      this.add
+        .text(220, 82, "GAMEPAD", {
+          fontFamily: "monospace",
+          fontSize: "11px",
+          color: "#f0c8d9",
+          stroke: "#080307",
+          strokeThickness: 2,
+        })
+        .setName("dynamic-control"),
+    );
+
+    let y = 102;
     for (const line of hints.keyboard) {
       const text = this.add
-        .text(34, y, line, {
+        .text(48, y, line, {
           fontFamily: "monospace",
-          fontSize: "10px",
-          color: "#dff7ff",
+          fontSize: "11px",
+          color: "#e7f3f7",
+          stroke: "#04070b",
+          strokeThickness: 2,
         })
         .setName("dynamic-control");
       this.pausePanel.add(text);
       y += 14;
     }
-    y += 2;
+    y = 102;
     for (const line of hints.gamepad) {
       const text = this.add
-        .text(34, y, line, {
+        .text(220, y, line, {
           fontFamily: "monospace",
-          fontSize: "10px",
-          color: "#ffd7e9",
+          fontSize: "11px",
+          color: "#fae5ee",
+          stroke: "#080307",
+          strokeThickness: 2,
         })
         .setName("dynamic-control");
       this.pausePanel.add(text);
@@ -274,8 +384,36 @@ export class HudScene extends Phaser.Scene {
     }
   }
 
+  private createCrtOverlay(): void {
+    const enabled = new URLSearchParams(window.location.search).get("crt") === "1";
+    const overlay = this.add.graphics().setScrollFactor(0).setDepth(6035);
+    if (enabled) {
+      overlay.fillStyle(0x0a0d12, 0.09);
+      for (let y = 0; y < BASE_HEIGHT; y += 2) {
+        overlay.fillRect(0, y, BASE_WIDTH, 1);
+      }
+      overlay.fillStyle(0x111622, 0.05);
+      for (let i = 0; i < 180; i += 1) {
+        const x = Math.floor(Math.random() * BASE_WIDTH);
+        const y = Math.floor(Math.random() * BASE_HEIGHT);
+        overlay.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+
+  private pulseHpBar(): void {
+    this.tweens.killTweensOf(this.hpFill);
+    this.tweens.add({
+      targets: this.hpFill,
+      scaleY: 1.22,
+      duration: 70,
+      yoyo: true,
+      ease: "Quad.Out",
+    });
+  }
+
   private formatZoneLabel(zoneId: string): string {
-    return zoneId.replace(/_/g, " ").toUpperCase().replace("ZONE", "ZONA");
+    return zoneId.replace(/_/g, " ").toUpperCase().replace("ZONE", "ZONA").trim();
   }
 
   private updateTargetBar(): void {
