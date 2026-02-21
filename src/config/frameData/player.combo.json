@@ -1,0 +1,105 @@
+{
+  "ATTACK_1": {
+    "totalFrames": 18,
+    "activeStart": 5,
+    "activeEnd": 7,
+    "recoveryStart": 8,
+    "comboWindowStart": 11,
+    "comboWindowEnd": 16,
+    "damage": 14,
+    "knockbackX": 90,
+    "causesKnockdown": false,
+    "hitStopMs": 80,
+    "iFrameMs": 180,
+    "hitStunMs": 220,
+    "knockdownDurationMs": 900,
+    "nextAttack": "ATTACK_2",
+    "hitbox": {
+      "offsetX": 18,
+      "offsetY": -30,
+      "width": 20,
+      "height": 14
+    }
+  },
+  "ATTACK_2": {
+    "totalFrames": 20,
+    "activeStart": 6,
+    "activeEnd": 8,
+    "recoveryStart": 9,
+    "comboWindowStart": 12,
+    "comboWindowEnd": 18,
+    "damage": 16,
+    "knockbackX": 110,
+    "causesKnockdown": false,
+    "hitStopMs": 80,
+    "iFrameMs": 180,
+    "hitStunMs": 240,
+    "knockdownDurationMs": 900,
+    "nextAttack": "ATTACK_3",
+    "hitbox": {
+      "offsetX": 20,
+      "offsetY": -30,
+      "width": 22,
+      "height": 14
+    }
+  },
+  "ATTACK_3": {
+    "totalFrames": 26,
+    "activeStart": 7,
+    "activeEnd": 11,
+    "recoveryStart": 12,
+    "damage": 22,
+    "knockbackX": 160,
+    "causesKnockdown": true,
+    "hitStopMs": 100,
+    "iFrameMs": 220,
+    "hitStunMs": 280,
+    "knockdownDurationMs": 980,
+    "hitbox": {
+      "offsetX": 22,
+      "offsetY": -30,
+      "width": 24,
+      "height": 16
+    }
+  },
+  "AIR_ATTACK": {
+    "totalFrames": 16,
+    "activeStart": 6,
+    "activeEnd": 9,
+    "recoveryStart": 10,
+    "damage": 15,
+    "knockbackX": 80,
+    "causesKnockdown": false,
+    "hitStopMs": 80,
+    "iFrameMs": 180,
+    "hitStunMs": 220,
+    "knockdownDurationMs": 900,
+    "hitbox": {
+      "offsetX": 16,
+      "offsetY": -36,
+      "width": 22,
+      "height": 16
+    }
+  },
+  "SPECIAL": {
+    "totalFrames": 30,
+    "activeStart": 8,
+    "activeEnd": 18,
+    "recoveryStart": 19,
+    "damage": 20,
+    "knockbackX": 130,
+    "causesKnockdown": true,
+    "hitStopMs": 100,
+    "iFrameMs": 240,
+    "hitStunMs": 260,
+    "knockdownDurationMs": 960,
+    "grantsInvulnMs": 220,
+    "hitbox": {
+      "offsetX": 28,
+      "offsetY": -36,
+      "width": 42,
+      "height": 24
+    }
+  }
+}
+
