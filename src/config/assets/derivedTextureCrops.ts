@@ -27,10 +27,10 @@ export const derivedTextureCrops: DerivedTextureCrop[] = [
   {
     sourceKey: "street_props",
     targetKey: "prop_crate",
-    sx: 64,
-    sy: 0,
-    width: 48,
-    height: 58,
+    sx: 70,
+    sy: 6,
+    width: 36,
+    height: 44,
   },
   {
     sourceKey: "street_props",
