@@ -98,7 +98,11 @@ export class StageRenderer {
       if (config.id.includes("crate")) {
         image.setTint(0x6f8f68).setAlpha(0.9);
       }
-      depthSystem.register(image, config.depthOffset);
+      if (config.depthAnchorY !== undefined) {
+        depthSystem.register(image, config.depthOffset, () => config.depthAnchorY!);
+      } else {
+        depthSystem.register(image, config.depthOffset);
+      }
       return image;
     });
 

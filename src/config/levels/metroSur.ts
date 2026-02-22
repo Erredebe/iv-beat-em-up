@@ -22,7 +22,7 @@ export const metroSurLayout: StageLayoutConfig = {
     { id: "foreground_deco", depth: 236, alpha: 0.92, targetRows: [7], sourceRows: [10] },
   ],
   props: [
-    { id: "booth_ticket", textureKey: "prop_booth", x: 704, y: 214, originX: 0.5, originY: 1, scale: 2, depthOffset: 0 },
+    { id: "booth_ticket", textureKey: "prop_booth", x: 704, y: 214, originX: 0.5, originY: 1, scale: 2, depthOffset: 18 },
     { id: "car_service", textureKey: "prop_car", x: 1760, y: 220, originX: 0.5, originY: 1, scale: 2, depthOffset: -2 },
   ],
   breakableProps: [

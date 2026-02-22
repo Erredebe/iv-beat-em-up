@@ -1,5 +1,4 @@
 export interface FeatureFlags {
-  arcadeArt: boolean;
   combatRework: boolean;
   enemyRoster: boolean;
   stagePack: boolean;
@@ -11,7 +10,6 @@ export interface FeatureFlags {
 }
 
 const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
-  arcadeArt: true,
   combatRework: true,
   enemyRoster: true,
   stagePack: true,

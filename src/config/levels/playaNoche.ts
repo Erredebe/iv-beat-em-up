@@ -22,7 +22,7 @@ export const playaNocheLayout: StageLayoutConfig = {
     { id: "foreground_deco", depth: 236, alpha: 0.9, targetRows: [7], sourceRows: [11] },
   ],
   props: [
-    { id: "booth_beach", textureKey: "prop_booth", x: 630, y: 210, originX: 0.5, originY: 1, scale: 2, depthOffset: 0 },
+    { id: "booth_beach", textureKey: "prop_booth", x: 630, y: 210, originX: 0.5, originY: 1, scale: 2, depthOffset: 18 },
     { id: "car_beach", textureKey: "prop_car", x: 1460, y: 216, originX: 0.5, originY: 1, scale: 2, depthOffset: -1 },
   ],
   breakableProps: [

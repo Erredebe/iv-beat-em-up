@@ -1,6 +1,6 @@
 export type AssetType = "image" | "spritesheet" | "audio";
 export type AssetRole = "character" | "tileset" | "prop" | "background" | "audio" | "ui";
-export type AssetPackId = "legacy_sms" | "arcade_90";
+export type AssetPackId = "arcade_90";
 
 export interface AssetManifestEntry {
   key: string;

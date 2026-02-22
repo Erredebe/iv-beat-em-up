@@ -16,6 +16,7 @@ export interface StagePropConfig {
   originX: number;
   originY: number;
   scale: 1 | 2 | 3 | 4;
+  depthAnchorY?: number;
   depthOffset: number;
 }
 
@@ -121,6 +122,7 @@ export function cloneStageLayoutConfig(layout: StageLayoutConfig): StageLayoutCo
       originX: prop.originX,
       originY: prop.originY,
       scale: prop.scale,
+      depthAnchorY: prop.depthAnchorY,
       depthOffset: prop.depthOffset,
     })),
     breakableProps: layout.breakableProps.map((prop) => ({

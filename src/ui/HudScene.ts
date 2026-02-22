@@ -205,7 +205,7 @@ export class HudScene extends Phaser.Scene {
       .setOrigin(1, 0);
 
     this.timeLabel = this.add
-      .text(250, 24, "TIEMPO 000", {
+      .text(250, 28, "TIEMPO 000", {
         fontFamily: "monospace",
         fontSize: "11px",
         color: "#ffcc88",
@@ -315,10 +315,11 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createObjectivePanel(): void {
-    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5960);
-    panel.add(this.add.rectangle(84, 84, 262, 24, 0x040409, 0.9).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(84, 84, 262, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
-    this.objectiveText = this.add.text(92, 90, "", {
+    const panelY = 86;
+    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5590);
+    panel.add(this.add.rectangle(12, panelY, 262, 24, 0x040409, 0.9).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(12, panelY, 262, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
+    this.objectiveText = this.add.text(20, panelY + 6, "", {
       fontFamily: "monospace",
       fontSize: "10px",
       color: "#d9f4ff",

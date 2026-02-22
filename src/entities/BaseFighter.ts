@@ -7,7 +7,6 @@ import {
   JUMP_GRAVITY,
   JUMP_INITIAL_VELOCITY,
 } from "../config/constants";
-import { isFeatureEnabled } from "../config/features";
 import {
   getAnimationKey,
   getFighterAnimationSet,
@@ -706,6 +705,7 @@ export class BaseFighter {
   }
 
   private getClipScaleMultiplier(clipId: AnimationClipId): number {
+    void clipId;
     return 1;
   }
 
