@@ -7,19 +7,19 @@ export const metroSurLayout: StageLayoutConfig = {
   tileSize: 32,
   mapWidthTiles: 80,
   mapHeightTiles: 8,
-  sourceTilesPerRow: 46,
+  sourceTilesPerRow: 20,
   tilesetKey: "street_clean_tileset",
   cameraYOffset: 0,
   walkLane: {
-    topY: 158,
+    topY: 182,
     bottomY: 226,
     playerSpawnY: 204,
   },
   layers: [
-    { id: "facade", depth: 82, alpha: 0.95, targetRows: [1, 2, 3], sourceRows: [1, 2, 3] },
-    { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [5] },
-    { id: "road", depth: 106, alpha: 1, targetRows: [5, 6], sourceRows: [8, 9] },
-    { id: "foreground_deco", depth: 236, alpha: 0.92, targetRows: [7], sourceRows: [10] },
+    { id: "facade", depth: 82, alpha: 0.95, targetRows: [1, 2, 3], sourceRows: [0, 2, 1] },
+    { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [10] },
+    { id: "road", depth: 106, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
+    { id: "foreground_deco", depth: 236, alpha: 0.92, targetRows: [7], sourceRows: [9] },
   ],
   props: [
     {
@@ -34,17 +34,6 @@ export const metroSurLayout: StageLayoutConfig = {
       depthOffset: 0,
     },
     {
-      id: "window_ticket",
-      textureKey: "prop_window_panel",
-      x: 790,
-      y: 220,
-      originX: 0.5,
-      originY: 1,
-      scale: 2,
-      depthAnchorY: 214,
-      depthOffset: -2,
-    },
-    {
       id: "container_service",
       textureKey: "prop_container",
       x: 1760,
@@ -57,12 +46,12 @@ export const metroSurLayout: StageLayoutConfig = {
     },
   ],
   breakableProps: [
-    { id: "barrel_1", textureKey: "prop_crate", x: 940, y: 214, originX: 0.5, originY: 1, scale: 2, maxHp: 30, points: 160 },
-    { id: "barrel_2", textureKey: "prop_crate", x: 1320, y: 214, originX: 0.5, originY: 1, scale: 2, maxHp: 30, points: 160 },
+    { id: "barrel_1", textureKey: "prop_crate", x: 940, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 30, points: 160 },
+    { id: "barrel_2", textureKey: "prop_crate", x: 1320, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 30, points: 160 },
   ],
   collisionFootprints: [
     { id: "booth_ticket_feet", x: 704, y: 218, width: 66, height: 14, color: 0x66d1ff },
-    { id: "container_service_feet", x: 1760, y: 220, width: 148, height: 16, color: 0xff7e98 },
+    { id: "container_service_feet", x: 1760, y: 220, width: 96, height: 16, color: 0xff7e98 },
   ],
   parallaxBands: [
     { id: "skyline_far", textureKey: "city_far_band", y: 0, height: 92, depth: 2, alpha: 0.54, scrollFactor: 0.07 },

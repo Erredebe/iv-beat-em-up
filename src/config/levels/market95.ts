@@ -7,19 +7,19 @@ export const market95Layout: StageLayoutConfig = {
   tileSize: 32,
   mapWidthTiles: 80,
   mapHeightTiles: 8,
-  sourceTilesPerRow: 46,
+  sourceTilesPerRow: 20,
   tilesetKey: "street_clean_tileset",
   cameraYOffset: 0,
   walkLane: {
-    topY: 156,
+    topY: 182,
     bottomY: 226,
-    playerSpawnY: 202,
+    playerSpawnY: 204,
   },
   layers: [
     { id: "facade", depth: 80, alpha: 1, targetRows: [1, 2, 3], sourceRows: [0, 1, 2] },
-    { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [6] },
-    { id: "road", depth: 104, alpha: 1, targetRows: [5, 6], sourceRows: [7, 8] },
-    { id: "foreground_deco", depth: 236, alpha: 0.94, targetRows: [7], sourceRows: [10] },
+    { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [10] },
+    { id: "road", depth: 104, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
+    { id: "foreground_deco", depth: 236, alpha: 0.94, targetRows: [7], sourceRows: [9] },
   ],
   props: [
     {
@@ -34,17 +34,6 @@ export const market95Layout: StageLayoutConfig = {
       depthOffset: 0,
     },
     {
-      id: "window_a",
-      textureKey: "prop_window_panel",
-      x: 644,
-      y: 220,
-      originX: 0.5,
-      originY: 1,
-      scale: 2,
-      depthAnchorY: 214,
-      depthOffset: -2,
-    },
-    {
       id: "container_a",
       textureKey: "prop_container",
       x: 1110,
@@ -57,12 +46,12 @@ export const market95Layout: StageLayoutConfig = {
     },
   ],
   breakableProps: [
-    { id: "crate_1", textureKey: "prop_crate", x: 810, y: 214, originX: 0.5, originY: 1, scale: 2, maxHp: 26, points: 120 },
-    { id: "crate_2", textureKey: "prop_crate", x: 1530, y: 214, originX: 0.5, originY: 1, scale: 2, maxHp: 26, points: 120 },
+    { id: "crate_1", textureKey: "prop_crate", x: 810, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 26, points: 120 },
+    { id: "crate_2", textureKey: "prop_crate", x: 1530, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 26, points: 120 },
   ],
   collisionFootprints: [
     { id: "booth_a_feet", x: 560, y: 218, width: 66, height: 14, color: 0x00c5ff },
-    { id: "container_a_feet", x: 1110, y: 220, width: 148, height: 16, color: 0xff5f7c },
+    { id: "container_a_feet", x: 1110, y: 220, width: 96, height: 16, color: 0xff5f7c },
   ],
   parallaxBands: [
     { id: "skyline_far", textureKey: "city_far_band", y: 0, height: 88, depth: 2, alpha: 0.56, scrollFactor: 0.06 },

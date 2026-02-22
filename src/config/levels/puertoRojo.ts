@@ -7,19 +7,19 @@ export const puertoRojoLayout: StageLayoutConfig = {
   tileSize: 32,
   mapWidthTiles: 80,
   mapHeightTiles: 8,
-  sourceTilesPerRow: 46,
+  sourceTilesPerRow: 20,
   tilesetKey: "street_clean_tileset",
   cameraYOffset: 0,
   walkLane: {
-    topY: 158,
+    topY: 182,
     bottomY: 226,
     playerSpawnY: 204,
   },
   layers: [
-    { id: "facade", depth: 82, alpha: 0.96, targetRows: [1, 2, 3], sourceRows: [0, 2, 4] },
-    { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [6] },
-    { id: "road", depth: 106, alpha: 1, targetRows: [5, 6], sourceRows: [8, 9] },
-    { id: "foreground_deco", depth: 236, alpha: 0.95, targetRows: [7], sourceRows: [10] },
+    { id: "facade", depth: 82, alpha: 0.96, targetRows: [1, 2, 3], sourceRows: [0, 1, 2] },
+    { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [10] },
+    { id: "road", depth: 106, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
+    { id: "foreground_deco", depth: 236, alpha: 0.95, targetRows: [7], sourceRows: [9] },
   ],
   props: [
     {
@@ -34,17 +34,6 @@ export const puertoRojoLayout: StageLayoutConfig = {
       depthOffset: 0,
     },
     {
-      id: "window_harbor",
-      textureKey: "prop_window_panel",
-      x: 594,
-      y: 220,
-      originX: 0.5,
-      originY: 1,
-      scale: 2,
-      depthAnchorY: 214,
-      depthOffset: -2,
-    },
-    {
       id: "container_harbor",
       textureKey: "prop_container",
       x: 1260,
@@ -57,12 +46,12 @@ export const puertoRojoLayout: StageLayoutConfig = {
     },
   ],
   breakableProps: [
-    { id: "crate_final_1", textureKey: "prop_crate", x: 930, y: 214, originX: 0.5, originY: 1, scale: 2, maxHp: 28, points: 180 },
-    { id: "crate_final_2", textureKey: "prop_crate", x: 1760, y: 214, originX: 0.5, originY: 1, scale: 2, maxHp: 28, points: 180 },
+    { id: "crate_final_1", textureKey: "prop_crate", x: 930, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 28, points: 180 },
+    { id: "crate_final_2", textureKey: "prop_crate", x: 1760, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 28, points: 180 },
   ],
   collisionFootprints: [
     { id: "booth_harbor_feet", x: 510, y: 218, width: 66, height: 14, color: 0x65d9ff },
-    { id: "container_harbor_feet", x: 1260, y: 220, width: 148, height: 16, color: 0xff7998 },
+    { id: "container_harbor_feet", x: 1260, y: 220, width: 96, height: 16, color: 0xff7998 },
   ],
   parallaxBands: [
     { id: "skyline_far", textureKey: "city_far_band", y: 0, height: 90, depth: 2, alpha: 0.56, scrollFactor: 0.07 },

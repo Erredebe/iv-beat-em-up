@@ -7,19 +7,19 @@ export const playaNocheLayout: StageLayoutConfig = {
   tileSize: 32,
   mapWidthTiles: 80,
   mapHeightTiles: 8,
-  sourceTilesPerRow: 46,
+  sourceTilesPerRow: 20,
   tilesetKey: "street_clean_tileset",
   cameraYOffset: 0,
   walkLane: {
-    topY: 154,
+    topY: 180,
     bottomY: 224,
-    playerSpawnY: 200,
+    playerSpawnY: 202,
   },
   layers: [
-    { id: "facade", depth: 78, alpha: 0.92, targetRows: [1, 2, 3], sourceRows: [2, 3, 4] },
-    { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [6] },
-    { id: "road", depth: 106, alpha: 1, targetRows: [5, 6], sourceRows: [9, 10] },
-    { id: "foreground_deco", depth: 236, alpha: 0.9, targetRows: [7], sourceRows: [11] },
+    { id: "facade", depth: 78, alpha: 0.92, targetRows: [1, 2, 3], sourceRows: [1, 2, 0] },
+    { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [10] },
+    { id: "road", depth: 106, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
+    { id: "foreground_deco", depth: 236, alpha: 0.9, targetRows: [7], sourceRows: [9] },
   ],
   props: [
     {
@@ -34,17 +34,6 @@ export const playaNocheLayout: StageLayoutConfig = {
       depthOffset: 0,
     },
     {
-      id: "window_beach",
-      textureKey: "prop_window_panel",
-      x: 714,
-      y: 218,
-      originX: 0.5,
-      originY: 1,
-      scale: 2,
-      depthAnchorY: 212,
-      depthOffset: -2,
-    },
-    {
       id: "container_beach",
       textureKey: "prop_container",
       x: 1460,
@@ -57,12 +46,12 @@ export const playaNocheLayout: StageLayoutConfig = {
     },
   ],
   breakableProps: [
-    { id: "table_1", textureKey: "prop_crate", x: 870, y: 210, originX: 0.5, originY: 1, scale: 2, maxHp: 24, points: 150 },
-    { id: "table_2", textureKey: "prop_crate", x: 1610, y: 212, originX: 0.5, originY: 1, scale: 2, maxHp: 24, points: 150 },
+    { id: "table_1", textureKey: "prop_crate", x: 870, y: 216, originX: 0.5, originY: 1, scale: 1, maxHp: 24, points: 150 },
+    { id: "table_2", textureKey: "prop_crate", x: 1610, y: 216, originX: 0.5, originY: 1, scale: 1, maxHp: 24, points: 150 },
   ],
   collisionFootprints: [
     { id: "booth_beach_feet", x: 630, y: 216, width: 66, height: 14, color: 0x74dcff },
-    { id: "container_beach_feet", x: 1460, y: 216, width: 148, height: 16, color: 0xff8bb0 },
+    { id: "container_beach_feet", x: 1460, y: 216, width: 96, height: 16, color: 0xff8bb0 },
   ],
   parallaxBands: [
     { id: "skyline_far", textureKey: "city_far_band", y: 0, height: 86, depth: 2, alpha: 0.62, scrollFactor: 0.05 },

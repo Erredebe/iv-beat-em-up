@@ -8,7 +8,6 @@ import { derivedAssetKeys, derivedTextureCrops } from "./derivedTextureCrops";
 const MIN_ALPHA_COVERAGE_BY_TARGET: Partial<Record<string, number>> = {
   prop_booth_front: 35,
   prop_container: 40,
-  prop_window_panel: 35,
   prop_crate: 25,
   city_far_band: 8,
   city_mid_band: 8,

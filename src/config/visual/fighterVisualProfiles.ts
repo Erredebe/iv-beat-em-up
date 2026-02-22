@@ -60,24 +60,30 @@ function createConstantFrameOffsets(frameCount: number, yOffset: number): Sprite
   }));
 }
 
+function createFootLockOffsets(bottomPaddingByFrame: number[], lockedPad: number): SpritePixelOffset[] {
+  return bottomPaddingByFrame.map((bottomPad) => ({
+    x: 0,
+    y: bottomPad - lockedPad,
+  }));
+}
+
 function createVisualProfile(
   stateOffsets: Partial<Record<FighterState, Partial<SpritePixelOffset>>>,
   options: {
     shadowWidth: number;
     shadowHeight: number;
     shadowOffsetY: number;
-    idleBob?: number;
   },
 ): FighterVisualProfile {
   return {
     scale: 1,
     shadowWidth: options.shadowWidth,
     shadowHeight: options.shadowHeight,
-    spriteAnchorOffsetY: 0,
+    spriteAnchorOffsetY: 8,
     shadowOffsetY: options.shadowOffsetY,
     stateOffsetByState: createStateOffsets(stateOffsets),
     frameOffsetByClip: {
-      idle: createFrameOffsets(10, options.idleBob ?? 0),
+      idle: createFrameOffsets(10, 0),
       walk: createFrameOffsets(10, 0),
     },
   };
@@ -94,7 +100,7 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       KNOCKDOWN: { x: -8, y: 17 },
       DEAD: { x: -8, y: 17 },
     },
-    { shadowWidth: 38, shadowHeight: 10, shadowOffsetY: 1, idleBob: 1 },
+    { shadowWidth: 38, shadowHeight: 10, shadowOffsetY: 1 },
   ),
   marina: createVisualProfile(
     {
@@ -107,7 +113,7 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       KNOCKDOWN: { x: -8, y: 16 },
       DEAD: { x: -8, y: 16 },
     },
-    { shadowWidth: 34, shadowHeight: 9, shadowOffsetY: 1, idleBob: 1 },
+    { shadowWidth: 34, shadowHeight: 9, shadowOffsetY: 1 },
   ),
   meneillos: createVisualProfile(
     {
@@ -120,7 +126,7 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       KNOCKDOWN: { x: -8, y: 17 },
       DEAD: { x: -8, y: 17 },
     },
-    { shadowWidth: 36, shadowHeight: 10, shadowOffsetY: 1, idleBob: 1 },
+    { shadowWidth: 36, shadowHeight: 10, shadowOffsetY: 1 },
   ),
   enemy: createVisualProfile(
     {
@@ -133,9 +139,13 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       KNOCKDOWN: { x: -8, y: 17 },
       DEAD: { x: -8, y: 17 },
     },
-    { shadowWidth: 36, shadowHeight: 10, shadowOffsetY: 1, idleBob: 1 },
+    { shadowWidth: 36, shadowHeight: 10, shadowOffsetY: 1 },
   ),
 };
 
+fighterVisualProfiles.kastro.frameOffsetByClip.idle = createFootLockOffsets([9, 5, 3, 3, 5, 9, 13, 15, 15, 13], 9);
+fighterVisualProfiles.marina.frameOffsetByClip.idle = createFootLockOffsets([10, 6, 4, 4, 6, 10, 14, 16, 16, 14], 10);
+fighterVisualProfiles.meneillos.frameOffsetByClip.idle = createFootLockOffsets([9, 5, 3, 3, 5, 9, 13, 15, 15, 13], 9);
+fighterVisualProfiles.enemy.frameOffsetByClip.idle = createFootLockOffsets([9, 3, 0, 0, 3, 9, 15, 19, 19, 15], 9);
 fighterVisualProfiles.marina.frameOffsetByClip.knockdown = createConstantFrameOffsets(10, 15);
 fighterVisualProfiles.enemy.frameOffsetByClip.knockdown = createConstantFrameOffsets(10, 15);

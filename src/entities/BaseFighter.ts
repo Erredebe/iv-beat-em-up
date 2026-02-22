@@ -490,7 +490,7 @@ export class BaseFighter {
       scale: CHARACTER_SCALE as 1 | 2 | 3,
       shadowWidth: 22,
       shadowHeight: 8,
-      spriteAnchorOffsetY: -2,
+      spriteAnchorOffsetY: 8,
       shadowOffsetY: 3,
       baselineOffsetByState,
       stateOffsetByState,
