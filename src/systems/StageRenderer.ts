@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT } from "../config/constants";
-import type { StageLayoutConfig } from "../config/levels/street95Zone1";
+import type { StageLayoutConfig } from "../config/levels/stageTypes";
 import type { CollisionSystem } from "./CollisionSystem";
 import type { DepthSystem } from "./DepthSystem";
 
@@ -25,6 +25,7 @@ export class StageRenderer {
   private backgroundGradient: Phaser.GameObjects.Graphics | null = null;
   private gradeOverlay: Phaser.GameObjects.Rectangle | null = null;
   private neonTexts: Phaser.GameObjects.Text[] = [];
+  private rainOverlay: Phaser.GameObjects.Graphics | null = null;
 
   constructor(scene: Phaser.Scene, layout: StageLayoutConfig) {
     this.scene = scene;
@@ -94,8 +95,8 @@ export class StageRenderer {
         .image(config.x, config.y, config.textureKey)
         .setOrigin(config.originX, config.originY)
         .setScale(config.scale);
-      if (config.id === "crate") {
-        image.setTint(0x6f8f68).setAlpha(0.86);
+      if (config.id.includes("crate")) {
+        image.setTint(0x6f8f68).setAlpha(0.9);
       }
       depthSystem.register(image, config.depthOffset);
       return image;
@@ -170,6 +171,8 @@ export class StageRenderer {
     this.backgroundGradient = null;
     this.gradeOverlay?.destroy();
     this.gradeOverlay = null;
+    this.rainOverlay?.destroy();
+    this.rainOverlay = null;
     this.depthSystem = null;
   }
 
@@ -198,9 +201,22 @@ export class StageRenderer {
     gradient.setDepth(0);
     this.backgroundGradient = gradient;
 
-    const grade = this.scene.add.rectangle(worldWidth * 0.5, BASE_HEIGHT * 0.5, worldWidth, BASE_HEIGHT, 0x1a1130, 0.2);
+    const gradeAlpha = this.layout.ambientFx.fogAlpha ?? 0.2;
+    const gradeColor = this.layout.ambientFx.colorGrade ?? 0x1a1130;
+    const grade = this.scene.add.rectangle(worldWidth * 0.5, BASE_HEIGHT * 0.5, worldWidth, BASE_HEIGHT, gradeColor, gradeAlpha);
     grade.setDepth(3200);
     grade.setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.gradeOverlay = grade;
+
+    if (this.layout.ambientFx.rain) {
+      const rain = this.scene.add.graphics().setDepth(3210);
+      rain.lineStyle(1, 0xcce8ff, 0.11);
+      for (let x = 0; x < worldWidth; x += 24) {
+        for (let y = -24; y < BASE_HEIGHT; y += 30) {
+          rain.lineBetween(x, y, x + 6, y + 12);
+        }
+      }
+      this.rainOverlay = rain;
+    }
   }
 }

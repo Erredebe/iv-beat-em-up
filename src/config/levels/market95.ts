@@ -1,0 +1,76 @@
+import type { StageLayoutConfig } from "./stageTypes";
+import type { StageSpawnZoneConfig } from "./stageSpawnTypes";
+
+export const market95Layout: StageLayoutConfig = {
+  stageId: "market_95",
+  displayName: "MERCADO 95",
+  tileSize: 32,
+  mapWidthTiles: 80,
+  mapHeightTiles: 8,
+  sourceTilesPerRow: 46,
+  tilesetKey: "street_clean_tileset",
+  cameraYOffset: 0,
+  walkLane: {
+    topY: 156,
+    bottomY: 226,
+    playerSpawnY: 202,
+  },
+  layers: [
+    { id: "facade", depth: 80, alpha: 1, targetRows: [1, 2, 3], sourceRows: [0, 1, 2] },
+    { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [6] },
+    { id: "road", depth: 104, alpha: 1, targetRows: [5, 6], sourceRows: [7, 8] },
+    { id: "foreground_deco", depth: 236, alpha: 0.94, targetRows: [7], sourceRows: [10] },
+  ],
+  props: [
+    { id: "booth_a", textureKey: "prop_booth", x: 560, y: 212, originX: 0.5, originY: 1, scale: 2, depthOffset: -2 },
+    { id: "car_a", textureKey: "prop_car", x: 1110, y: 220, originX: 0.5, originY: 1, scale: 3, depthOffset: 0 },
+  ],
+  breakableProps: [
+    { id: "crate_1", textureKey: "prop_crate", x: 810, y: 214, originX: 0.5, originY: 1, scale: 2, maxHp: 26, points: 120 },
+    { id: "crate_2", textureKey: "prop_crate", x: 1530, y: 214, originX: 0.5, originY: 1, scale: 2, maxHp: 26, points: 120 },
+  ],
+  collisionFootprints: [
+    { id: "booth_a_feet", x: 560, y: 212, width: 112, height: 14, color: 0x00c5ff },
+    { id: "car_a_feet", x: 1110, y: 220, width: 74, height: 14, color: 0xff5f7c },
+  ],
+  parallaxBands: [
+    { id: "skyline_far", textureKey: "city_far_band", y: 0, height: 88, depth: 2, alpha: 0.56, scrollFactor: 0.06 },
+    { id: "skyline_mid", textureKey: "city_mid_band", y: 14, height: 92, depth: 3, alpha: 0.68, scrollFactor: 0.12 },
+    { id: "skyline_close", textureKey: "city_close_band", y: 24, height: 98, depth: 4, alpha: 0.78, scrollFactor: 0.2 },
+  ],
+  neonLabels: [
+    { x: 220, y: 72, text: "MERCADO SUR", color: "#ff4cb4", fontSize: "12px" },
+    { x: 822, y: 76, text: "FRUTA 24H", color: "#5cc9ff", fontSize: "10px" },
+    { x: 1390, y: 80, text: "BAR NAVAJA", color: "#ffe273", fontSize: "10px" },
+  ],
+  ambientFx: {
+    rain: false,
+    fogAlpha: 0.08,
+    colorGrade: 0x1a1130,
+  },
+};
+
+export const market95Spawns: StageSpawnZoneConfig[] = [
+  {
+    id: "market_zone_1",
+    triggerX: 340,
+    leftBarrierX: 92,
+    rightBarrierX: 880,
+    spawns: [
+      { x: 612, y: 204, archetype: "brawler" },
+      { x: 760, y: 196, archetype: "agile_f" },
+      { x: 840, y: 210, archetype: "rusher" },
+    ],
+  },
+  {
+    id: "market_zone_2",
+    triggerX: 1060,
+    leftBarrierX: 1020,
+    rightBarrierX: 1710,
+    spawns: [
+      { x: 1360, y: 212, archetype: "bat_wielder" },
+      { x: 1490, y: 194, archetype: "rusher" },
+      { x: 1620, y: 210, archetype: "tank" },
+    ],
+  },
+];

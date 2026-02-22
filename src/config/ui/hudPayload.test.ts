@@ -1,0 +1,31 @@
+import { describe, expect, it } from "vitest";
+import type { HudPayload } from "../../ui/HudScene";
+
+describe("hud payload contract", () => {
+  it("requires arcade HUD fields", () => {
+    const payload: HudPayload = {
+      playerHp: 120,
+      playerMaxHp: 130,
+      playerName: "BOXEADOR",
+      playerPortraitKey: "portrait_boxeador",
+      score: 1200,
+      timeRemainingSec: 99,
+      specialCooldownRatio: 0.5,
+      stageName: "MERCADO 95",
+      zoneId: "market_zone_1",
+      targetEnemy: null,
+      visibleEnemies: [],
+      controlsHintVisible: true,
+      isPaused: false,
+      isGameOver: false,
+      zoneMessage: null,
+      bindingHints: { keyboard: [], gamepad: [] },
+      objectiveText: "",
+    };
+
+    expect(payload.playerName.length).toBeGreaterThan(0);
+    expect(payload.timeRemainingSec).toBeGreaterThanOrEqual(0);
+    expect(payload.specialCooldownRatio).toBeGreaterThanOrEqual(0);
+    expect(payload.specialCooldownRatio).toBeLessThanOrEqual(1);
+  });
+});

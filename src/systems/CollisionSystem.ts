@@ -35,20 +35,26 @@ export class CollisionSystem {
   private readonly scene: Phaser.Scene;
   private readonly obstacles: Phaser.Physics.Arcade.StaticGroup;
   private readonly walkLane: WalkLaneBounds;
+  private readonly worldWidth: number;
   private debugEnabled = false;
 
-  constructor(scene: Phaser.Scene, walkLane: WalkLaneBounds = DEFAULT_WALK_LANE) {
+  constructor(scene: Phaser.Scene, walkLane: WalkLaneBounds = DEFAULT_WALK_LANE, worldWidth = WORLD_WIDTH) {
     this.scene = scene;
     this.walkLane = {
       topY: walkLane.topY,
       bottomY: walkLane.bottomY,
     };
-    this.scene.physics.world.setBounds(0, this.walkLane.topY, WORLD_WIDTH, this.walkLane.bottomY - this.walkLane.topY);
+    this.worldWidth = worldWidth;
+    this.scene.physics.world.setBounds(0, this.walkLane.topY, this.worldWidth, this.walkLane.bottomY - this.walkLane.topY);
     this.obstacles = scene.physics.add.staticGroup();
   }
 
   getWalkLane(): WalkLaneBounds {
     return this.walkLane;
+  }
+
+  getWorldWidth(): number {
+    return this.worldWidth;
   }
 
   registerGroundObstacle(config: GroundObstacleConfig): GroundObstacle {

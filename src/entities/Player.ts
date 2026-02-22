@@ -1,4 +1,5 @@
 import { SPECIAL_COOLDOWN_MS, SPECIAL_HP_COST_RATIO } from "../config/constants";
+import type { PlayableCharacterProfile } from "../config/gameplay/playableRoster";
 import type { AttackFrameData, AttackId } from "../types/combat";
 import { BaseFighter } from "./BaseFighter";
 import type { InputManager } from "../systems/InputManager";
@@ -51,6 +52,14 @@ export class Player extends BaseFighter {
     return events;
   }
 
+  getSpecialCooldownRatio(nowMs: number): number {
+    if (nowMs >= this.specialCooldownUntil) {
+      return 1;
+    }
+    const remaining = this.specialCooldownUntil - nowMs;
+    return Math.max(0, 1 - remaining / SPECIAL_COOLDOWN_MS);
+  }
+
   private handleComboQueue(input: InputManager): void {
     if (!this.isPerformingAttack()) {
       return;
@@ -85,13 +94,45 @@ export class Player extends BaseFighter {
   }
 }
 
-export function buildPlayerAttackData(raw: Record<string, AttackFrameData>): Record<AttackId, AttackFrameData> {
+function scaleFrameData(base: AttackFrameData, profile: PlayableCharacterProfile): AttackFrameData {
+  const comboWindowStart = base.comboWindowStart !== undefined
+    ? Math.max(1, base.comboWindowStart - profile.comboWindowBonusFrames)
+    : undefined;
+  const comboWindowEnd = base.comboWindowEnd !== undefined
+    ? Math.max(1, base.comboWindowEnd + profile.comboWindowBonusFrames)
+    : undefined;
+
   return {
-    ATTACK_1: raw.ATTACK_1,
-    ATTACK_2: raw.ATTACK_2,
-    ATTACK_3: raw.ATTACK_3,
-    AIR_ATTACK: raw.AIR_ATTACK,
-    SPECIAL: raw.SPECIAL,
-    ENEMY_ATTACK: raw.ATTACK_1,
+    ...base,
+    totalFrames: Math.max(8, Math.round(base.totalFrames / profile.comboSpeedMultiplier)),
+    activeStart: Math.max(1, Math.round(base.activeStart / profile.comboSpeedMultiplier)),
+    activeEnd: Math.max(1, Math.round(base.activeEnd / profile.comboSpeedMultiplier)),
+    recoveryStart: Math.max(1, Math.round(base.recoveryStart / profile.comboSpeedMultiplier)),
+    comboWindowStart,
+    comboWindowEnd,
+    damage: Math.max(1, Math.round(base.damage * profile.damageMultiplier)),
+    visualClipId: base.visualClipId,
+  };
+}
+
+export function buildPlayerAttackData(
+  raw: Record<string, AttackFrameData>,
+  profile: PlayableCharacterProfile,
+): Record<AttackId, AttackFrameData> {
+  const withClips = {
+    ATTACK_1: { ...raw.ATTACK_1, visualClipId: "attack1" as const },
+    ATTACK_2: { ...raw.ATTACK_2, visualClipId: "attack2" as const },
+    ATTACK_3: { ...raw.ATTACK_3, visualClipId: "attack3" as const },
+    AIR_ATTACK: { ...raw.AIR_ATTACK, visualClipId: "airAttack" as const },
+    SPECIAL: { ...raw.SPECIAL, visualClipId: "special" as const },
+  };
+
+  return {
+    ATTACK_1: scaleFrameData(withClips.ATTACK_1, profile),
+    ATTACK_2: scaleFrameData(withClips.ATTACK_2, profile),
+    ATTACK_3: scaleFrameData(withClips.ATTACK_3, profile),
+    AIR_ATTACK: scaleFrameData(withClips.AIR_ATTACK, profile),
+    SPECIAL: scaleFrameData(withClips.SPECIAL, profile),
+    ENEMY_ATTACK: scaleFrameData(withClips.ATTACK_1, profile),
   };
 }

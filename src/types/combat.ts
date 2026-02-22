@@ -22,6 +22,13 @@ export type AttackId =
   | "SPECIAL"
   | "ENEMY_ATTACK";
 
+export type AttackVisualClipId =
+  | "attack1"
+  | "attack2"
+  | "attack3"
+  | "airAttack"
+  | "special";
+
 export interface Rect {
   x: number;
   y: number;
@@ -53,6 +60,7 @@ export interface AttackFrameData {
   nextAttack?: AttackId;
   hitbox: HitboxShape;
   grantsInvulnMs?: number;
+  visualClipId?: AttackVisualClipId;
 }
 
 export interface DamageEvent {
@@ -64,4 +72,3 @@ export interface DamageEvent {
   knockdownDurationMs: number;
   sourceX: number;
 }
-

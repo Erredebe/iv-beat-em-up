@@ -1,63 +1,24 @@
 # Spain 90
 
-`Spain 90` es un juego beat 'em up 2D con pixel art, inspirado en la energia urbana de la Espana de mediados de los 90.
+`Spain 90` es un beat 'em up 2D arcade con ambientacion de Espana urbana (1995), ahora con pipeline visual tipo CPS, campana por 4 escenarios y roster jugable.
 
-## De que va el proyecto
+## Que incluye esta version
 
-Controlas a un ex-boxeador de barrio que vuelve a su distrito y encuentra las calles tomadas por bandas, extorsion y negocios tapadera.  
-La historia avanza zona a zona: limpias la calle, derrotas cabecillas y recuperas el control del barrio.
+- 3 personajes jugables (`boxeador`, `veloz`, `tecnico`) con stats y frame-data propios
+- 6 clases de enemigos (`brawler`, `rusher`, `tank`, `agile_f`, `bat_wielder`, `mini_boss`)
+- 4 escenarios de campana:
+  - `market_95`
+  - `metro_sur`
+  - `playa_noche`
+  - `puerto_rojo`
+- Seleccion de personaje y escena de introduccion
+- HUD arcade ampliado: nombre, retrato, vida, especial, score, tiempo, objetivo y target enemigo
+- Props rompibles con puntuacion
+- Sistema de features por flags (`src/config/features.ts`) con overrides por query/localStorage
+- Pack de assets `arcade_90` activo por defecto + fallback `legacy_sms`
+- Tests de manifiesto legal, crops, layouts, roster, animaciones y contratos HUD
 
-Incluye:
-- Combate con estados (idle, walk, hit, knockdown, getup, ataques y especial)
-- Sistema de spawn por zonas con barreras temporales
-- Escenario con tilemap, props y parallax
-- HUD de vida/objetivo y ayudas de control
-- Debug visual (`F1`) y editor de nivel en runtime (`F2`)
-- Tests de configuracion, layout y consistencia visual de sprites/crops
-
-## Lore y ambientacion
-
-### Espana, 1995
-
-El pais vive una mezcla de modernizacion y tension social:
-- periferias industriales en cambio
-- carteles de neones, bares de barrio, recreativos y mercado nocturno
-- choque entre cultura local, influencias punk, rap y electronica
-
-En ese contexto, el barrio del protagonista esta dividido en "zonas calientes".  
-Cada zona tiene su propio control territorial, su estilo visual y su ritmo de combate.
-
-### Tono narrativo
-
-- Callejero y directo
-- Violencia arcade estilizada, no realista
-- Heroe de barrio contra estructuras corruptas
-- Progresion de "calle libre" hacia "territorio recuperado"
-
-### Facciones (base narrativa)
-
-- **La Cadena**: matones de extorsion y control de comercios.
-- **Norte 32**: pandilla agresiva ligada a almacenes y rutas nocturnas.
-- **Los Grises**: seguridad privada corrupta que protege a los jefes.
-
-Estas facciones pueden convertirse en enemigos y jefes por zona en futuras iteraciones.
-
-## Direccion artistica
-
-### Estilo visual
-
-- Pixel art 16-bit con escala x3 para personajes
-- Paleta nocturna: azules frios, magentas, rojos de ladrillo y neones puntuales
-- Escenarios urbanos densos: persianas metalicas, muros de ladrillo, calle sucia y mobiliario de barrio
-- Parallax para dar profundidad sin perder lectura del combate
-
-### Estilo sonoro
-
-- Loops arcade/retro para exploracion y combate
-- SFX secos y contundentes para golpes, salto y knockdown
-- Ritmo general rapido, con identidad de recreativa noventera
-
-## Stack tecnico
+## Stack
 
 - `TypeScript`
 - `Phaser 3`
@@ -66,38 +27,40 @@ Estas facciones pueden convertirse en enemigos y jefes por zona en futuras itera
 
 ## Estructura principal
 
-- `src/scenes/`: escenas de juego (`Boot`, `Preload`, `Street`)
-- `src/entities/`: entidades jugables (`BaseFighter`, `Player`, `EnemyBasic`)
-- `src/systems/`: sistemas de combate, colision, profundidad, spawn, audio, etc.
-- `src/config/`: constantes, niveles, assets y perfiles visuales
-- `public/assets/external/`: sprites, fondos y audio en runtime
-- `ASSETS.md`: trazabilidad legal/licencias de assets
+- `src/scenes/`: `Boot`, `Preload`, `Title`, `CharacterSelect`, `Intro`, `Street`
+- `src/entities/`: `BaseFighter`, `Player`, `EnemyBasic`
+- `src/systems/`: combate, colision, spawn, profundidad, audio, stage renderer, breakables
+- `src/config/gameplay/`: roster jugable, roster enemigo, campana y estado de sesion
+- `src/config/levels/`: catalogo y layouts de escenarios
+- `src/config/assets/`: manifiestos por pack y crops derivados
+- `public/assets/external/arcade/`: pack arcade runtime
+- `ASSETS.md`: trazabilidad legal/licencias
 
 ## Requisitos
 
 - Node.js 18+ (recomendado 20+)
 - npm
 
-## Como ejecutar
+## Ejecutar
 
 ```bash
 npm install
 npm run dev
 ```
 
-Compilar produccion:
+Build produccion:
 
 ```bash
 npm run build
 ```
 
-Previsualizar build:
+Preview build:
 
 ```bash
 npm run preview
 ```
 
-Ejecutar tests:
+Tests:
 
 ```bash
 npm test
@@ -109,10 +72,11 @@ Teclado:
 - Mover: `Flechas`
 - Ataque: `Z`
 - Salto: `X`
-- Especial: `C` (consume vida)
-- Pausa/Ayuda: `ESC`
-- Debug hitboxes/visuales: `F1`
-- Editor de nivel: `F2`
+- Especial: `C`
+- Pausa: `ESC`
+- Confirmar UI: `ENTER`
+- Debug: `F1`
+- Editor runtime: `F2`
 
 Gamepad:
 - Mover: `D-Pad / Stick izquierdo`
@@ -121,11 +85,30 @@ Gamepad:
 - Especial: `X / Square / LT`
 - Pausa: `Start / Options`
 
-## Estado del proyecto
+## Feature flags (QA)
 
-Proyecto orientado a pulido visual y estabilidad de gameplay base.
-Si vas a anadir contenido nuevo (niveles, enemigos, animaciones), revisa primero:
-- `src/config/levels/street95Zone1.ts`
-- `src/config/visual/fighterVisualProfiles.ts`
-- `src/config/assets/assetManifest.ts`
-- `src/config/assets/derivedTextureCrops.ts`
+Archivo: `src/config/features.ts`
+
+- `arcadeArt`
+- `combatRework`
+- `enemyRoster`
+- `stagePack`
+- `arcadeHud`
+- `characterSelect`
+- `storyIntro`
+- `breakableProps`
+- `enhancedSfx`
+
+Override por URL (ejemplo):
+- `?ff_arcadeArt=0`
+- `?ff_storyIntro=0`
+
+## Estado actual
+
+La base tecnica del upgrade arcade esta integrada y funcional con assets placeholder generados en runtime para el pack `arcade_90`.
+
+Si vas a seguir puliendo contenido final (arte/audio), revisa primero:
+- `src/config/assets/packs/arcadeManifest.ts`
+- `src/config/visual/fighterAnimationSets.ts`
+- `src/config/levels/stageCatalog.ts`
+- `src/scenes/StreetScene.ts`

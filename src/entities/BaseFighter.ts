@@ -7,7 +7,14 @@ import {
   JUMP_GRAVITY,
   JUMP_INITIAL_VELOCITY,
 } from "../config/constants";
-import type { FighterVisualProfile, SpritePixelOffset, TextureStateId } from "../config/visual/fighterVisualProfiles";
+import { isFeatureEnabled } from "../config/features";
+import {
+  getAnimationKey,
+  getFighterAnimationSet,
+  type AnimationClipId,
+  type FighterAnimationSet,
+} from "../config/visual/fighterAnimationSets";
+import type { FighterVisualProfile, SpritePixelOffset } from "../config/visual/fighterVisualProfiles";
 import { isFrameActive, isFrameInComboWindow } from "../systems/combatMath";
 import type { AttackFrameData, AttackId, DamageEvent, FighterState, Rect, Team } from "../types/combat";
 
@@ -20,16 +27,10 @@ interface AttackRuntime {
   queuedNextAttack: AttackId | null;
 }
 
-interface ResolvedTextureState {
-  key: string;
-  frame: number;
-  textureStateId: TextureStateId;
-}
-
 export interface FighterVisualDebugInfo {
   textureKey: string;
   frame: number;
-  textureStateId: TextureStateId;
+  textureStateId: string;
   appliedOffset: SpritePixelOffset;
   baselineY: number;
   footY: number;
@@ -59,7 +60,7 @@ interface FighterOptions {
   team: Team;
   x: number;
   y: number;
-  texture: string;
+  texture: "player" | "enemy";
   maxHp: number;
   moveSpeed: number;
   attackData: Record<AttackId, AttackFrameData>;
@@ -70,8 +71,8 @@ export class BaseFighter {
   readonly id: string;
   readonly team: Team;
   readonly footCollider: Phaser.Physics.Arcade.Image;
-  readonly sprite: Phaser.GameObjects.Image;
-  readonly spriteOutline: Phaser.GameObjects.Image;
+  readonly sprite: Phaser.GameObjects.Sprite;
+  readonly spriteOutline: Phaser.GameObjects.Sprite;
   readonly shadow: Phaser.GameObjects.Ellipse;
   state: FighterState = "IDLE";
   facing: 1 | -1 = 1;
@@ -91,11 +92,12 @@ export class BaseFighter {
   private jumpHeight = 0;
   private jumpVelocity = 0;
   private airborne = false;
-  private readonly skinPrefix: string;
   private visualProfile: FighterVisualProfile;
-  private animationElapsed = 0;
-  private walkFrame = 0;
-  private currentTextureState: ResolvedTextureState;
+  private animationSet: FighterAnimationSet;
+  private animationOwner: "player" | "enemy";
+  private currentClipId: AnimationClipId;
+  private currentClipScaleMultiplier = 1;
+  private forceClipRestart = false;
   private lastAppliedOffset: SpritePixelOffset = { x: 0, y: 0 };
   private lastBaselineY = 0;
 
@@ -106,13 +108,12 @@ export class BaseFighter {
     this.hp = options.maxHp;
     this.moveSpeed = options.moveSpeed;
     this.attackData = options.attackData;
-    this.skinPrefix = options.texture;
     this.visualProfile = options.visualProfile ?? this.createDefaultVisualProfile();
-    this.currentTextureState = {
-      key: `${this.skinPrefix}_idle_strip4`,
-      frame: 0,
-      textureStateId: "idle_strip4",
-    };
+    this.animationOwner = options.texture;
+    this.animationSet = getFighterAnimationSet(this.animationOwner);
+    this.currentClipId = this.animationSet.idleClip;
+    const initialTexture = this.animationSet.clips[this.currentClipId].textureKey;
+
     this.lastBaselineY = options.y + this.visualProfile.spriteAnchorOffsetY;
 
     this.shadow = scene.add
@@ -126,15 +127,17 @@ export class BaseFighter {
       )
       .setOrigin(0.5, 0.5);
 
-    this.spriteOutline = scene.add.image(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, `${this.skinPrefix}_idle_strip4`, 0);
+    this.spriteOutline = scene.add.sprite(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, initialTexture, 0);
     this.spriteOutline.setOrigin(0.5, 1);
     this.spriteOutline.setScale(this.visualProfile.scale);
     this.spriteOutline.setTint(0x101010);
     this.spriteOutline.setAlpha(0.6);
 
-    this.sprite = scene.add.image(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, `${this.skinPrefix}_idle_strip4`, 0);
+    this.sprite = scene.add.sprite(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, initialTexture, 0);
     this.sprite.setOrigin(0.5, 1);
     this.sprite.setScale(this.visualProfile.scale);
+
+    this.playClip(this.currentClipId, true);
 
     this.footCollider = scene.physics.add.image(options.x, options.y, "utility-white");
     this.footCollider.setDisplaySize(FOOT_COLLIDER_WIDTH, FOOT_COLLIDER_HEIGHT);
@@ -148,8 +151,9 @@ export class BaseFighter {
   setVisualProfile(profile: FighterVisualProfile): void {
     this.visualProfile = profile;
     this.shadow.setSize(profile.shadowWidth + 2, profile.shadowHeight + 1);
-    this.spriteOutline.setScale(profile.scale);
-    this.sprite.setScale(profile.scale);
+    const scale = profile.scale * this.currentClipScaleMultiplier;
+    this.spriteOutline.setScale(scale);
+    this.sprite.setScale(scale);
   }
 
   get x(): number {
@@ -195,7 +199,7 @@ export class BaseFighter {
     this.updateJump(deltaMs);
     this.updateAttack(deltaMs);
     this.applyVelocity(deltaMs);
-    this.updateSpriteAnimation(deltaMs);
+    this.updateSpriteAnimation();
     this.syncVisual();
     this.updateVisualTone(nowMs);
   }
@@ -260,6 +264,7 @@ export class BaseFighter {
       queuedNextAttack: null,
     };
     this.applyStateForAttack(attackId);
+    this.forceClipRestart = true;
     return true;
   }
 
@@ -339,18 +344,18 @@ export class BaseFighter {
 
     if (this.state === "KNOCKDOWN") {
       return {
-        x: this.x - 16,
-        y: this.y - 13,
-        width: 32,
-        height: 13,
+        x: this.x - 30,
+        y: this.y - 20,
+        width: 60,
+        height: 20,
       };
     }
 
     return {
-      x: this.x - 10,
-      y: this.y - 36 - this.jumpHeight,
-      width: 20,
-      height: 34,
+      x: this.x - 20,
+      y: this.y - 84 - this.jumpHeight,
+      width: 40,
+      height: 78,
     };
   }
 
@@ -371,17 +376,20 @@ export class BaseFighter {
     if (this.hp <= 0) {
       this.state = "DEAD";
       this.clearMoveIntent();
+      this.forceClipRestart = true;
       return true;
     }
 
     if (event.causesKnockdown) {
       this.state = "KNOCKDOWN";
       this.knockdownUntil = nowMs + event.knockdownDurationMs;
+      this.forceClipRestart = true;
       return true;
     }
 
     this.state = "HIT";
     this.hitUntil = nowMs + event.hitStunMs;
+    this.forceClipRestart = true;
     return true;
   }
 
@@ -397,6 +405,7 @@ export class BaseFighter {
     this.jumpHeight = 1;
     this.jumpVelocity = JUMP_INITIAL_VELOCITY;
     this.state = "JUMP";
+    this.forceClipRestart = true;
     return true;
   }
 
@@ -416,9 +425,9 @@ export class BaseFighter {
 
   getVisualDebugInfo(): FighterVisualDebugInfo {
     return {
-      textureKey: this.currentTextureState.key,
-      frame: this.currentTextureState.frame,
-      textureStateId: this.currentTextureState.textureStateId,
+      textureKey: this.animationSet.clips[this.currentClipId].textureKey,
+      frame: Number(this.sprite.frame.name),
+      textureStateId: this.currentClipId,
       appliedOffset: {
         x: this.lastAppliedOffset.x,
         y: this.lastAppliedOffset.y,
@@ -446,13 +455,14 @@ export class BaseFighter {
       shadowOffsetY: 3,
       baselineOffsetByState,
       stateOffsetByState,
-      frameOffsetByTexture: {},
+      frameOffsetByClip: {},
     };
   }
 
   private updateTimers(nowMs: number): void {
     if (this.state === "HIT" && nowMs >= this.hitUntil) {
       this.state = this.airborne ? "JUMP" : "IDLE";
+      this.forceClipRestart = true;
     }
 
     if (this.state === "KNOCKDOWN" && nowMs >= this.knockdownUntil) {
@@ -460,10 +470,12 @@ export class BaseFighter {
       this.getupUntil = nowMs + 520;
       this.externalVelocity.x = 0;
       this.externalVelocity.y = 0;
+      this.forceClipRestart = true;
     }
 
     if (this.state === "GETUP" && nowMs >= this.getupUntil) {
       this.state = "IDLE";
+      this.forceClipRestart = true;
     }
   }
 
@@ -482,6 +494,7 @@ export class BaseFighter {
       this.airborne = false;
       if (this.state === "JUMP") {
         this.state = "IDLE";
+        this.forceClipRestart = true;
       }
     }
   }
@@ -515,6 +528,7 @@ export class BaseFighter {
     } else {
       this.state = "IDLE";
     }
+    this.forceClipRestart = true;
   }
 
   private applyVelocity(deltaMs: number): void {
@@ -550,7 +564,11 @@ export class BaseFighter {
     }
 
     if (!lockedMove && !this.airborne && !this.attackRuntime && this.state !== "HIT" && this.state !== "GETUP") {
-      this.state = moveX !== 0 || moveY !== 0 ? "WALK" : "IDLE";
+      const nextState = moveX !== 0 || moveY !== 0 ? "WALK" : "IDLE";
+      if (this.state !== nextState) {
+        this.state = nextState;
+        this.forceClipRestart = true;
+      }
     }
   }
 
@@ -559,7 +577,7 @@ export class BaseFighter {
     this.shadow.setAlpha(Phaser.Math.Clamp(1 - this.jumpHeight / 120, 0.25, 1));
 
     const stateOffset = this.getStateOffset(this.state);
-    const frameOffset = this.getFrameOffset(this.currentTextureState.textureStateId, this.currentTextureState.frame);
+    const frameOffset = this.getFrameOffset(this.currentClipId, Number(this.sprite.frame.name));
     const totalOffsetX = stateOffset.x + frameOffset.x;
     const appliedOffsetX = this.facing < 0 ? -totalOffsetX : totalOffsetX;
     const appliedOffsetY = stateOffset.y + frameOffset.y;
@@ -590,12 +608,13 @@ export class BaseFighter {
     return ZERO_OFFSET;
   }
 
-  private getFrameOffset(textureStateId: TextureStateId, frame: number): SpritePixelOffset {
-    const offsets = this.visualProfile.frameOffsetByTexture[textureStateId];
+  private getFrameOffset(clipId: AnimationClipId, frame: number): SpritePixelOffset {
+    const offsets = this.visualProfile.frameOffsetByClip[clipId];
     if (!offsets || offsets.length === 0) {
       return ZERO_OFFSET;
     }
-    return offsets[frame] ?? ZERO_OFFSET;
+    const index = Number.isFinite(frame) ? Math.max(0, frame) : 0;
+    return offsets[index] ?? ZERO_OFFSET;
   }
 
   private updateVisualTone(nowMs: number): void {
@@ -627,51 +646,81 @@ export class BaseFighter {
     this.spriteOutline.setAlpha(0.6);
   }
 
-  private updateSpriteAnimation(deltaMs: number): void {
-    this.animationElapsed += deltaMs;
-    if (this.animationElapsed >= 130) {
-      this.walkFrame = (this.walkFrame + 1) % 4;
-      this.animationElapsed = 0;
+  private updateSpriteAnimation(): void {
+    const nextClip = this.resolveClipForState(this.state);
+    if (this.currentClipId !== nextClip || this.forceClipRestart) {
+      this.playClip(nextClip, true);
+      this.forceClipRestart = false;
+      return;
     }
 
-    const stateTexture = this.resolveTextureForState(this.state);
-    this.currentTextureState = stateTexture;
-    const currentFrame = Number(this.sprite.frame.name);
-    if (this.sprite.texture.key !== stateTexture.key || Number.isNaN(currentFrame) || currentFrame !== stateTexture.frame) {
-      this.sprite.setTexture(stateTexture.key, stateTexture.frame);
-      this.spriteOutline.setTexture(stateTexture.key, stateTexture.frame);
+    const currentAnim = this.sprite.anims.currentAnim;
+    if (!currentAnim) {
+      this.playClip(nextClip, true);
     }
   }
 
-  private resolveTextureForState(state: FighterState): ResolvedTextureState {
+  private resolveClipForState(state: FighterState): AnimationClipId {
     if (state === "WALK") {
-      return { key: `${this.skinPrefix}_walk_strip4`, frame: this.walkFrame, textureStateId: "walk_strip4" };
+      return "walk";
     }
     if (state === "IDLE" || state === "JUMP") {
-      return { key: `${this.skinPrefix}_idle_strip4`, frame: this.walkFrame, textureStateId: "idle_strip4" };
+      return "idle";
     }
     if (state === "ATTACK_1") {
-      return { key: `${this.skinPrefix}_punch1`, frame: 0, textureStateId: "punch1" };
+      return "attack1";
     }
-    if (state === "ATTACK_2" || state === "ATTACK_3") {
-      return { key: `${this.skinPrefix}_punch2`, frame: 0, textureStateId: "punch2" };
+    if (state === "ATTACK_2") {
+      return "attack2";
+    }
+    if (state === "ATTACK_3") {
+      return "attack3";
     }
     if (state === "AIR_ATTACK") {
-      return { key: `${this.skinPrefix}_kick1`, frame: 0, textureStateId: "kick1" };
+      return "airAttack";
     }
     if (state === "SPECIAL") {
-      return { key: `${this.skinPrefix}_kick2`, frame: 0, textureStateId: "kick2" };
+      return "special";
     }
     if (state === "HIT") {
-      return { key: `${this.skinPrefix}_hurt`, frame: 0, textureStateId: "hurt" };
+      return "hurt";
     }
     if (state === "KNOCKDOWN" || state === "DEAD") {
-      return { key: `${this.skinPrefix}_knockdown`, frame: 0, textureStateId: "knockdown" };
+      return "knockdown";
     }
     if (state === "GETUP") {
-      return { key: `${this.skinPrefix}_getup`, frame: 0, textureStateId: "getup" };
+      return "getup";
     }
-    return { key: `${this.skinPrefix}_idle_strip4`, frame: 0, textureStateId: "idle_strip4" };
+    return "idle";
+  }
+
+  private playClip(clipId: AnimationClipId, restart = false): void {
+    this.currentClipId = clipId;
+    this.currentClipScaleMultiplier = this.getClipScaleMultiplier(clipId);
+    const scale = this.visualProfile.scale * this.currentClipScaleMultiplier;
+    this.sprite.setScale(scale);
+    this.spriteOutline.setScale(scale);
+    const key = getAnimationKey(this.animationOwner, clipId);
+    this.sprite.play(key, restart);
+    this.spriteOutline.play(key, restart);
+  }
+
+  private getClipScaleMultiplier(clipId: AnimationClipId): number {
+    if (!isFeatureEnabled("arcadeArt")) {
+      return 1;
+    }
+
+    if (
+      clipId === "attack1" ||
+      clipId === "attack2" ||
+      clipId === "attack3" ||
+      clipId === "airAttack" ||
+      clipId === "special"
+    ) {
+      return 1.5;
+    }
+
+    return 1;
   }
 
   private applyStateForAttack(attackId: AttackId): void {

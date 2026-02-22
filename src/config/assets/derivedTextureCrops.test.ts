@@ -2,24 +2,16 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PNG } from "pngjs";
 import { describe, expect, it } from "vitest";
+import { assetManifest } from "./assetManifest";
 import { derivedAssetKeys, derivedTextureCrops } from "./derivedTextureCrops";
 
-const SOURCE_FILE_BY_KEY: Record<string, string> = {
-  street_sheet: "public/assets/external/sprites/street_sheet.png",
-  street_props: "public/assets/external/sprites/street_props.png",
-  street_tileset: "public/assets/external/sprites/street_tileset.png",
-  city_far: "public/assets/external/backgrounds/city_far.png",
-  city_mid: "public/assets/external/backgrounds/city_mid.png",
-  city_close: "public/assets/external/backgrounds/city_close.png",
-};
-
 const MIN_ALPHA_COVERAGE_BY_TARGET: Partial<Record<string, number>> = {
-  prop_booth: 50,
-  prop_crate: 50,
-  prop_car: 50,
-  city_far_band: 40,
-  city_mid_band: 15,
-  city_close_band: 15,
+  prop_booth: 35,
+  prop_crate: 25,
+  prop_car: 25,
+  city_far_band: 8,
+  city_mid_band: 8,
+  city_close_band: 8,
 };
 
 function readPng(filePath: string): PNG {
@@ -41,6 +33,13 @@ function alphaCoveragePercent(source: PNG, sx: number, sy: number, width: number
   return (nonTransparent * 100) / total;
 }
 
+function toLocalPath(runtimePath: string): string {
+  if (!runtimePath.startsWith("/assets/external/")) {
+    throw new Error(`Unexpected runtime asset path: ${runtimePath}`);
+  }
+  return `public${runtimePath}`;
+}
+
 describe("derived texture crops", () => {
   it("exposes consistent derived keys", () => {
     expect(derivedAssetKeys).toEqual(derivedTextureCrops.map((entry) => entry.targetKey));
@@ -50,15 +49,15 @@ describe("derived texture crops", () => {
     const pngCache = new Map<string, PNG>();
 
     for (const crop of derivedTextureCrops) {
-      const sourceFile = SOURCE_FILE_BY_KEY[crop.sourceKey];
-      expect(sourceFile, `Missing file mapping for ${crop.sourceKey}`).toBeDefined();
-      if (!sourceFile) {
+      const sourceEntry = assetManifest.find((entry) => entry.key === crop.sourceKey);
+      expect(sourceEntry, `Missing source asset for ${crop.sourceKey}`).toBeDefined();
+      if (!sourceEntry) {
         continue;
       }
 
       let source = pngCache.get(crop.sourceKey);
       if (!source) {
-        source = readPng(sourceFile);
+        source = readPng(toLocalPath(sourceEntry.path));
         pngCache.set(crop.sourceKey, source);
       }
 

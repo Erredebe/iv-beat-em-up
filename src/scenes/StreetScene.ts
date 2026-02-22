@@ -1,5 +1,8 @@
 import Phaser from "phaser";
+import boxeadorComboRaw from "../config/frameData/boxeador.combo.json";
 import playerComboRaw from "../config/frameData/player.combo.json";
+import tecnicoComboRaw from "../config/frameData/tecnico.combo.json";
+import velozComboRaw from "../config/frameData/veloz.combo.json";
 import {
   BASE_HEIGHT,
   BASE_WIDTH,
@@ -7,21 +10,20 @@ import {
   DEBUG_TOGGLE_KEY,
   ENEMY_MAX_HP,
   ENEMY_MOVE_SPEED,
-  LANE_BOTTOM,
-  LANE_TOP,
-  PLAYER_MAX_HP,
-  PLAYER_MOVE_SPEED,
   PLAYER_SPAWN_X,
-  PLAYER_SPAWN_Y,
   TARGET_ENEMY_TTL_MS,
-  WORLD_WIDTH,
 } from "../config/constants";
-import { street95Zone1Layout } from "../config/levels/street95Zone1";
-import { street95Zone1Spawns } from "../config/levels/street95Zone1Spawns";
+import { getNextStageId } from "../config/gameplay/campaign";
+import { featureFlags } from "../config/features";
+import { getPlayableCharacter } from "../config/gameplay/playableRoster";
+import { getSessionState, resetSessionState, updateSessionState } from "../config/gameplay/sessionState";
+import { getStageBundle, type StageBundle } from "../config/levels/stageCatalog";
 import { fighterVisualProfiles } from "../config/visual/fighterVisualProfiles";
+import { ensureFighterAnimations } from "../config/visual/fighterAnimationSets";
 import { EnemyBasic, buildEnemyAttackData, type EnemyArchetype } from "../entities/EnemyBasic";
 import { Player, buildPlayerAttackData } from "../entities/Player";
 import { AudioSystem } from "../systems/AudioSystem";
+import { BreakablePropSystem } from "../systems/BreakablePropSystem";
 import { CollisionSystem } from "../systems/CollisionSystem";
 import { CombatSystem } from "../systems/CombatSystem";
 import { DepthSystem } from "../systems/DepthSystem";
@@ -38,6 +40,15 @@ interface TargetEnemyTracker {
   expiresAt: number;
 }
 
+const ENEMY_POINTS_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
+  brawler: 120,
+  rusher: 140,
+  tank: 180,
+  agile_f: 150,
+  bat_wielder: 190,
+  mini_boss: 350,
+};
+
 export class StreetScene extends Phaser.Scene {
   private inputManager!: InputManager;
   private collisionSystem!: CollisionSystem;
@@ -53,9 +64,9 @@ export class StreetScene extends Phaser.Scene {
   private debugText!: Phaser.GameObjects.Text;
   private debugKey!: Phaser.Input.Keyboard.Key;
   private debugEnabled = false;
-  private enemyAttackData!: Record<AttackId, AttackFrameData>;
   private stageRenderer!: StageRenderer;
   private levelEditor!: LevelEditor;
+  private breakablePropSystem: BreakablePropSystem | null = null;
   private flashOverlay!: Phaser.GameObjects.Rectangle;
   private damageFlashOverlay!: Phaser.GameObjects.Rectangle;
   private isPausedByPlayer = false;
@@ -65,44 +76,87 @@ export class StreetScene extends Phaser.Scene {
   private zoneMessage: string | null = null;
   private zoneMessageUntil = 0;
   private announcedZoneId: string | null = null;
-  private readonly walkLane = street95Zone1Layout.walkLane ?? {
-    topY: LANE_TOP,
-    bottomY: LANE_BOTTOM,
-    playerSpawnY: PLAYER_SPAWN_Y,
+  private stageBundle!: StageBundle;
+  private stageWorldWidth = 2560;
+  private stageTimeLimitMs = 0;
+  private stageStartedAt = 0;
+  private stageTransitionQueued = false;
+  private score = 0;
+  private stageEntryState = getSessionState();
+  private playerAttackData!: Record<AttackId, AttackFrameData>;
+  private readonly comboByCharacter = {
+    boxeador: boxeadorComboRaw,
+    veloz: velozComboRaw,
+    tecnico: tecnicoComboRaw,
   };
+  private perfEnabled = false;
+  private perfText: Phaser.GameObjects.Text | null = null;
+  private perfMinFps = Number.POSITIVE_INFINITY;
+  private perfSumFps = 0;
+  private perfSampleCount = 0;
 
   constructor() {
     super("StreetScene");
   }
 
   create(): void {
+    this.enemies = [];
+    this.targetEnemy = null;
+    this.zoneMessage = null;
+    this.zoneMessageUntil = 0;
+    this.announcedZoneId = null;
+    this.stageTransitionQueued = false;
+
+    if (!this.scene.isActive("HudScene")) {
+      this.scene.launch("HudScene");
+    }
+
+    ensureFighterAnimations(this);
+    this.stageEntryState = getSessionState();
+    const requestedStageId = featureFlags.stagePack ? this.stageEntryState.currentStageId : "market_95";
+    this.stageBundle = getStageBundle(requestedStageId);
+    this.stageWorldWidth = this.stageBundle.layout.mapWidthTiles * this.stageBundle.layout.tileSize;
+    this.stageTimeLimitMs = this.stageBundle.timeLimitSec * 1000;
+    this.stageStartedAt = this.time.now;
+    this.score = this.stageEntryState.score;
+
     this.inputManager = new InputManager(this);
-    this.collisionSystem = new CollisionSystem(this, this.walkLane);
+
+    const walkLane = this.stageBundle.layout.walkLane ?? {
+      topY: 152,
+      bottomY: 224,
+      playerSpawnY: 198,
+    };
+
+    this.collisionSystem = new CollisionSystem(this, walkLane, this.stageWorldWidth);
     this.depthSystem = new DepthSystem();
     this.hitStopSystem = new HitStopSystem(this);
     this.enemyAI = new EnemyAI();
     this.audioSystem = new AudioSystem(this);
-    const layoutWorldWidth = street95Zone1Layout.mapWidthTiles * street95Zone1Layout.tileSize;
-    if (layoutWorldWidth !== WORLD_WIDTH) {
-      throw new Error(`Street layout width ${layoutWorldWidth} must match WORLD_WIDTH ${WORLD_WIDTH}`);
-    }
-    this.stageRenderer = new StageRenderer(this, street95Zone1Layout);
+
+    this.stageRenderer = new StageRenderer(this, this.stageBundle.layout);
     this.stageRenderer.build(this.collisionSystem, this.depthSystem);
 
-    const playerAttackData = buildPlayerAttackData(playerComboRaw as Record<string, AttackFrameData>);
-    this.enemyAttackData = buildEnemyAttackData(playerAttackData);
+    const character = getPlayableCharacter(this.stageEntryState.selectedCharacter);
+    const comboRaw = (
+      featureFlags.combatRework
+        ? this.comboByCharacter[character.id]
+        : playerComboRaw
+    ) as Record<string, AttackFrameData>;
+    this.playerAttackData = buildPlayerAttackData(comboRaw, character);
 
     this.player = new Player(this, {
       id: "P1",
       team: "player",
       x: PLAYER_SPAWN_X,
-      y: this.walkLane.playerSpawnY,
+      y: walkLane.playerSpawnY,
       texture: "player",
-      maxHp: PLAYER_MAX_HP,
-      moveSpeed: PLAYER_MOVE_SPEED,
-      attackData: playerAttackData,
+      maxHp: character.maxHp,
+      moveSpeed: character.moveSpeed,
+      attackData: this.playerAttackData,
       visualProfile: fighterVisualProfiles.player,
     });
+    this.player.sprite.setTint(character.tint);
     this.collisionSystem.attachFootCollider(this.player);
     this.collisionSystem.applyWorldBounds(this.player);
 
@@ -114,7 +168,7 @@ export class StreetScene extends Phaser.Scene {
       hitStopSystem: this.hitStopSystem,
       eventBus: this.game.events,
       onHit: ({ attackId, target }) => {
-        this.createHitSpark(target.x, target.y - 22);
+        this.createHitSpark(target.x, target.y - 38);
         this.audioSystem.playHit();
         if (attackId === "SPECIAL") {
           this.flashScene();
@@ -134,18 +188,25 @@ export class StreetScene extends Phaser.Scene {
       this.game.events.off("combat:hit", this.onCombatHit, this);
       this.stageRenderer.destroy();
       this.levelEditor.destroy();
+      this.breakablePropSystem?.destroy();
     });
 
-    this.spawnManager = new SpawnManager(this.collisionSystem, (spawn) => this.spawnEnemy(spawn.x, spawn.y, spawn.archetype), street95Zone1Spawns);
-    this.enemies.push(...this.spawnManager.startWave("zone_1"));
-    this.announceZoneLock("zone_1", this.time.now);
+    this.spawnManager = new SpawnManager(this.collisionSystem, (spawn) => this.spawnEnemy(spawn.x, spawn.y, spawn.archetype), this.stageBundle.spawns);
+    if (this.stageBundle.spawns.length > 0) {
+      this.enemies.push(...this.spawnManager.startWave(this.stageBundle.spawns[0].id));
+      this.announceZoneLock(this.stageBundle.spawns[0].id, this.time.now);
+    }
+
+    this.breakablePropSystem = featureFlags.breakableProps
+      ? new BreakablePropSystem(this, this.depthSystem, this.stageBundle.layout.breakableProps)
+      : null;
 
     this.levelEditor = new LevelEditor(this, {
-      layout: street95Zone1Layout,
-      spawnZones: street95Zone1Spawns,
+      layout: this.stageBundle.layout,
+      spawnZones: this.stageBundle.spawns,
     });
 
-    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, BASE_HEIGHT);
+    this.cameras.main.setBounds(0, this.stageBundle.layout.cameraYOffset, this.stageWorldWidth, BASE_HEIGHT);
     this.cameras.main.setRoundPixels(true);
     this.cameras.main.setZoom(1);
 
@@ -172,7 +233,25 @@ export class StreetScene extends Phaser.Scene {
       .setDepth(6200)
       .setVisible(false);
     this.debugKey = this.input.keyboard!.addKey(DEBUG_TOGGLE_KEY);
+    this.perfEnabled = new URLSearchParams(window.location.search).get("perf") === "1";
+    if (this.perfEnabled) {
+      this.perfText = this.add
+        .text(BASE_WIDTH - 6, 6, "", {
+          fontFamily: "monospace",
+          fontSize: "10px",
+          color: "#d4fbff",
+          stroke: "#041218",
+          strokeThickness: 2,
+          align: "right",
+        })
+        .setOrigin(1, 0)
+        .setScrollFactor(0)
+        .setDepth(6400);
+    }
+
     this.controlsHintUntil = this.time.now + CONTROLS_HINT_DURATION_MS;
+    this.audioSystem.ensureStarted();
+    this.audioSystem.switchTheme(this.stageBundle.theme);
     this.updateHud();
   }
 
@@ -185,6 +264,7 @@ export class StreetScene extends Phaser.Scene {
       this.controlsHintVisible = false;
       this.updateParallax();
       this.updateHud();
+      this.updatePerfOverlay();
       this.renderDebug(delta);
       return;
     }
@@ -195,6 +275,23 @@ export class StreetScene extends Phaser.Scene {
       this.audioSystem.ensureStarted();
     }
 
+    const stageElapsed = time - this.stageStartedAt;
+    const stageRemainingMs = Math.max(0, this.stageTimeLimitMs - stageElapsed);
+    if (stageRemainingMs <= 0 && this.player.isAlive()) {
+      this.player.applyDamage(
+        {
+          damage: this.player.maxHp * 2,
+          knockbackX: 0,
+          causesKnockdown: true,
+          iFrameMs: 0,
+          hitStunMs: 0,
+          knockdownDurationMs: 0,
+          sourceX: this.player.x,
+        },
+        time,
+      );
+    }
+
     if (!this.player.isAlive()) {
       this.controlsHintVisible = false;
       if (this.inputManager.consumeBuffered("ui_confirm")) {
@@ -203,6 +300,7 @@ export class StreetScene extends Phaser.Scene {
       }
       this.updateParallax();
       this.updateHud();
+      this.updatePerfOverlay();
       this.renderDebug(delta);
       return;
     }
@@ -212,16 +310,10 @@ export class StreetScene extends Phaser.Scene {
     }
 
     this.hitStopSystem.update(time);
-    if (this.isPausedByPlayer) {
+    if (this.isPausedByPlayer || this.hitStopSystem.isActive()) {
       this.updateParallax();
       this.updateHud();
-      this.renderDebug(delta);
-      return;
-    }
-
-    if (this.hitStopSystem.isActive()) {
-      this.updateParallax();
-      this.updateHud();
+      this.updatePerfOverlay();
       this.renderDebug(delta);
       return;
     }
@@ -245,9 +337,7 @@ export class StreetScene extends Phaser.Scene {
 
     const spawnedEnemies = this.spawnManager.update(this.player.x);
     if (spawnedEnemies.length > 0) {
-      for (const enemy of spawnedEnemies) {
-        this.enemies.push(enemy);
-      }
+      this.enemies.push(...spawnedEnemies);
     }
 
     const activeZoneId = this.spawnManager.getActiveZoneId();
@@ -258,12 +348,23 @@ export class StreetScene extends Phaser.Scene {
     }
 
     this.combatSystem.resolveHits([this.player, ...this.enemies], time);
+    if (this.breakablePropSystem) {
+      const breakResult = this.breakablePropSystem.resolveHits([this.player, ...this.enemies]);
+      if (breakResult.pointsAwarded > 0) {
+        this.score += breakResult.pointsAwarded;
+      }
+      if (breakResult.brokenCount > 0) {
+        this.audioSystem.playBreakableBreak();
+        this.createHitSpark(this.player.x + this.player.facing * 24, this.player.y - 24);
+      }
+    }
+
     this.cleanupDeadEnemies();
 
     if (this.spawnManager.getActiveZoneId()) {
       this.audioSystem.switchTheme("theme_b");
     } else {
-      this.audioSystem.switchTheme("theme_a");
+      this.audioSystem.switchTheme(this.stageBundle.theme);
     }
 
     if (this.zoneMessage && time >= this.zoneMessageUntil) {
@@ -274,16 +375,29 @@ export class StreetScene extends Phaser.Scene {
     this.updateCamera();
     this.updateParallax();
     this.updateTargetTracker(time);
+    this.tryHandleStageCompletion(time);
     this.updateHud();
+    this.updatePerfOverlay();
     this.renderDebug(delta);
   }
 
   private spawnEnemy(x: number, y: number, archetype: EnemyArchetype = "brawler"): EnemyBasic {
+    if (!featureFlags.enemyRoster && archetype !== "brawler" && archetype !== "rusher" && archetype !== "tank") {
+      archetype = "brawler";
+    }
     const profile = archetype === "tank"
-      ? { maxHp: ENEMY_MAX_HP + 28, moveSpeed: ENEMY_MOVE_SPEED * 0.75, tint: 0xffd0a1 }
+      ? { maxHp: ENEMY_MAX_HP + 44, moveSpeed: ENEMY_MOVE_SPEED * 0.74, tint: 0xffd0a1 }
       : archetype === "rusher"
-        ? { maxHp: ENEMY_MAX_HP - 12, moveSpeed: ENEMY_MOVE_SPEED * 1.22, tint: 0xc7dcff }
-        : { maxHp: ENEMY_MAX_HP, moveSpeed: ENEMY_MOVE_SPEED, tint: 0xfff4f8 };
+        ? { maxHp: ENEMY_MAX_HP - 10, moveSpeed: ENEMY_MOVE_SPEED * 1.24, tint: 0xc7dcff }
+        : archetype === "agile_f"
+          ? { maxHp: ENEMY_MAX_HP - 4, moveSpeed: ENEMY_MOVE_SPEED * 1.18, tint: 0xffc2e6 }
+          : archetype === "bat_wielder"
+            ? { maxHp: ENEMY_MAX_HP + 14, moveSpeed: ENEMY_MOVE_SPEED * 0.96, tint: 0xe4dbff }
+            : archetype === "mini_boss"
+              ? { maxHp: ENEMY_MAX_HP + 110, moveSpeed: ENEMY_MOVE_SPEED * 0.88, tint: 0xffb782 }
+              : { maxHp: ENEMY_MAX_HP, moveSpeed: ENEMY_MOVE_SPEED, tint: 0xfff4f8 };
+
+    const enemyAttackData = buildEnemyAttackData(this.playerAttackData, archetype);
 
     const enemy = new EnemyBasic(this, {
       id: `E_${Math.floor(this.time.now)}_${Math.floor(Math.random() * 1000)}`,
@@ -293,7 +407,7 @@ export class StreetScene extends Phaser.Scene {
       texture: "enemy",
       maxHp: profile.maxHp,
       moveSpeed: profile.moveSpeed,
-      attackData: this.enemyAttackData,
+      attackData: enemyAttackData,
       visualProfile: fighterVisualProfiles.enemy,
     }, archetype);
     enemy.sprite.setTint(profile.tint);
@@ -312,6 +426,7 @@ export class StreetScene extends Phaser.Scene {
         survivors.push(enemy);
         continue;
       }
+      this.score += ENEMY_POINTS_BY_ARCHETYPE[enemy.combatProfile.archetype] ?? 100;
       this.enemyAI.releaseAttackToken(enemy.id);
       this.depthSystem.unregister(enemy.shadow);
       this.depthSystem.unregister(enemy.spriteOutline);
@@ -325,7 +440,7 @@ export class StreetScene extends Phaser.Scene {
   }
 
   private updateCamera(): void {
-    const targetX = Phaser.Math.Clamp(this.player.x - BASE_WIDTH * 0.45, 0, WORLD_WIDTH - BASE_WIDTH);
+    const targetX = Phaser.Math.Clamp(this.player.x - BASE_WIDTH * 0.45, 0, this.stageWorldWidth - BASE_WIDTH);
     this.cameras.main.scrollX = Phaser.Math.Linear(this.cameras.main.scrollX, targetX, 0.12);
   }
 
@@ -357,7 +472,7 @@ export class StreetScene extends Phaser.Scene {
         hp: enemy.hp,
         maxHp: enemy.maxHp,
         x: enemy.x - cam.scrollX,
-        y: enemy.y - cam.scrollY - 42,
+        y: enemy.y - cam.scrollY - 82,
       }));
 
     let targetEnemyPayload: { id: string; hp: number; maxHp: number; ttlMs: number } | null = null;
@@ -373,9 +488,19 @@ export class StreetScene extends Phaser.Scene {
       }
     }
 
+    const stageElapsed = this.time.now - this.stageStartedAt;
+    const timeRemainingSec = Math.max(0, Math.ceil((this.stageTimeLimitMs - stageElapsed) / 1000));
+    const character = getPlayableCharacter(this.stageEntryState.selectedCharacter);
+
     this.game.events.emit("hud:update", {
       playerHp: this.player.hp,
       playerMaxHp: this.player.maxHp,
+      playerName: character.displayName,
+      playerPortraitKey: character.portraitKey,
+      score: this.score,
+      timeRemainingSec,
+      specialCooldownRatio: this.player.getSpecialCooldownRatio(this.time.now),
+      stageName: this.stageBundle.displayName,
       zoneId: this.spawnManager.getActiveZoneId(),
       targetEnemy: targetEnemyPayload,
       visibleEnemies,
@@ -388,39 +513,49 @@ export class StreetScene extends Phaser.Scene {
     });
   }
 
-
-
   private getObjectiveText(): string {
     if (!this.player.isAlive()) {
       return "Pulsa ENTER para reintentar";
     }
 
-    const activeZoneId = this.spawnManager.getActiveZoneId();
-    if (activeZoneId) {
+    if (this.spawnManager.getActiveZoneId()) {
       const remaining = this.enemies.filter((enemy) => enemy.isAlive()).length;
       return `Derrota a los enemigos (${remaining} restantes)`;
     }
 
-    return "Avanza por la calle hasta la siguiente zona";
+    if (!this.spawnManager.areAllZonesCleared()) {
+      return "Avanza hasta activar la siguiente zona";
+    }
+
+    if (this.player.x < this.stageWorldWidth - 84) {
+      return "Avanza hacia la salida";
+    }
+
+    return "Zona despejada";
   }
 
   private announceZoneLock(zoneId: string, now: number): void {
     this.announcedZoneId = zoneId;
-    this.zoneMessage = "¡Zona bloqueada! Derrota a los enemigos para avanzar";
-    this.zoneMessageUntil = now + 3400;
+    this.zoneMessage = "Zona bloqueada. Derrota a todos para avanzar";
+    this.zoneMessageUntil = now + 3200;
     this.playBarrierLockFx(zoneId);
     this.audioSystem.playZoneLock();
   }
 
   private playBarrierLockFx(zoneId: string): void {
-    const zoneConfig = street95Zone1Spawns.find((zone) => zone.id === zoneId);
+    const zoneConfig = this.stageBundle.spawns.find((zone) => zone.id === zoneId);
     if (!zoneConfig) {
       return;
     }
 
-    const laneHeight = this.walkLane.bottomY - this.walkLane.topY;
-    const fxY = this.walkLane.topY + laneHeight * 0.5;
-    const fxDepth = this.walkLane.bottomY + 26;
+    const lane = this.stageBundle.layout.walkLane;
+    if (!lane) {
+      return;
+    }
+
+    const laneHeight = lane.bottomY - lane.topY;
+    const fxY = lane.topY + laneHeight * 0.5;
+    const fxDepth = lane.bottomY + 26;
     const barriers = [zoneConfig.leftBarrierX, zoneConfig.rightBarrierX].map((x) =>
       this.add
         .rectangle(x, fxY, 16, laneHeight + 8, 0xff4b89, 0.28)
@@ -438,6 +573,43 @@ export class StreetScene extends Phaser.Scene {
         onComplete: () => barrier.destroy(),
       });
     }
+  }
+
+  private tryHandleStageCompletion(nowMs: number): void {
+    if (this.stageTransitionQueued) {
+      return;
+    }
+
+    const ready = this.spawnManager.areAllZonesCleared() && this.enemies.length === 0 && this.player.x >= this.stageWorldWidth - 80;
+    if (!ready) {
+      return;
+    }
+
+    this.stageTransitionQueued = true;
+    const nextStageId = getNextStageId(this.stageBundle.id);
+    const elapsed = this.time.now - this.stageStartedAt;
+    updateSessionState({
+      score: this.score,
+      elapsedMs: this.stageEntryState.elapsedMs + elapsed,
+      currentStageId: nextStageId ?? this.stageBundle.id,
+    });
+
+    if (nextStageId) {
+      this.zoneMessage = `Siguiente zona: ${getStageBundle(nextStageId).displayName}`;
+      this.zoneMessageUntil = nowMs + 1500;
+      this.time.delayedCall(900, () => {
+        this.scene.restart();
+      });
+      return;
+    }
+
+    this.zoneMessage = "BARRIO RECUPERADO";
+    this.zoneMessageUntil = nowMs + 3200;
+    this.time.delayedCall(1700, () => {
+      resetSessionState();
+      this.scene.stop("HudScene");
+      this.scene.start("TitleScene");
+    });
   }
 
   private handleDebugToggle(): void {
@@ -520,10 +692,13 @@ export class StreetScene extends Phaser.Scene {
       this.debugGraphics.fillCircle(fighter.shadow.x, fighter.shadow.y, 2);
     }
 
-    this.debugGraphics.lineStyle(1, 0x4cd7ff, 0.8);
-    this.debugGraphics.lineBetween(cam.scrollX, this.walkLane.topY, cam.scrollX + cam.width, this.walkLane.topY);
-    this.debugGraphics.lineStyle(1, 0xffaf5a, 0.8);
-    this.debugGraphics.lineBetween(cam.scrollX, this.walkLane.bottomY, cam.scrollX + cam.width, this.walkLane.bottomY);
+    const lane = this.stageBundle.layout.walkLane;
+    if (lane) {
+      this.debugGraphics.lineStyle(1, 0x4cd7ff, 0.8);
+      this.debugGraphics.lineBetween(cam.scrollX, lane.topY, cam.scrollX + cam.width, lane.topY);
+      this.debugGraphics.lineStyle(1, 0xffaf5a, 0.8);
+      this.debugGraphics.lineBetween(cam.scrollX, lane.bottomY, cam.scrollX + cam.width, lane.bottomY);
+    }
 
     const fps = this.game.loop.actualFps.toFixed(1);
     const dt = deltaMs.toFixed(2);
@@ -532,30 +707,39 @@ export class StreetScene extends Phaser.Scene {
     const playerVisual = this.player.getVisualDebugInfo();
     const playerDepth = this.depthSystem.getResolvedDepth(this.player.sprite) ?? this.player.sprite.depth;
 
-    const leadEnemy = this.enemies.find((enemy) => enemy.isAlive()) ?? null;
-    const leadEnemyVisual = leadEnemy ? leadEnemy.getVisualDebugInfo() : null;
-    const leadEnemyDepth = leadEnemy ? (this.depthSystem.getResolvedDepth(leadEnemy.sprite) ?? leadEnemy.sprite.depth) : null;
-
     this.debugText.setText([
       `FPS ${fps} | dt ${dt}ms`,
       this.player.getDebugText(),
       `ATK ${playerAttack} FRAME ${playerFrame}`,
-      `P1 TEX ${playerVisual.textureStateId}:${playerVisual.frame} OFF ${playerVisual.appliedOffset.x},${playerVisual.appliedOffset.y}`,
+      `P1 CLIP ${playerVisual.textureStateId}:${playerVisual.frame} OFF ${playerVisual.appliedOffset.x},${playerVisual.appliedOffset.y}`,
       `P1 DEPTH ${Math.round(playerDepth)} | FOOT ${Math.round(playerVisual.footY)} BASE ${Math.round(playerVisual.baselineY)} SHADOW ${Math.round(playerVisual.shadowY)}`,
-      leadEnemyVisual
-        ? `E1 TEX ${leadEnemyVisual.textureStateId}:${leadEnemyVisual.frame} OFF ${leadEnemyVisual.appliedOffset.x},${leadEnemyVisual.appliedOffset.y} DEPTH ${Math.round(leadEnemyDepth ?? 0)}`
-        : "E1 TEX -",
-      `LANE ${this.walkLane.topY}-${this.walkLane.bottomY}`,
+      `STAGE ${this.stageBundle.id} | SCORE ${this.score}`,
       `ENEMIES ${this.enemies.length} | PAUSE ${this.isPausedByPlayer ? "ON" : "OFF"}`,
     ]);
   }
 
+  private updatePerfOverlay(): void {
+    if (!this.perfEnabled || !this.perfText) {
+      return;
+    }
+    const fps = this.game.loop.actualFps;
+    this.perfMinFps = Math.min(this.perfMinFps, fps);
+    this.perfSumFps += fps;
+    this.perfSampleCount += 1;
+    const avg = this.perfSumFps / Math.max(1, this.perfSampleCount);
+    this.perfText.setText([
+      `FPS ${fps.toFixed(1)}`,
+      `AVG ${avg.toFixed(1)}`,
+      `MIN ${this.perfMinFps.toFixed(1)}`,
+    ]);
+  }
+
   private createHitSpark(x: number, y: number): void {
-    const spark = this.add.image(x, y, "hit_spark").setScale(3).setTint(0xfff9c2).setDepth(5000);
+    const spark = this.add.image(x, y, "hit_spark").setScale(2.5).setTint(0xfff9c2).setDepth(5000);
     this.tweens.add({
       targets: spark,
       alpha: { from: 0.95, to: 0 },
-      scale: { from: 3, to: 4 },
+      scale: { from: 2.5, to: 3.6 },
       duration: 110,
       onComplete: () => spark.destroy(),
     });

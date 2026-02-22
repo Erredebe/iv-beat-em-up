@@ -1,0 +1,109 @@
+{
+  "ATTACK_1": {
+    "totalFrames": 22,
+    "activeStart": 6,
+    "activeEnd": 10,
+    "recoveryStart": 11,
+    "comboWindowStart": 13,
+    "comboWindowEnd": 19,
+    "damage": 14,
+    "knockbackX": 88,
+    "causesKnockdown": false,
+    "hitStopMs": 80,
+    "iFrameMs": 160,
+    "hitStunMs": 200,
+    "knockdownDurationMs": 860,
+    "nextAttack": "ATTACK_2",
+    "visualClipId": "attack1",
+    "hitbox": {
+      "offsetX": 24,
+      "offsetY": -62,
+      "width": 30,
+      "height": 20
+    }
+  },
+  "ATTACK_2": {
+    "totalFrames": 24,
+    "activeStart": 7,
+    "activeEnd": 11,
+    "recoveryStart": 12,
+    "comboWindowStart": 14,
+    "comboWindowEnd": 20,
+    "damage": 16,
+    "knockbackX": 102,
+    "causesKnockdown": false,
+    "hitStopMs": 82,
+    "iFrameMs": 160,
+    "hitStunMs": 220,
+    "knockdownDurationMs": 880,
+    "nextAttack": "ATTACK_3",
+    "visualClipId": "attack2",
+    "hitbox": {
+      "offsetX": 26,
+      "offsetY": -62,
+      "width": 34,
+      "height": 22
+    }
+  },
+  "ATTACK_3": {
+    "totalFrames": 28,
+    "activeStart": 8,
+    "activeEnd": 13,
+    "recoveryStart": 14,
+    "damage": 22,
+    "knockbackX": 138,
+    "causesKnockdown": true,
+    "hitStopMs": 95,
+    "iFrameMs": 200,
+    "hitStunMs": 250,
+    "knockdownDurationMs": 940,
+    "visualClipId": "attack3",
+    "hitbox": {
+      "offsetX": 28,
+      "offsetY": -64,
+      "width": 36,
+      "height": 24
+    }
+  },
+  "AIR_ATTACK": {
+    "totalFrames": 20,
+    "activeStart": 7,
+    "activeEnd": 11,
+    "recoveryStart": 12,
+    "damage": 15,
+    "knockbackX": 84,
+    "causesKnockdown": false,
+    "hitStopMs": 80,
+    "iFrameMs": 170,
+    "hitStunMs": 210,
+    "knockdownDurationMs": 860,
+    "visualClipId": "airAttack",
+    "hitbox": {
+      "offsetX": 22,
+      "offsetY": -70,
+      "width": 32,
+      "height": 22
+    }
+  },
+  "SPECIAL": {
+    "totalFrames": 34,
+    "activeStart": 10,
+    "activeEnd": 20,
+    "recoveryStart": 21,
+    "damage": 24,
+    "knockbackX": 126,
+    "causesKnockdown": true,
+    "hitStopMs": 104,
+    "iFrameMs": 230,
+    "hitStunMs": 260,
+    "knockdownDurationMs": 940,
+    "grantsInvulnMs": 180,
+    "visualClipId": "special",
+    "hitbox": {
+      "offsetX": 24,
+      "offsetY": -70,
+      "width": 50,
+      "height": 28
+    }
+  }
+}

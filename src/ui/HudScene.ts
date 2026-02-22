@@ -1,9 +1,15 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
 
-interface HudPayload {
+export interface HudPayload {
   playerHp: number;
   playerMaxHp: number;
+  playerName: string;
+  playerPortraitKey: string;
+  score: number;
+  timeRemainingSec: number;
+  specialCooldownRatio: number;
+  stageName: string;
   zoneId: string | null;
   targetEnemy: { id: string; hp: number; maxHp: number; ttlMs: number } | null;
   visibleEnemies: Array<{ id: string; hp: number; maxHp: number; x: number; y: number }>;
@@ -18,9 +24,14 @@ interface HudPayload {
 export class HudScene extends Phaser.Scene {
   private hpLabel!: Phaser.GameObjects.Text;
   private hpValue!: Phaser.GameObjects.Text;
-  private zoneLabel!: Phaser.GameObjects.Text;
+  private stageLabel!: Phaser.GameObjects.Text;
+  private scoreLabel!: Phaser.GameObjects.Text;
+  private timeLabel!: Phaser.GameObjects.Text;
+  private specialLabel!: Phaser.GameObjects.Text;
   private hpFill!: Phaser.GameObjects.Rectangle;
   private hpLag!: Phaser.GameObjects.Rectangle;
+  private specialFill!: Phaser.GameObjects.Rectangle;
+  private portrait!: Phaser.GameObjects.Image;
   private targetLabel!: Phaser.GameObjects.Text;
   private targetFill!: Phaser.GameObjects.Rectangle;
   private targetPanel!: Phaser.GameObjects.Container;
@@ -33,6 +44,7 @@ export class HudScene extends Phaser.Scene {
   private gameOverDim!: Phaser.GameObjects.Rectangle;
   private pauseDim!: Phaser.GameObjects.Rectangle;
   private maxBarWidth = 148;
+  private specialBarWidth = 96;
   private targetBarWidth = 116;
   private currentPayload: HudPayload | null = null;
   private displayedPlayerHp = 0;
@@ -41,6 +53,7 @@ export class HudScene extends Phaser.Scene {
   private objectiveText!: Phaser.GameObjects.Text;
   private wasGameOverVisible = false;
   private previousPlayerHp = 0;
+  private activePortraitKey = "";
 
   constructor() {
     super("HudScene");
@@ -85,8 +98,18 @@ export class HudScene extends Phaser.Scene {
     this.hpLag.width = Math.floor(this.maxBarWidth * lagRatio);
     this.hpFill.fillColor = hpRatio < 0.25 ? 0xff466a : 0xf06b3b;
     this.hpValue.setText(`${roundedHp} / ${this.currentPayload.playerMaxHp}`);
-    const zoneLabel = this.currentPayload.zoneId ? this.formatZoneLabel(this.currentPayload.zoneId) : "CALLE LIBRE";
-    this.zoneLabel.setText(zoneLabel);
+
+    this.specialFill.width = Math.floor(this.specialBarWidth * Phaser.Math.Clamp(this.currentPayload.specialCooldownRatio, 0, 1));
+
+    this.stageLabel.setText(`${this.currentPayload.stageName} ${this.currentPayload.zoneId ? `| ${this.formatZoneLabel(this.currentPayload.zoneId)}` : ""}`);
+    this.scoreLabel.setText(`PUNTOS ${this.currentPayload.score.toString().padStart(6, "0")}`);
+    this.timeLabel.setText(`TIEMPO ${this.currentPayload.timeRemainingSec.toString().padStart(3, "0")}`);
+    this.hpLabel.setText(this.currentPayload.playerName);
+
+    if (this.currentPayload.playerPortraitKey && this.currentPayload.playerPortraitKey !== this.activePortraitKey) {
+      this.activePortraitKey = this.currentPayload.playerPortraitKey;
+      this.portrait.setTexture(this.activePortraitKey);
+    }
 
     this.updateTargetBar();
     this.drawEnemyBars();
@@ -119,15 +142,17 @@ export class HudScene extends Phaser.Scene {
 
   private createMainHud(): void {
     const frame = this.add.container(0, 0).setScrollFactor(0).setDepth(5600);
-    frame.add(this.add.rectangle(8, 8, 196, 54, 0x070a12, 0.78).setOrigin(0, 0));
-    frame.add(this.add.rectangle(8, 8, 196, 54, 0x3f5c7a, 0).setOrigin(0, 0).setStrokeStyle(1, 0x6f89a3, 0.9));
-    frame.add(this.add.rectangle(18, 28, 174, 12, 0x161522, 1).setOrigin(0, 0));
-    frame.add(this.add.rectangle(18, 28, 174, 12, 0x5e5b72, 0).setOrigin(0, 0).setStrokeStyle(1, 0x54526b, 1));
+    frame.add(this.add.rectangle(8, 8, 250, 68, 0x070a12, 0.82).setOrigin(0, 0));
+    frame.add(this.add.rectangle(8, 8, 250, 68, 0x3f5c7a, 0).setOrigin(0, 0).setStrokeStyle(1, 0x6f89a3, 0.9));
+    frame.add(this.add.rectangle(64, 30, 176, 12, 0x161522, 1).setOrigin(0, 0));
 
-    this.hpLag = this.add.rectangle(21, 34, this.maxBarWidth, 8, 0x5c2143, 0.92).setOrigin(0, 0.5).setDepth(5602);
-    this.hpFill = this.add.rectangle(21, 34, this.maxBarWidth, 8, 0xf06b3b, 1).setOrigin(0, 0.5).setDepth(5603);
+    this.portrait = this.add.image(34, 42, "portrait_boxeador").setOrigin(0.5).setScale(0.95).setTint(0xfff4dd).setDepth(5602);
+    this.hpLag = this.add.rectangle(67, 36, this.maxBarWidth, 8, 0x5c2143, 0.92).setOrigin(0, 0.5).setDepth(5602);
+    this.hpFill = this.add.rectangle(67, 36, this.maxBarWidth, 8, 0xf06b3b, 1).setOrigin(0, 0.5).setDepth(5603);
+    this.specialFill = this.add.rectangle(67, 52, this.specialBarWidth, 6, 0x4dc8ff, 1).setOrigin(0, 0.5).setDepth(5603);
+
     this.hpLabel = this.add
-      .text(18, 13, "VIDA", {
+      .text(64, 12, "JUGADOR", {
         fontFamily: "monospace",
         fontSize: "11px",
         color: "#d4dee7",
@@ -135,8 +160,9 @@ export class HudScene extends Phaser.Scene {
         strokeThickness: 2,
       })
       .setDepth(5604);
+
     this.hpValue = this.add
-      .text(58, 13, "120 / 120", {
+      .text(170, 12, "120 / 120", {
         fontFamily: "monospace",
         fontSize: "11px",
         color: "#ffffff",
@@ -144,31 +170,74 @@ export class HudScene extends Phaser.Scene {
         strokeThickness: 2,
       })
       .setDepth(5604);
-    this.zoneLabel = this.add
-      .text(18, 46, "CALLE LIBRE", {
+
+    this.specialLabel = this.add
+      .text(64, 46, "ESP", {
         fontFamily: "monospace",
-        fontSize: "11px",
+        fontSize: "10px",
         color: "#9fd6e3",
         stroke: "#06080d",
         strokeThickness: 2,
       })
       .setDepth(5604);
-    this.hpLag.setScrollFactor(0);
-    this.hpFill.setScrollFactor(0);
-    this.hpLabel.setScrollFactor(0);
-    this.hpValue.setScrollFactor(0);
-    this.zoneLabel.setScrollFactor(0);
+
+    this.stageLabel = this.add
+      .text(8, 72, "STAGE", {
+        fontFamily: "monospace",
+        fontSize: "10px",
+        color: "#9fd6e3",
+        stroke: "#06080d",
+        strokeThickness: 2,
+      })
+      .setDepth(5604);
+
+    this.scoreLabel = this.add
+      .text(250, 10, "PUNTOS 000000", {
+        fontFamily: "monospace",
+        fontSize: "11px",
+        color: "#fff1c3",
+        stroke: "#06080d",
+        strokeThickness: 2,
+      })
+      .setDepth(5604)
+      .setOrigin(1, 0);
+
+    this.timeLabel = this.add
+      .text(250, 24, "TIEMPO 000", {
+        fontFamily: "monospace",
+        fontSize: "11px",
+        color: "#ffcc88",
+        stroke: "#06080d",
+        strokeThickness: 2,
+      })
+      .setDepth(5604)
+      .setOrigin(1, 0);
+
+    for (const obj of [
+      this.portrait,
+      this.hpLag,
+      this.hpFill,
+      this.specialFill,
+      this.hpLabel,
+      this.hpValue,
+      this.specialLabel,
+      this.stageLabel,
+      this.scoreLabel,
+      this.timeLabel,
+    ]) {
+      obj.setScrollFactor(0);
+    }
   }
 
   private createTargetHud(): void {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5600);
-    panel.add(this.add.rectangle(250, 6, 168, 34, 0x090910, 0.68).setOrigin(0, 0));
-    panel.add(this.add.rectangle(258, 18, this.targetBarWidth, 7, 0x232334, 1).setOrigin(0, 0.5));
-    panel.add(this.add.tileSprite(250, 6, 168, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
+    panel.add(this.add.rectangle(250, 40, 168, 34, 0x090910, 0.68).setOrigin(0, 0));
+    panel.add(this.add.rectangle(258, 52, this.targetBarWidth, 7, 0x232334, 1).setOrigin(0, 0.5));
+    panel.add(this.add.tileSprite(250, 40, 168, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
 
-    this.targetFill = this.add.rectangle(258, 18, this.targetBarWidth, 7, 0xff5a6f, 1).setOrigin(0, 0.5).setDepth(5602);
+    this.targetFill = this.add.rectangle(258, 52, this.targetBarWidth, 7, 0xff5a6f, 1).setOrigin(0, 0.5).setDepth(5602);
     this.targetLabel = this.add
-      .text(258, 8, "OBJETIVO", {
+      .text(258, 42, "OBJETIVO", {
         fontFamily: "monospace",
         fontSize: "10px",
         color: "#ffd1e8",
@@ -183,10 +252,10 @@ export class HudScene extends Phaser.Scene {
 
   private createControlsPanel(): void {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5900);
-    panel.add(this.add.rectangle(20, 56, 388, 88, 0x07090f, 0.9).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(20, 56, 388, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
+    panel.add(this.add.rectangle(20, 134, 388, 88, 0x07090f, 0.9).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(20, 134, 388, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
     panel.add(
-      this.add.text(26, 62, "CONTROLES", {
+      this.add.text(26, 140, "CONTROLES", {
         fontFamily: "monospace",
         fontSize: "11px",
         color: "#ffffff",
@@ -198,13 +267,12 @@ export class HudScene extends Phaser.Scene {
     panel.setVisible(true);
   }
 
-
   private createTutorialPanel(): void {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5950);
-    panel.add(this.add.rectangle(78, 74, 272, 28, 0x05050a, 0.86).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(78, 74, 272, 2, "hud_frame").setOrigin(0, 0).setTint(0xffc870));
+    panel.add(this.add.rectangle(78, 206, 272, 28, 0x05050a, 0.86).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(78, 206, 272, 2, "hud_frame").setOrigin(0, 0).setTint(0xffc870));
     panel.add(
-      this.add.text(86, 83, "Pulsa ENTER para cerrar la ayuda", {
+      this.add.text(86, 215, "Pulsa ENTER para cerrar la ayuda", {
         fontFamily: "monospace",
         fontSize: "10px",
         color: "#ffe6b5",
@@ -216,9 +284,9 @@ export class HudScene extends Phaser.Scene {
 
   private createZoneMessagePanel(): void {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5970);
-    panel.add(this.add.rectangle(84, 40, 262, 26, 0x040409, 0.94).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(84, 40, 262, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
-    this.zoneMessageText = this.add.text(92, 47, "", {
+    panel.add(this.add.rectangle(84, 110, 262, 26, 0x040409, 0.94).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(84, 110, 262, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
+    this.zoneMessageText = this.add.text(92, 117, "", {
       fontFamily: "monospace",
       fontSize: "11px",
       color: "#ffe7f4",
@@ -230,17 +298,17 @@ export class HudScene extends Phaser.Scene {
     panel.setVisible(false);
   }
 
-
   private createObjectivePanel(): void {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5960);
-    panel.add(this.add.rectangle(84, 12, 262, 24, 0x040409, 0.9).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(84, 12, 262, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
-    this.objectiveText = this.add.text(92, 18, "", {
+    panel.add(this.add.rectangle(84, 84, 262, 24, 0x040409, 0.9).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(84, 84, 262, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
+    this.objectiveText = this.add.text(92, 90, "", {
       fontFamily: "monospace",
       fontSize: "10px",
       color: "#d9f4ff",
       stroke: "#041018",
       strokeThickness: 2,
+      wordWrap: { width: 246 },
     });
     panel.add(this.objectiveText);
   }
@@ -322,7 +390,7 @@ export class HudScene extends Phaser.Scene {
     }
 
     const compact = this.add
-      .text(26, 78, `${hints.keyboard[0]}  |  ${hints.keyboard[1]}  |  ${hints.keyboard[2]}`, {
+      .text(26, 156, `${hints.keyboard[0]}  |  ${hints.keyboard[1]}  |  ${hints.keyboard[2]}`, {
         fontFamily: "monospace",
         fontSize: "11px",
         color: "#e8f7ff",
@@ -331,7 +399,7 @@ export class HudScene extends Phaser.Scene {
       })
       .setName("dynamic-control");
     const compact2 = this.add
-      .text(26, 96, `${hints.keyboard[3]}  |  ${hints.keyboard[4]}`, {
+      .text(26, 174, `${hints.keyboard[3]}  |  ${hints.keyboard[4]}`, {
         fontFamily: "monospace",
         fontSize: "11px",
         color: "#ffdeea",
@@ -340,7 +408,7 @@ export class HudScene extends Phaser.Scene {
       })
       .setName("dynamic-control");
     const compact3 = this.add
-      .text(26, 114, `${hints.gamepad[0]}  |  ${hints.gamepad[1]}`, {
+      .text(26, 192, `${hints.gamepad[0]}  |  ${hints.gamepad[1]}`, {
         fontFamily: "monospace",
         fontSize: "11px",
         color: "#ffd6e7",
@@ -460,13 +528,13 @@ export class HudScene extends Phaser.Scene {
     this.enemyBarsGraphics.setDepth(5750);
     for (const enemy of this.currentPayload.visibleEnemies) {
       const ratio = Phaser.Math.Clamp(enemy.hp / enemy.maxHp, 0, 1);
-      const width = 24;
+      const width = 30;
       const x = Math.floor(enemy.x - width * 0.5);
       const y = Math.floor(enemy.y);
       this.enemyBarsGraphics.fillStyle(0x090910, 0.8);
-      this.enemyBarsGraphics.fillRect(x, y, width, 4);
+      this.enemyBarsGraphics.fillRect(x, y, width, 5);
       this.enemyBarsGraphics.fillStyle(0xd9435f, 1);
-      this.enemyBarsGraphics.fillRect(x + 1, y + 1, Math.floor((width - 2) * ratio), 2);
+      this.enemyBarsGraphics.fillRect(x + 1, y + 1, Math.floor((width - 2) * ratio), 3);
     }
   }
 }

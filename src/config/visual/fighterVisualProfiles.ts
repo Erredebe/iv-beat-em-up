@@ -1,15 +1,6 @@
 import type { FighterState } from "../../types/combat";
-
-export type TextureStateId =
-  | "idle_strip4"
-  | "walk_strip4"
-  | "punch1"
-  | "punch2"
-  | "kick1"
-  | "kick2"
-  | "hurt"
-  | "knockdown"
-  | "getup";
+import { isFeatureEnabled } from "../features";
+import type { AnimationClipId } from "./fighterAnimationSets";
 
 export interface SpritePixelOffset {
   x: number;
@@ -24,7 +15,7 @@ export interface FighterVisualProfile {
   shadowOffsetY: number;
   baselineOffsetByState?: Record<FighterState, number>;
   stateOffsetByState: Record<FighterState, SpritePixelOffset>;
-  frameOffsetByTexture: Partial<Record<TextureStateId, SpritePixelOffset[]>>;
+  frameOffsetByClip: Partial<Record<AnimationClipId, SpritePixelOffset[]>>;
 }
 
 const ALL_STATES: FighterState[] = [
@@ -64,77 +55,64 @@ function createLegacyBaselineOffsets(offsets: Record<FighterState, SpritePixelOf
   return map;
 }
 
-function createFrameOffsets(
-  frameCount: number,
-  overrides: Partial<Record<number, Partial<SpritePixelOffset>>> = {},
-): SpritePixelOffset[] {
+function createFrameOffsets(frameCount: number, wave = 0): SpritePixelOffset[] {
   return Array.from({ length: frameCount }, (_, frame) => ({
-    x: overrides[frame]?.x ?? 0,
-    y: overrides[frame]?.y ?? 0,
+    x: 0,
+    y: Math.round(Math.sin((frame / Math.max(1, frameCount - 1)) * Math.PI * 2) * wave),
   }));
 }
 
+const isArcade = isFeatureEnabled("arcadeArt");
+const idleFrameCount = isArcade ? 10 : 4;
+const walkFrameCount = isArcade ? 10 : 4;
+
 const playerStateOffsets = createStateOffsets({
-  ATTACK_1: { x: -6, y: 0 },
-  ATTACK_2: { x: -3, y: 0 },
-  ATTACK_3: { x: -3, y: 0 },
-  AIR_ATTACK: { x: -9, y: 3 },
-  SPECIAL: { x: -7, y: 0 },
-  HIT: { x: 2, y: 0 },
-  KNOCKDOWN: { x: -12, y: 9 },
-  DEAD: { x: -12, y: 9 },
+  ATTACK_1: { x: -5, y: 0 },
+  ATTACK_2: { x: -4, y: 0 },
+  ATTACK_3: { x: -4, y: 0 },
+  AIR_ATTACK: { x: -6, y: 2 },
+  SPECIAL: { x: -8, y: 0 },
+  HIT: { x: 3, y: 0 },
+  KNOCKDOWN: { x: -10, y: isArcade ? 18 : 9 },
+  DEAD: { x: -10, y: isArcade ? 18 : 9 },
 });
 
 const enemyStateOffsets = createStateOffsets({
-  ATTACK_1: { x: -6, y: 0 },
+  ATTACK_1: { x: -5, y: 0 },
   ATTACK_2: { x: -4, y: 0 },
   ATTACK_3: { x: -4, y: 0 },
-  AIR_ATTACK: { x: -8, y: 3 },
-  SPECIAL: { x: -7, y: 0 },
-  HIT: { x: 2, y: 0 },
-  KNOCKDOWN: { x: -11, y: 12 },
-  DEAD: { x: -11, y: 12 },
+  AIR_ATTACK: { x: -6, y: 2 },
+  SPECIAL: { x: -8, y: 0 },
+  HIT: { x: 3, y: 0 },
+  KNOCKDOWN: { x: -10, y: isArcade ? 18 : 12 },
+  DEAD: { x: -10, y: isArcade ? 18 : 12 },
 });
 
 export const fighterVisualProfiles: Record<"player" | "enemy", FighterVisualProfile> = {
   player: {
-    scale: 3,
-    shadowWidth: 24,
-    shadowHeight: 8,
+    scale: isArcade ? 1 : 3,
+    shadowWidth: isArcade ? 36 : 24,
+    shadowHeight: isArcade ? 10 : 8,
     spriteAnchorOffsetY: 0,
     shadowOffsetY: 1,
     baselineOffsetByState: createLegacyBaselineOffsets(playerStateOffsets),
     stateOffsetByState: playerStateOffsets,
-    frameOffsetByTexture: {
-      idle_strip4: createFrameOffsets(4, {
-        2: { x: -1 },
-        3: { x: -1 },
-      }),
-      walk_strip4: createFrameOffsets(4, {
-        1: { x: -3 },
-        2: { x: -3 },
-        3: { x: -3 },
-      }),
+    frameOffsetByClip: {
+      idle: createFrameOffsets(idleFrameCount, isArcade ? 1 : 0),
+      walk: createFrameOffsets(walkFrameCount, 0),
     },
   },
   enemy: {
-    scale: 3,
-    shadowWidth: 24,
-    shadowHeight: 8,
+    scale: isArcade ? 1 : 3,
+    shadowWidth: isArcade ? 36 : 24,
+    shadowHeight: isArcade ? 10 : 8,
     spriteAnchorOffsetY: 0,
     shadowOffsetY: 1,
     baselineOffsetByState: createLegacyBaselineOffsets(enemyStateOffsets),
     stateOffsetByState: enemyStateOffsets,
-    frameOffsetByTexture: {
-      idle_strip4: createFrameOffsets(4, {
-        2: { x: -1 },
-        3: { x: -1 },
-      }),
-      walk_strip4: createFrameOffsets(4, {
-        1: { x: -3 },
-        2: { x: -2 },
-        3: { x: -3 },
-      }),
+    frameOffsetByClip: {
+      idle: createFrameOffsets(idleFrameCount, isArcade ? 1 : 0),
+      walk: createFrameOffsets(walkFrameCount, 0),
     },
   },
 };

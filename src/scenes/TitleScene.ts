@@ -1,20 +1,21 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
+import { isFeatureEnabled } from "../config/features";
+import { resetSessionState } from "../config/gameplay/sessionState";
 
 type MenuAction = "play" | "options" | "instructions" | "credits";
 
 interface MenuItem {
   label: string;
-  icon: string;
   action: MenuAction;
 }
 
 export class TitleScene extends Phaser.Scene {
   private readonly menuItems: MenuItem[] = [
-    { label: "JUGAR", icon: "▶", action: "play" },
-    { label: "OPCIONES", icon: "⚙", action: "options" },
-    { label: "INSTRUCCIONES", icon: "⌨", action: "instructions" },
-    { label: "CRÉDITOS", icon: "★", action: "credits" },
+    { label: "JUGAR", action: "play" },
+    { label: "OPCIONES", action: "options" },
+    { label: "INSTRUCCIONES", action: "instructions" },
+    { label: "CREDITOS", action: "credits" },
   ];
 
   private selectedIndex = 0;
@@ -112,7 +113,7 @@ export class TitleScene extends Phaser.Scene {
       const background = this.add.rectangle(0, 0, 160, 22, 0x06070d, 0.85).setOrigin(0, 0);
       const border = this.add.rectangle(0, 0, 160, 22, 0x68abff, 0).setOrigin(0, 0).setStrokeStyle(1, 0x68abff, 0.85);
       const label = this.add
-        .text(10, 5, `${item.icon} ${item.label}`, {
+        .text(10, 5, item.label, {
           fontFamily: "monospace",
           fontSize: "11px",
           color: "#f2f5ff",
@@ -135,7 +136,7 @@ export class TitleScene extends Phaser.Scene {
     }
 
     this.add
-      .text(50, 234, "↑↓ Navegar  •  ENTER confirmar", {
+      .text(50, 234, "UP/DOWN para navegar  |  ENTER confirmar", {
         fontFamily: "monospace",
         fontSize: "10px",
         color: "#ffd7ec",
@@ -243,11 +244,11 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private showCredits(): void {
-    this.infoPanelTitle.setText("CRÉDITOS");
+    this.infoPanelTitle.setText("CREDITOS");
     this.infoPanelText.setVisible(true);
     this.optionsVolumeText.setVisible(false);
     this.infoPanelText.setText(
-      "Diseño y código: proyecto Spain 90\n\nInspirado en beat 'em ups noventeros de recreativa.\n\nPulsa JUGAR para entrar en la calle.",
+      "Diseno y codigo: proyecto Spain 90\n\nInspirado en beat 'em ups noventeros de recreativa.",
     );
   }
 
@@ -256,7 +257,7 @@ export class TitleScene extends Phaser.Scene {
     this.infoPanelText.setVisible(true);
     this.optionsVolumeText.setVisible(false);
     this.infoPanelText.setText(
-      "Un exboxeador vuelve a su barrio para cortar la extorsión.\n\nLimpia la zona, resiste y avanza hasta el jefe final.",
+      "Un exboxeador vuelve a su barrio para cortar la extorsion.\n\nLimpia zonas, derrota cabecillas y recupera territorio.",
     );
   }
 
@@ -265,7 +266,7 @@ export class TitleScene extends Phaser.Scene {
     this.infoPanelText.setVisible(false);
     this.optionsVolumeText.setVisible(true);
     this.optionsVolumeText.setText(
-      `Volumen general: ${Math.round(this.volume * 100)}%\n\nUsa ← → para ajustar.\nEl valor se guarda automáticamente.`,
+      `Volumen general: ${Math.round(this.volume * 100)}%\n\nUsa LEFT/RIGHT para ajustar.\nEl valor se guarda automaticamente.`,
     );
   }
 
@@ -289,11 +290,11 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private startGame(): void {
-    if (!this.scene.isActive("StreetScene")) {
-      this.scene.start("StreetScene");
+    resetSessionState();
+    if (isFeatureEnabled("characterSelect")) {
+      this.scene.start("CharacterSelectScene");
+      return;
     }
-    if (!this.scene.isActive("HudScene")) {
-      this.scene.launch("HudScene");
-    }
+    this.scene.start("StreetScene");
   }
 }

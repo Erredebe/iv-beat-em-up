@@ -1,5 +1,5 @@
 import type { EnemyBasic } from "../entities/EnemyBasic";
-import { cloneSpawnZones, street95Zone1Spawns, type StageSpawnPointConfig, type StageSpawnZoneConfig } from "../config/levels/street95Zone1Spawns";
+import { cloneSpawnZones, type StageSpawnPointConfig, type StageSpawnZoneConfig } from "../config/levels/stageSpawnTypes";
 import type { GroundObstacle, CollisionSystem } from "./CollisionSystem";
 
 interface ZoneRuntime {
@@ -23,7 +23,7 @@ export class SpawnManager {
   constructor(
     collisionSystem: CollisionSystem,
     createEnemy: (spawn: StageSpawnPointConfig) => EnemyBasic,
-    zoneConfig: StageSpawnZoneConfig[] = street95Zone1Spawns,
+    zoneConfig: StageSpawnZoneConfig[],
   ) {
     this.collisionSystem = collisionSystem;
     this.createEnemy = createEnemy;
@@ -115,7 +115,18 @@ export class SpawnManager {
     return zone ? zone.cleared : false;
   }
 
+  areAllZonesCleared(): boolean {
+    if (this.zones.length === 0) {
+      return true;
+    }
+    return this.zones.every((zone) => zone.cleared);
+  }
+
   getActiveZoneId(): string | null {
     return this.activeZoneId;
+  }
+
+  getRemainingEnemies(): number {
+    return this.zones.reduce((count, zone) => count + zone.enemies.filter((enemy) => enemy.isAlive()).length, 0);
   }
 }

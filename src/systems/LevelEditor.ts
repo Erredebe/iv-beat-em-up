@@ -14,7 +14,7 @@ type LaneAnchor = "topY" | "bottomY" | "playerSpawnY";
 
 const EDITOR_TOOLS: EditorTool[] = ["prop", "collision", "spawn", "zone", "lane"];
 const PROP_TEXTURE_OPTIONS = ["prop_booth", "prop_crate", "prop_car"] as const;
-const SCALE_OPTIONS: Array<1 | 2 | 3> = [1, 2, 3];
+const SCALE_OPTIONS: Array<1 | 2 | 3 | 4> = [1, 2, 3, 4];
 
 interface EditorKeyMap {
   toggle: Phaser.Input.Keyboard.Key;
