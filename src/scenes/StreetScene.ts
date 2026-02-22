@@ -19,7 +19,7 @@ import {
 import { street95Zone1Layout } from "../config/levels/street95Zone1";
 import { street95Zone1Spawns } from "../config/levels/street95Zone1Spawns";
 import { fighterVisualProfiles } from "../config/visual/fighterVisualProfiles";
-import { EnemyBasic, buildEnemyAttackData } from "../entities/EnemyBasic";
+import { EnemyBasic, buildEnemyAttackData, type EnemyArchetype } from "../entities/EnemyBasic";
 import { Player, buildPlayerAttackData } from "../entities/Player";
 import { AudioSystem } from "../systems/AudioSystem";
 import { CollisionSystem } from "../systems/CollisionSystem";
@@ -136,7 +136,7 @@ export class StreetScene extends Phaser.Scene {
       this.levelEditor.destroy();
     });
 
-    this.spawnManager = new SpawnManager(this.collisionSystem, (x, y) => this.spawnEnemy(x, y), street95Zone1Spawns);
+    this.spawnManager = new SpawnManager(this.collisionSystem, (spawn) => this.spawnEnemy(spawn.x, spawn.y, spawn.archetype), street95Zone1Spawns);
     this.enemies.push(...this.spawnManager.startWave("zone_1"));
     this.announceZoneLock("zone_1", this.time.now);
 
@@ -278,18 +278,25 @@ export class StreetScene extends Phaser.Scene {
     this.renderDebug(delta);
   }
 
-  private spawnEnemy(x: number, y: number): EnemyBasic {
+  private spawnEnemy(x: number, y: number, archetype: EnemyArchetype = "brawler"): EnemyBasic {
+    const profile = archetype === "tank"
+      ? { maxHp: ENEMY_MAX_HP + 28, moveSpeed: ENEMY_MOVE_SPEED * 0.75, tint: 0xffd0a1 }
+      : archetype === "rusher"
+        ? { maxHp: ENEMY_MAX_HP - 12, moveSpeed: ENEMY_MOVE_SPEED * 1.22, tint: 0xc7dcff }
+        : { maxHp: ENEMY_MAX_HP, moveSpeed: ENEMY_MOVE_SPEED, tint: 0xfff4f8 };
+
     const enemy = new EnemyBasic(this, {
       id: `E_${Math.floor(this.time.now)}_${Math.floor(Math.random() * 1000)}`,
       team: "enemy",
       x,
       y,
       texture: "enemy",
-      maxHp: ENEMY_MAX_HP,
-      moveSpeed: ENEMY_MOVE_SPEED,
+      maxHp: profile.maxHp,
+      moveSpeed: profile.moveSpeed,
       attackData: this.enemyAttackData,
       visualProfile: fighterVisualProfiles.enemy,
-    });
+    }, archetype);
+    enemy.sprite.setTint(profile.tint);
     this.collisionSystem.attachFootCollider(enemy);
     this.collisionSystem.applyWorldBounds(enemy);
     this.depthSystem.register(enemy.shadow, -1, () => enemy.y);
@@ -376,10 +383,26 @@ export class StreetScene extends Phaser.Scene {
       isPaused: this.isPausedByPlayer,
       isGameOver: !this.player.isAlive(),
       zoneMessage: this.zoneMessage,
+      objectiveText: this.getObjectiveText(),
       bindingHints: this.inputManager.getBindingHints(),
     });
   }
 
+
+
+  private getObjectiveText(): string {
+    if (!this.player.isAlive()) {
+      return "Pulsa ENTER para reintentar";
+    }
+
+    const activeZoneId = this.spawnManager.getActiveZoneId();
+    if (activeZoneId) {
+      const remaining = this.enemies.filter((enemy) => enemy.isAlive()).length;
+      return `Derrota a los enemigos (${remaining} restantes)`;
+    }
+
+    return "Avanza por la calle hasta la siguiente zona";
+  }
 
   private announceZoneLock(zoneId: string, now: number): void {
     this.announcedZoneId = zoneId;

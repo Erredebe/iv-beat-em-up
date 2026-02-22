@@ -1,6 +1,9 @@
+import type { EnemyArchetype } from "../../entities/EnemyBasic";
+
 export interface StageSpawnPointConfig {
   x: number;
   y: number;
+  archetype?: EnemyArchetype;
 }
 
 export interface StageSpawnZoneConfig {
@@ -20,6 +23,7 @@ export function cloneSpawnZones(config: StageSpawnZoneConfig[]): StageSpawnZoneC
     spawns: zone.spawns.map((spawn) => ({
       x: spawn.x,
       y: spawn.y,
+      archetype: spawn.archetype,
     })),
   }));
 }
@@ -30,13 +34,20 @@ export const street95Zone1Spawns: StageSpawnZoneConfig[] = [
     triggerX: 300,
     leftBarrierX: 60,
     rightBarrierX: 860,
-    spawns: [{ x: 640, y: 204 }],
+    spawns: [
+      { x: 600, y: 204, archetype: "brawler" },
+      { x: 760, y: 188, archetype: "rusher" },
+    ],
   },
   {
     id: "zone_2",
     triggerX: 1080,
     leftBarrierX: 1040,
     rightBarrierX: 1680,
-    spawns: [{ x: 1460, y: 208 }],
+    spawns: [
+      { x: 1380, y: 204, archetype: "brawler" },
+      { x: 1500, y: 212, archetype: "tank" },
+      { x: 1600, y: 192, archetype: "rusher" },
+    ],
   },
 ];
