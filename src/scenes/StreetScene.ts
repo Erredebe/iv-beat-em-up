@@ -210,7 +210,7 @@ export class StreetScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0, this.stageBundle.layout.cameraYOffset, this.stageWorldWidth, BASE_HEIGHT);
     this.cameras.main.setRoundPixels(true);
-    this.cameras.main.setZoom(1);
+    this.cameras.main.setZoom(1.08);
 
     this.flashOverlay = this.add
       .rectangle(0, 0, BASE_WIDTH, BASE_HEIGHT, 0xffffff, 0)

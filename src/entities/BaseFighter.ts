@@ -130,8 +130,13 @@ export class BaseFighter {
     this.spriteOutline = scene.add.sprite(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, initialTexture, 0);
     this.spriteOutline.setOrigin(0.5, 1);
     this.spriteOutline.setScale(this.visualProfile.scale);
-    this.spriteOutline.setTint(0x101010);
-    this.spriteOutline.setAlpha(0.6);
+    if (this.team === "player") {
+      this.spriteOutline.setTint(0xcfe6ff);
+      this.spriteOutline.setAlpha(0.52);
+    } else {
+      this.spriteOutline.setTint(0x101010);
+      this.spriteOutline.setAlpha(0.56);
+    }
 
     this.sprite = scene.add.sprite(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, initialTexture, 0);
     this.sprite.setOrigin(0.5, 1);

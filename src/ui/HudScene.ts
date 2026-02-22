@@ -40,13 +40,14 @@ export class HudScene extends Phaser.Scene {
   private pausePanel!: Phaser.GameObjects.Container;
   private tutorialPanel!: Phaser.GameObjects.Container;
   private zoneMessagePanel!: Phaser.GameObjects.Container;
+  private objectivePanel!: Phaser.GameObjects.Container;
   private gameOverPanel!: Phaser.GameObjects.Container;
   private gameOverDim!: Phaser.GameObjects.Rectangle;
   private pauseDim!: Phaser.GameObjects.Rectangle;
   private hudElements: Phaser.GameObjects.GameObject[] = [];
   private maxBarWidth = 148;
   private specialBarWidth = 96;
-  private targetBarWidth = 94;
+  private targetBarWidth = 120;
   private currentPayload: HudPayload | null = null;
   private displayedPlayerHp = 0;
   private renderedHintsKey = "";
@@ -119,6 +120,7 @@ export class HudScene extends Phaser.Scene {
     this.controlsPanel.setVisible(this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
     this.pausePanel.setVisible(this.currentPayload.isPaused);
     this.tutorialPanel.setVisible(this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
+    this.objectivePanel.setVisible(!this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
     this.zoneMessagePanel.setVisible(Boolean(this.currentPayload.zoneMessage) && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
     this.zoneMessageText.setText(this.currentPayload.zoneMessage ?? "");
     this.objectiveText.setText(this.currentPayload.objectiveText);
@@ -145,12 +147,12 @@ export class HudScene extends Phaser.Scene {
 
   private createMainHud(): void {
     const frame = this.add.container(0, 0).setScrollFactor(0).setDepth(5600);
-    frame.add(this.add.rectangle(8, 8, 268, 74, 0x070a12, 0.82).setOrigin(0, 0));
-    frame.add(this.add.rectangle(8, 8, 268, 74, 0x3f5c7a, 0).setOrigin(0, 0).setStrokeStyle(1, 0x6f89a3, 0.9));
-    frame.add(this.add.rectangle(64, 34, 176, 12, 0x161522, 1).setOrigin(0, 0));
+    frame.add(this.add.rectangle(8, 8, 258, 72, 0x070a12, 0.68).setOrigin(0, 0));
+    frame.add(this.add.rectangle(8, 8, 258, 72, 0x3f5c7a, 0).setOrigin(0, 0).setStrokeStyle(1, 0x6f89a3, 0.86));
+    frame.add(this.add.rectangle(64, 34, 174, 12, 0x161522, 0.92).setOrigin(0, 0));
 
     this.portrait = this.add.image(34, 44, "portrait_boxeador").setOrigin(0.5).setScale(0.95).setTint(0xfff4dd).setDepth(5602);
-    this.hpLag = this.add.rectangle(67, 40, this.maxBarWidth, 8, 0x5c2143, 0.92).setOrigin(0, 0.5).setDepth(5602);
+    this.hpLag = this.add.rectangle(67, 40, this.maxBarWidth, 8, 0x5c2143, 0.86).setOrigin(0, 0.5).setDepth(5602);
     this.hpFill = this.add.rectangle(67, 40, this.maxBarWidth, 8, 0xf06b3b, 1).setOrigin(0, 0.5).setDepth(5603);
     this.specialFill = this.add.rectangle(67, 58, this.specialBarWidth, 6, 0x4dc8ff, 1).setOrigin(0, 0.5).setDepth(5603);
 
@@ -195,7 +197,7 @@ export class HudScene extends Phaser.Scene {
       .setDepth(5604);
 
     this.scoreLabel = this.add
-      .text(264, 10, "PUNTOS 000000", {
+      .text(262, 10, "PUNTOS 000000", {
         fontFamily: "monospace",
         fontSize: "10px",
         color: "#fff1c3",
@@ -206,7 +208,7 @@ export class HudScene extends Phaser.Scene {
       .setOrigin(1, 0);
 
     this.timeLabel = this.add
-      .text(264, 24, "TIEMPO 000", {
+      .text(262, 24, "TIEMPO 000", {
         fontFamily: "monospace",
         fontSize: "10px",
         color: "#ffcc88",
@@ -248,15 +250,15 @@ export class HudScene extends Phaser.Scene {
 
   private createTargetHud(): void {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5600);
-    panel.add(this.add.rectangle(286, 10, 134, 32, 0x090910, 0.68).setOrigin(0, 0));
-    panel.add(this.add.rectangle(294, 24, this.targetBarWidth, 7, 0x232334, 1).setOrigin(0, 0.5));
-    panel.add(this.add.tileSprite(286, 10, 134, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
+    panel.add(this.add.rectangle(266, 8, 174, 32, 0x090910, 0.62).setOrigin(0, 0));
+    panel.add(this.add.rectangle(274, 22, this.targetBarWidth, 7, 0x232334, 0.92).setOrigin(0, 0.5));
+    panel.add(this.add.tileSprite(266, 8, 174, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
 
-    this.targetFill = this.add.rectangle(294, 24, this.targetBarWidth, 7, 0xff5a6f, 1).setOrigin(0, 0.5).setDepth(5602);
+    this.targetFill = this.add.rectangle(274, 22, this.targetBarWidth, 7, 0xff5a6f, 1).setOrigin(0, 0.5).setDepth(5602);
     this.targetLabel = this.add
-      .text(294, 12, "OBJETIVO", {
+      .text(274, 11, "OBJETIVO", {
         fontFamily: "monospace",
-        fontSize: "9px",
+        fontSize: "10px",
         color: "#ffd1e8",
       })
       .setDepth(5602);
@@ -316,19 +318,21 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createObjectivePanel(): void {
-    const panelY = 96;
+    const panelX = 266;
+    const panelY = 44;
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5590);
-    panel.add(this.add.rectangle(12, panelY, 340, 24, 0x040409, 0.9).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(12, panelY, 340, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
-    this.objectiveText = this.add.text(20, panelY + 6, "", {
+    panel.add(this.add.rectangle(panelX, panelY, 174, 30, 0x040409, 0.58).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(panelX, panelY, 174, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
+    this.objectiveText = this.add.text(panelX + 8, panelY + 6, "", {
       fontFamily: "monospace",
-      fontSize: "10px",
+      fontSize: "9px",
       color: "#d9f4ff",
       stroke: "#041018",
       strokeThickness: 2,
-      wordWrap: { width: 324 },
+      wordWrap: { width: 158 },
     });
     panel.add(this.objectiveText);
+    this.objectivePanel = panel;
   }
 
   private createGameOverPanel(): void {
@@ -570,6 +574,7 @@ export class HudScene extends Phaser.Scene {
     this.enemyBarsGraphics?.setVisible(visible);
     if (!visible) {
       this.targetPanel.setVisible(false);
+      this.objectivePanel.setVisible(false);
       this.controlsPanel.setVisible(false);
       this.tutorialPanel.setVisible(false);
       this.zoneMessagePanel.setVisible(false);

@@ -205,24 +205,29 @@ function resampleToTarget(frameData, box, scale) {
   const out = createEmptyFrame();
   const centerX = (box.minX + box.maxX) * 0.5;
   const footY = box.maxY;
+  const dstMinX = clamp(Math.floor((box.minX - centerX) * scale + centerX) - 1, 0, FRAME_WIDTH - 1);
+  const dstMaxX = clamp(Math.ceil((box.maxX - centerX) * scale + centerX) + 1, 0, FRAME_WIDTH - 1);
+  const dstMinY = clamp(Math.floor((box.minY - footY) * scale + footY) - 1, 0, FRAME_HEIGHT - 1);
+  const dstMaxY = clamp(Math.ceil((box.maxY - footY) * scale + footY) + 1, 0, FRAME_HEIGHT - 1);
 
-  for (let y = box.minY; y <= box.maxY; y += 1) {
-    for (let x = box.minX; x <= box.maxX; x += 1) {
-      const srcIndex = frameOffset(x, y);
+  // Inverse mapping avoids transparent seams/columns when scaling attack frames.
+  for (let y = dstMinY; y <= dstMaxY; y += 1) {
+    for (let x = dstMinX; x <= dstMaxX; x += 1) {
+      const srcX = Math.round((x - centerX) / scale + centerX);
+      const srcY = Math.round((y - footY) / scale + footY);
+      if (srcX < box.minX || srcX > box.maxX || srcY < box.minY || srcY > box.maxY) {
+        continue;
+      }
+      const srcIndex = frameOffset(srcX, srcY);
       const alpha = frameData[srcIndex + 3];
       if (alpha === 0) {
         continue;
       }
-      const mappedX = Math.round((x - centerX) * scale + centerX);
-      const mappedY = Math.round((y - footY) * scale + footY);
-      if (mappedX < 0 || mappedX >= FRAME_WIDTH || mappedY < 0 || mappedY >= FRAME_HEIGHT) {
-        continue;
-      }
-      const dstIndex = frameOffset(mappedX, mappedY);
+      const dstIndex = frameOffset(x, y);
       out[dstIndex] = frameData[srcIndex];
       out[dstIndex + 1] = frameData[srcIndex + 1];
       out[dstIndex + 2] = frameData[srcIndex + 2];
-      out[dstIndex + 3] = frameData[srcIndex + 3];
+      out[dstIndex + 3] = alpha;
     }
   }
   return out;

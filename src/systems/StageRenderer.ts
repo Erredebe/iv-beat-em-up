@@ -205,7 +205,7 @@ export class StageRenderer {
     gradient.setDepth(0);
     this.backgroundGradient = gradient;
 
-    const gradeAlpha = this.layout.ambientFx.fogAlpha ?? 0.2;
+    const gradeAlpha = Phaser.Math.Clamp((this.layout.ambientFx.fogAlpha ?? 0.2) * 0.72, 0.04, 0.14);
     const gradeColor = this.layout.ambientFx.colorGrade ?? 0x1a1130;
     const grade = this.scene.add.rectangle(worldWidth * 0.5, BASE_HEIGHT * 0.5, worldWidth, BASE_HEIGHT, gradeColor, gradeAlpha);
     grade.setDepth(3200);
