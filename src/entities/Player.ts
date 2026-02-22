@@ -126,7 +126,7 @@ function applyCommonAttackDefaults(data: AttackFrameData): AttackFrameData {
 }
 
 function buildSpecialByProfile(base: AttackFrameData, profileId: SpecialProfileId): AttackFrameData {
-  if (profileId === "boxeador_power") {
+  if (profileId === "kastro_power") {
     return applyCommonAttackDefaults({
       ...base,
       damage: Math.max(base.damage, 38),
@@ -143,7 +143,7 @@ function buildSpecialByProfile(base: AttackFrameData, profileId: SpecialProfileI
       selfMoveActiveEnd: base.activeEnd,
     });
   }
-  if (profileId === "veloz_rush") {
+  if (profileId === "marina_rush") {
     return applyCommonAttackDefaults({
       ...base,
       damage: Math.max(8, Math.round(base.damage * 0.58)),

@@ -1,7 +1,8 @@
+import type { SpecialSfxKey } from "../audio/specialSfx";
 import type { AnimationOwner } from "../visual/fighterAnimationSets";
 
-export type CharacterId = "boxeador" | "veloz" | "tecnico";
-export type SpecialProfileId = "boxeador_power" | "veloz_rush" | "tecnico_control";
+export type CharacterId = "kastro" | "marina" | "meneillos";
+export type SpecialProfileId = "kastro_power" | "marina_rush" | "meneillos_control";
 
 export interface PlayableCharacterProfile {
   id: CharacterId;
@@ -9,7 +10,7 @@ export interface PlayableCharacterProfile {
   portraitKey: string;
   animationOwner: AnimationOwner;
   specialProfileId: SpecialProfileId;
-  specialSfxKey: "sfx_special_boxeador" | "sfx_special_veloz" | "sfx_special_tecnico";
+  specialSfxKey: SpecialSfxKey;
   maxHp: number;
   moveSpeed: number;
   damageMultiplier: number;
@@ -19,46 +20,46 @@ export interface PlayableCharacterProfile {
 }
 
 export const playableRoster: Record<CharacterId, PlayableCharacterProfile> = {
-  boxeador: {
-    id: "boxeador",
-    displayName: "BOXEADOR",
-    portraitKey: "portrait_boxeador",
-    animationOwner: "boxeador",
-    specialProfileId: "boxeador_power",
-    specialSfxKey: "sfx_special_boxeador",
-    maxHp: 130,
-    moveSpeed: 126,
-    damageMultiplier: 1.18,
-    comboSpeedMultiplier: 0.94,
+  kastro: {
+    id: "kastro",
+    displayName: "KASTRO",
+    portraitKey: "portrait_kastro",
+    animationOwner: "kastro",
+    specialProfileId: "kastro_power",
+    specialSfxKey: "sfx_special_kastro",
+    maxHp: 138,
+    moveSpeed: 124,
+    damageMultiplier: 1.22,
+    comboSpeedMultiplier: 0.92,
     comboWindowBonusFrames: 0,
     tint: 0xfff6ee,
   },
-  veloz: {
-    id: "veloz",
-    displayName: "VELOZ",
-    portraitKey: "portrait_veloz",
-    animationOwner: "veloz",
-    specialProfileId: "veloz_rush",
-    specialSfxKey: "sfx_special_veloz",
-    maxHp: 100,
-    moveSpeed: 156,
-    damageMultiplier: 0.9,
-    comboSpeedMultiplier: 1.12,
+  marina: {
+    id: "marina",
+    displayName: "MARINA",
+    portraitKey: "portrait_marina",
+    animationOwner: "marina",
+    specialProfileId: "marina_rush",
+    specialSfxKey: "sfx_special_marina",
+    maxHp: 96,
+    moveSpeed: 164,
+    damageMultiplier: 0.88,
+    comboSpeedMultiplier: 1.16,
     comboWindowBonusFrames: 2,
     tint: 0xd4ecff,
   },
-  tecnico: {
-    id: "tecnico",
-    displayName: "TECNICO",
-    portraitKey: "portrait_tecnico",
-    animationOwner: "tecnico",
-    specialProfileId: "tecnico_control",
-    specialSfxKey: "sfx_special_tecnico",
-    maxHp: 115,
-    moveSpeed: 138,
-    damageMultiplier: 1,
+  meneillos: {
+    id: "meneillos",
+    displayName: "MENEILLOS",
+    portraitKey: "portrait_meneillos",
+    animationOwner: "meneillos",
+    specialProfileId: "meneillos_control",
+    specialSfxKey: "sfx_special_meneillos",
+    maxHp: 116,
+    moveSpeed: 142,
+    damageMultiplier: 1.02,
     comboSpeedMultiplier: 1,
-    comboWindowBonusFrames: 3,
+    comboWindowBonusFrames: 4,
     tint: 0xffe8c2,
   },
 };

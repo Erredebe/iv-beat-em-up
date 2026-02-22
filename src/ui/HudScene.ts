@@ -151,7 +151,7 @@ export class HudScene extends Phaser.Scene {
     frame.add(this.add.rectangle(8, 8, 258, 72, 0x3f5c7a, 0).setOrigin(0, 0).setStrokeStyle(1, 0x6f89a3, 0.86));
     frame.add(this.add.rectangle(64, 34, 174, 12, 0x161522, 0.92).setOrigin(0, 0));
 
-    this.portrait = this.add.image(34, 44, "portrait_boxeador").setOrigin(0.5).setScale(0.95).setTint(0xfff4dd).setDepth(5602);
+    this.portrait = this.add.image(34, 44, "portrait_kastro").setOrigin(0.5).setScale(0.95).setTint(0xfff4dd).setDepth(5602);
     this.hpLag = this.add.rectangle(67, 40, this.maxBarWidth, 8, 0x5c2143, 0.86).setOrigin(0, 0.5).setDepth(5602);
     this.hpFill = this.add.rectangle(67, 40, this.maxBarWidth, 8, 0xf06b3b, 1).setOrigin(0, 0.5).setDepth(5603);
     this.specialFill = this.add.rectangle(67, 58, this.specialBarWidth, 6, 0x4dc8ff, 1).setOrigin(0, 0.5).setDepth(5603);

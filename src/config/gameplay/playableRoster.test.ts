@@ -4,15 +4,15 @@ import { playableCharacters, playableRoster } from "./playableRoster";
 describe("playable roster", () => {
   it("defines exactly 3 playable archetypes", () => {
     expect(playableCharacters.length).toBe(3);
-    expect(Object.keys(playableRoster)).toEqual(["boxeador", "veloz", "tecnico"]);
+    expect(Object.keys(playableRoster)).toEqual(["kastro", "marina", "meneillos"]);
   });
 
   it("keeps core stat identity coherent", () => {
-    expect(playableRoster.boxeador.maxHp).toBeGreaterThan(playableRoster.veloz.maxHp);
-    expect(playableRoster.veloz.moveSpeed).toBeGreaterThan(playableRoster.boxeador.moveSpeed);
-    expect(playableRoster.tecnico.comboWindowBonusFrames).toBeGreaterThanOrEqual(2);
-    expect(playableRoster.boxeador.animationOwner).not.toBe(playableRoster.veloz.animationOwner);
-    expect(playableRoster.boxeador.specialProfileId).not.toBe(playableRoster.veloz.specialProfileId);
-    expect(playableRoster.veloz.specialSfxKey).not.toBe(playableRoster.tecnico.specialSfxKey);
+    expect(playableRoster.kastro.maxHp).toBeGreaterThan(playableRoster.marina.maxHp);
+    expect(playableRoster.marina.moveSpeed).toBeGreaterThan(playableRoster.kastro.moveSpeed);
+    expect(playableRoster.meneillos.comboWindowBonusFrames).toBeGreaterThanOrEqual(4);
+    expect(playableRoster.kastro.animationOwner).not.toBe(playableRoster.marina.animationOwner);
+    expect(playableRoster.kastro.specialProfileId).not.toBe(playableRoster.marina.specialProfileId);
+    expect(playableRoster.marina.specialSfxKey).not.toBe(playableRoster.meneillos.specialSfxKey);
   });
 });

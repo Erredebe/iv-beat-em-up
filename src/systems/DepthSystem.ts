@@ -2,6 +2,7 @@ interface DepthEntry {
   object: Phaser.GameObjects.GameObject & { y: number; depth: number };
   offset: number;
   yResolver?: () => number;
+  priority: number;
 }
 
 export class DepthSystem {
@@ -11,8 +12,9 @@ export class DepthSystem {
     object: Phaser.GameObjects.GameObject & { y: number; depth: number },
     offset = 0,
     yResolver?: () => number,
+    priority = 0,
   ): void {
-    this.entries.push({ object, offset, yResolver });
+    this.entries.push({ object, offset, yResolver, priority });
   }
 
   unregister(object: Phaser.GameObjects.GameObject): void {
@@ -25,7 +27,7 @@ export class DepthSystem {
   update(): void {
     for (const entry of this.entries) {
       const y = entry.yResolver ? entry.yResolver() : entry.object.y;
-      entry.object.depth = y + entry.offset;
+      entry.object.depth = y + entry.offset + entry.priority * 0.001;
     }
   }
 
@@ -35,6 +37,6 @@ export class DepthSystem {
       return null;
     }
     const y = entry.yResolver ? entry.yResolver() : entry.object.y;
-    return y + entry.offset;
+    return y + entry.offset + entry.priority * 0.001;
   }
 }

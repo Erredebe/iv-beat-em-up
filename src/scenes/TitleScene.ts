@@ -257,7 +257,7 @@ export class TitleScene extends Phaser.Scene {
     this.infoPanelText.setVisible(true);
     this.optionsVolumeText.setVisible(false);
     this.infoPanelText.setText(
-      "Un exboxeador vuelve a su barrio para cortar la extorsion.\n\nLimpia zonas, derrota cabecillas y recupera territorio.",
+      "Kastro, Marina y Meneillos se plantan contra la extorsion del barrio.\n\nLimpia zonas, derrota cabecillas y recupera territorio.",
     );
   }
 

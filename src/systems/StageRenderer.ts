@@ -99,9 +99,9 @@ export class StageRenderer {
         image.setTint(0x6f8f68).setAlpha(0.9);
       }
       if (config.depthAnchorY !== undefined) {
-        depthSystem.register(image, config.depthOffset, () => config.depthAnchorY!);
+        depthSystem.register(image, config.depthOffset, () => config.depthAnchorY!, 5);
       } else {
-        depthSystem.register(image, config.depthOffset);
+        depthSystem.register(image, config.depthOffset, undefined, 5);
       }
       return image;
     });

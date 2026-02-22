@@ -84,7 +84,7 @@ function createVisualProfile(
 }
 
 export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile> = {
-  boxeador: createVisualProfile(
+  kastro: createVisualProfile(
     {
       ATTACK_1: { x: -3, y: 0 },
       ATTACK_2: { x: -3, y: 0 },
@@ -96,7 +96,7 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
     },
     { shadowWidth: 38, shadowHeight: 10, shadowOffsetY: 1, idleBob: 1 },
   ),
-  veloz: createVisualProfile(
+  marina: createVisualProfile(
     {
       ATTACK_1: { x: -4, y: -1 },
       ATTACK_2: { x: -4, y: -1 },
@@ -109,7 +109,7 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
     },
     { shadowWidth: 34, shadowHeight: 9, shadowOffsetY: 1, idleBob: 1 },
   ),
-  tecnico: createVisualProfile(
+  meneillos: createVisualProfile(
     {
       ATTACK_1: { x: -2, y: 0 },
       ATTACK_2: { x: -3, y: 0 },
@@ -137,4 +137,5 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
   ),
 };
 
-fighterVisualProfiles.enemy.frameOffsetByClip.knockdown = createConstantFrameOffsets(10, 13);
+fighterVisualProfiles.marina.frameOffsetByClip.knockdown = createConstantFrameOffsets(10, 15);
+fighterVisualProfiles.enemy.frameOffsetByClip.knockdown = createConstantFrameOffsets(10, 15);

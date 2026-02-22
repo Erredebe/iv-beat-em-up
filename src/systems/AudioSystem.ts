@@ -1,14 +1,14 @@
 import Phaser from "phaser";
+import { SPECIAL_SFX_KEYS, type SpecialSfxKey } from "../config/audio/specialSfx";
 import { featureFlags } from "../config/features";
 
 type ThemeId = "theme_a" | "theme_b";
 type SfxCategory = "hit" | "jump" | "special" | "knockdown" | "break" | "ui";
-export type SpecialSfxKey = "sfx_special_boxeador" | "sfx_special_veloz" | "sfx_special_tecnico";
 
 const SFX_POOL: Record<SfxCategory, string[]> = {
   hit: ["sfx_hit", "sfx_hit_alt"],
   jump: ["sfx_jump"],
-  special: ["sfx_special_boxeador", "sfx_special_veloz", "sfx_special_tecnico"],
+  special: [...SPECIAL_SFX_KEYS],
   knockdown: ["sfx_knockdown"],
   break: ["sfx_break"],
   ui: ["sfx_ui"],

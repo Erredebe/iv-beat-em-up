@@ -4,7 +4,7 @@
 
 ## Que incluye esta version
 
-- 3 personajes jugables (`boxeador`, `veloz`, `tecnico`) con stats y frame-data propios
+- 3 protagonistas jugables (`Kastro`, `Marina`, `Meneillos`) con stats y frame-data propios
 - 6 clases de enemigos (`brawler`, `rusher`, `tank`, `agile_f`, `bat_wielder`, `mini_boss`)
 - 4 escenarios de campana:
   - `market_95`

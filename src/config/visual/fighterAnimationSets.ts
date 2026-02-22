@@ -1,6 +1,6 @@
 import type Phaser from "phaser";
 
-export type AnimationOwner = "boxeador" | "veloz" | "tecnico" | "enemy";
+export type AnimationOwner = "kastro" | "marina" | "meneillos" | "enemy";
 
 export type AnimationClipId =
   | "idle"
@@ -49,9 +49,9 @@ interface OwnerTempo {
 }
 
 const OWNER_TEMPO: Record<AnimationOwner, OwnerTempo> = {
-  boxeador: { idle: 11, walk: 12, attack: 14, hurt: 11, knockdown: 9 },
-  veloz: { idle: 13, walk: 16, attack: 18, hurt: 13, knockdown: 11 },
-  tecnico: { idle: 12, walk: 14, attack: 16, hurt: 12, knockdown: 10 },
+  kastro: { idle: 11, walk: 12, attack: 14, hurt: 11, knockdown: 9 },
+  marina: { idle: 13, walk: 16, attack: 18, hurt: 13, knockdown: 11 },
+  meneillos: { idle: 12, walk: 14, attack: 16, hurt: 12, knockdown: 10 },
   enemy: { idle: 12, walk: 14, attack: 15, hurt: 12, knockdown: 10 },
 };
 
@@ -92,9 +92,9 @@ function createSet(owner: AnimationOwner): FighterAnimationSet {
 }
 
 const ACTIVE_SETS: Record<AnimationOwner, FighterAnimationSet> = {
-  boxeador: createSet("boxeador"),
-  veloz: createSet("veloz"),
-  tecnico: createSet("tecnico"),
+  kastro: createSet("kastro"),
+  marina: createSet("marina"),
+  meneillos: createSet("meneillos"),
   enemy: createSet("enemy"),
 };
 

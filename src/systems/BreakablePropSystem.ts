@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import type { BaseFighter } from "../entities/BaseFighter";
 import type { StageBreakablePropConfig } from "../config/levels/stageTypes";
 import type { DepthSystem } from "./DepthSystem";
+import type { CollisionSystem, GroundObstacle } from "./CollisionSystem";
 
 interface BreakableRuntime {
   id: string;
@@ -12,6 +13,7 @@ interface BreakableRuntime {
   destroyed: boolean;
   hitByAttack: Set<string>;
   hurtbox: Phaser.Geom.Rectangle;
+  obstacle: GroundObstacle;
 }
 
 function rectIntersects(a: Phaser.Geom.Rectangle, b: Phaser.Geom.Rectangle): boolean {
@@ -31,11 +33,13 @@ export interface BreakableHitResult {
 export class BreakablePropSystem {
   private readonly scene: Phaser.Scene;
   private readonly depthSystem: DepthSystem;
+  private readonly collisionSystem: CollisionSystem;
   private readonly props: BreakableRuntime[] = [];
 
-  constructor(scene: Phaser.Scene, depthSystem: DepthSystem, props: StageBreakablePropConfig[]) {
+  constructor(scene: Phaser.Scene, depthSystem: DepthSystem, collisionSystem: CollisionSystem, props: StageBreakablePropConfig[]) {
     this.scene = scene;
     this.depthSystem = depthSystem;
+    this.collisionSystem = collisionSystem;
 
     for (const config of props) {
       const sprite = scene.add
@@ -43,12 +47,23 @@ export class BreakablePropSystem {
         .setOrigin(config.originX, config.originY)
         .setScale(config.scale)
         .setTint(0xb8c7d2);
-      depthSystem.register(sprite, 0);
+      depthSystem.register(sprite, 0, undefined, 6);
 
       const width = sprite.width * config.scale;
       const height = sprite.height * config.scale;
       const left = config.x - width * config.originX;
       const top = config.y - height * config.originY;
+      const footprintWidth = Math.max(18, Math.min(width, Math.round(width * 0.58)));
+      const footprintHeight = 14;
+      const footprintY = top + height - footprintHeight * 0.5;
+      const obstacle = this.collisionSystem.registerGroundObstacle({
+        id: `${config.id}_breakable_feet`,
+        x: config.x,
+        y: footprintY,
+        width: footprintWidth,
+        height: footprintHeight,
+        color: 0xffcc66,
+      });
 
       this.props.push({
         id: config.id,
@@ -59,6 +74,7 @@ export class BreakablePropSystem {
         destroyed: false,
         hitByAttack: new Set<string>(),
         hurtbox: new Phaser.Geom.Rectangle(left, top, width, height),
+        obstacle,
       });
     }
   }
@@ -101,6 +117,7 @@ export class BreakablePropSystem {
           prop.destroyed = true;
           brokenCount += 1;
           pointsAwarded += prop.points;
+          this.collisionSystem.setObstacleEnabled(prop.obstacle, false);
           this.depthSystem.unregister(prop.sprite);
           this.scene.tweens.add({
             targets: prop.sprite,
@@ -122,6 +139,7 @@ export class BreakablePropSystem {
 
   destroy(): void {
     for (const prop of this.props) {
+      this.collisionSystem.setObstacleEnabled(prop.obstacle, false);
       if (!prop.destroyed) {
         this.depthSystem.unregister(prop.sprite);
         prop.sprite.destroy();

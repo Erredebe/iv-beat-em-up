@@ -86,9 +86,9 @@ export class StreetScene extends Phaser.Scene {
   private selectedCharacter = getPlayableCharacter(this.stageEntryState.selectedCharacter);
   private playerAttackData!: Record<AttackId, AttackFrameData>;
   private readonly comboByCharacter = {
-    boxeador: boxeadorComboRaw,
-    veloz: velozComboRaw,
-    tecnico: tecnicoComboRaw,
+    kastro: boxeadorComboRaw,
+    marina: velozComboRaw,
+    meneillos: tecnicoComboRaw,
   };
   private perfEnabled = false;
   private perfText: Phaser.GameObjects.Text | null = null;
@@ -162,9 +162,9 @@ export class StreetScene extends Phaser.Scene {
     this.collisionSystem.attachFootCollider(this.player);
     this.collisionSystem.applyWorldBounds(this.player);
 
-    this.depthSystem.register(this.player.shadow, -1, () => this.player.y);
-    this.depthSystem.register(this.player.spriteOutline, -0.2, () => this.player.y);
-    this.depthSystem.register(this.player.sprite, 0, () => this.player.y);
+    this.depthSystem.register(this.player.shadow, -1, () => this.player.y, -20);
+    this.depthSystem.register(this.player.spriteOutline, -0.2, () => this.player.y, -10);
+    this.depthSystem.register(this.player.sprite, 0, () => this.player.y, 20);
 
     this.combatSystem = new CombatSystem({
       hitStopSystem: this.hitStopSystem,
@@ -200,7 +200,7 @@ export class StreetScene extends Phaser.Scene {
     }
 
     this.breakablePropSystem = featureFlags.breakableProps
-      ? new BreakablePropSystem(this, this.depthSystem, this.stageBundle.layout.breakableProps)
+      ? new BreakablePropSystem(this, this.depthSystem, this.collisionSystem, this.stageBundle.layout.breakableProps)
       : null;
 
     this.levelEditor = new LevelEditor(this, {
@@ -415,9 +415,9 @@ export class StreetScene extends Phaser.Scene {
     enemy.sprite.setTint(profile.tint);
     this.collisionSystem.attachFootCollider(enemy);
     this.collisionSystem.applyWorldBounds(enemy);
-    this.depthSystem.register(enemy.shadow, -1, () => enemy.y);
-    this.depthSystem.register(enemy.spriteOutline, -0.2, () => enemy.y);
-    this.depthSystem.register(enemy.sprite, 0, () => enemy.y);
+    this.depthSystem.register(enemy.shadow, -1, () => enemy.y, -20);
+    this.depthSystem.register(enemy.spriteOutline, -0.2, () => enemy.y, -10);
+    this.depthSystem.register(enemy.sprite, 0, () => enemy.y, 20);
     return enemy;
   }
 

@@ -1,7 +1,7 @@
 import type { AssetManifestEntry } from "../assetTypes";
 import { localAsset } from "../assetTypes";
 
-type ManifestAnimationOwner = "boxeador" | "veloz" | "tecnico" | "enemy";
+type ManifestAnimationOwner = "kastro" | "marina" | "meneillos" | "enemy";
 
 function createArcadeCharacterSet(owner: ManifestAnimationOwner): AssetManifestEntry[] {
   const packId = "arcade_90" as const;
@@ -155,8 +155,8 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
     tags: ["background", "arcade"],
   },
   {
-    key: "portrait_boxeador",
-    path: localAsset("arcade/ui/portrait_boxeador.png"),
+    key: "portrait_kastro",
+    path: localAsset("arcade/ui/portrait_kastro.png"),
     type: "image",
     role: "ui",
     critical: true,
@@ -171,8 +171,8 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
     tags: ["ui", "portrait", "arcade"],
   },
   {
-    key: "portrait_veloz",
-    path: localAsset("arcade/ui/portrait_veloz.png"),
+    key: "portrait_marina",
+    path: localAsset("arcade/ui/portrait_marina.png"),
     type: "image",
     role: "ui",
     critical: true,
@@ -187,8 +187,8 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
     tags: ["ui", "portrait", "arcade"],
   },
   {
-    key: "portrait_tecnico",
-    path: localAsset("arcade/ui/portrait_tecnico.png"),
+    key: "portrait_meneillos",
+    path: localAsset("arcade/ui/portrait_meneillos.png"),
     type: "image",
     role: "ui",
     critical: true,
@@ -283,7 +283,7 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
     tags: ["audio", "sfx", "jump"],
   },
   {
-    key: "sfx_special_boxeador",
+    key: "sfx_special_kastro",
     path: localAsset("arcade/audio/sfx_special.wav"),
     type: "audio",
     role: "audio",
@@ -296,10 +296,10 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
     paletteProfile: "impact-arcade",
     scaleProfile: "audio-sfx",
     packId: "arcade_90",
-    tags: ["audio", "sfx", "special", "boxeador"],
+    tags: ["audio", "sfx", "special", "kastro"],
   },
   {
-    key: "sfx_special_veloz",
+    key: "sfx_special_marina",
     path: localAsset("arcade/audio/sfx_special.wav"),
     type: "audio",
     role: "audio",
@@ -312,10 +312,10 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
     paletteProfile: "impact-arcade",
     scaleProfile: "audio-sfx",
     packId: "arcade_90",
-    tags: ["audio", "sfx", "special", "veloz"],
+    tags: ["audio", "sfx", "special", "marina"],
   },
   {
-    key: "sfx_special_tecnico",
+    key: "sfx_special_meneillos",
     path: localAsset("arcade/audio/sfx_special.wav"),
     type: "audio",
     role: "audio",
@@ -328,7 +328,7 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
     paletteProfile: "impact-arcade",
     scaleProfile: "audio-sfx",
     packId: "arcade_90",
-    tags: ["audio", "sfx", "special", "tecnico"],
+    tags: ["audio", "sfx", "special", "meneillos"],
   },
   {
     key: "sfx_knockdown",
@@ -381,9 +381,9 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
 ];
 
 export const arcadeManifest: AssetManifestEntry[] = [
-  ...createArcadeCharacterSet("boxeador"),
-  ...createArcadeCharacterSet("veloz"),
-  ...createArcadeCharacterSet("tecnico"),
+  ...createArcadeCharacterSet("kastro"),
+  ...createArcadeCharacterSet("marina"),
+  ...createArcadeCharacterSet("meneillos"),
   ...createArcadeCharacterSet("enemy"),
   ...ARCADE_COMMON,
 ];

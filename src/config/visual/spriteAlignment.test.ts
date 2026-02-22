@@ -37,7 +37,7 @@ function getFrameOffset(
 
 describe("fighter sprite alignment", () => {
   it("keeps expected 64x128 source dimensions for every arcade runtime sprite", () => {
-    for (const profileId of ["boxeador", "veloz", "tecnico", "enemy"] as AnimationOwner[]) {
+    for (const profileId of ["kastro", "marina", "meneillos", "enemy"] as AnimationOwner[]) {
       const animationSet = getFighterAnimationSet(profileId);
       for (const clipId of Object.keys(animationSet.clips) as AnimationClipId[]) {
         const clip = animationSet.clips[clipId];
@@ -55,7 +55,7 @@ describe("fighter sprite alignment", () => {
   });
 
   it("keeps visual feet near the baseline across frames", () => {
-    for (const profileId of ["boxeador", "veloz", "tecnico", "enemy"] as AnimationOwner[]) {
+    for (const profileId of ["kastro", "marina", "meneillos", "enemy"] as AnimationOwner[]) {
       const animationSet = getFighterAnimationSet(profileId);
       for (const clipId of Object.keys(animationSet.clips) as AnimationClipId[]) {
         const clip = animationSet.clips[clipId];

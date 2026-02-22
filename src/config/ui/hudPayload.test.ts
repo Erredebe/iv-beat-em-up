@@ -5,9 +5,9 @@ describe("hud payload contract", () => {
   it("requires arcade HUD fields", () => {
     const payload: HudPayload = {
       playerHp: 120,
-      playerMaxHp: 130,
-      playerName: "BOXEADOR",
-      playerPortraitKey: "portrait_boxeador",
+      playerMaxHp: 138,
+      playerName: "KASTRO",
+      playerPortraitKey: "portrait_kastro",
       score: 1200,
       timeRemainingSec: 99,
       specialCooldownRatio: 0.5,

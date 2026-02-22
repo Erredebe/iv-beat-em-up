@@ -9,19 +9,19 @@ Politica aplicada:
 ## Runtime (`arcade_90`)
 
 ### Personajes (64x128, strips de 10 frames)
-`boxeador_idle_strip10, boxeador_walk_strip10, boxeador_attack1_strip10, boxeador_attack2_strip10, boxeador_attack3_strip10, boxeador_air_attack_strip10, boxeador_special_strip10, boxeador_hurt_strip10, boxeador_knockdown_strip10, boxeador_getup_strip10`
+`kastro_idle_strip10, kastro_walk_strip10, kastro_attack1_strip10, kastro_attack2_strip10, kastro_attack3_strip10, kastro_air_attack_strip10, kastro_special_strip10, kastro_hurt_strip10, kastro_knockdown_strip10, kastro_getup_strip10`
 
-`veloz_idle_strip10, veloz_walk_strip10, veloz_attack1_strip10, veloz_attack2_strip10, veloz_attack3_strip10, veloz_air_attack_strip10, veloz_special_strip10, veloz_hurt_strip10, veloz_knockdown_strip10, veloz_getup_strip10`
+`marina_idle_strip10, marina_walk_strip10, marina_attack1_strip10, marina_attack2_strip10, marina_attack3_strip10, marina_air_attack_strip10, marina_special_strip10, marina_hurt_strip10, marina_knockdown_strip10, marina_getup_strip10`
 
-`tecnico_idle_strip10, tecnico_walk_strip10, tecnico_attack1_strip10, tecnico_attack2_strip10, tecnico_attack3_strip10, tecnico_air_attack_strip10, tecnico_special_strip10, tecnico_hurt_strip10, tecnico_knockdown_strip10, tecnico_getup_strip10`
+`meneillos_idle_strip10, meneillos_walk_strip10, meneillos_attack1_strip10, meneillos_attack2_strip10, meneillos_attack3_strip10, meneillos_air_attack_strip10, meneillos_special_strip10, meneillos_hurt_strip10, meneillos_knockdown_strip10, meneillos_getup_strip10`
 
 `enemy_idle_strip10, enemy_walk_strip10, enemy_attack1_strip10, enemy_attack2_strip10, enemy_attack3_strip10, enemy_air_attack_strip10, enemy_special_strip10, enemy_hurt_strip10, enemy_knockdown_strip10, enemy_getup_strip10`
 
 ### Escenario, fondos y UI
-`street_sheet, street_tileset, street_props, police_car_sheet, city_far, city_mid, city_close, portrait_boxeador, portrait_veloz, portrait_tecnico`
+`street_sheet, street_tileset, street_props, police_car_sheet, city_far, city_mid, city_close, portrait_kastro, portrait_marina, portrait_meneillos`
 
 ### Audio
-`theme_a, theme_b, sfx_hit, sfx_hit_alt, sfx_jump, sfx_special_boxeador, sfx_special_veloz, sfx_special_tecnico, sfx_knockdown, sfx_break, sfx_ui`
+`theme_a, theme_b, sfx_hit, sfx_hit_alt, sfx_jump, sfx_special_kastro, sfx_special_marina, sfx_special_meneillos, sfx_knockdown, sfx_break, sfx_ui`
 
 ### Derivaciones runtime
 `street_clean_tileset, prop_booth_front, prop_container, prop_window_panel, prop_crate, city_far_band, city_mid_band, city_close_band, hud_frame, ui_btn, hit_spark`
