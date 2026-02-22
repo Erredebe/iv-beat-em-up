@@ -43,6 +43,7 @@ export class HudScene extends Phaser.Scene {
   private gameOverPanel!: Phaser.GameObjects.Container;
   private gameOverDim!: Phaser.GameObjects.Rectangle;
   private pauseDim!: Phaser.GameObjects.Rectangle;
+  private hudElements: Phaser.GameObjects.GameObject[] = [];
   private maxBarWidth = 148;
   private specialBarWidth = 96;
   private targetBarWidth = 116;
@@ -113,6 +114,7 @@ export class HudScene extends Phaser.Scene {
 
     this.updateTargetBar();
     this.drawEnemyBars();
+    this.setHudVisible(!this.currentPayload.isGameOver);
     this.controlsPanel.setVisible(this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
     this.pausePanel.setVisible(this.currentPayload.isPaused);
     this.tutorialPanel.setVisible(this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
@@ -227,6 +229,20 @@ export class HudScene extends Phaser.Scene {
     ]) {
       obj.setScrollFactor(0);
     }
+
+    this.hudElements.push(
+      frame,
+      this.portrait,
+      this.hpLag,
+      this.hpFill,
+      this.specialFill,
+      this.hpLabel,
+      this.hpValue,
+      this.specialLabel,
+      this.stageLabel,
+      this.scoreLabel,
+      this.timeLabel,
+    );
   }
 
   private createTargetHud(): void {
@@ -507,6 +523,10 @@ export class HudScene extends Phaser.Scene {
     if (!this.currentPayload) {
       return;
     }
+    if (this.currentPayload.isGameOver) {
+      this.targetPanel.setVisible(false);
+      return;
+    }
     const target = this.currentPayload.targetEnemy;
     if (!target) {
       this.targetPanel.setVisible(false);
@@ -535,6 +555,19 @@ export class HudScene extends Phaser.Scene {
       this.enemyBarsGraphics.fillRect(x, y, width, 5);
       this.enemyBarsGraphics.fillStyle(0xd9435f, 1);
       this.enemyBarsGraphics.fillRect(x + 1, y + 1, Math.floor((width - 2) * ratio), 3);
+    }
+  }
+
+  private setHudVisible(visible: boolean): void {
+    for (const obj of this.hudElements) {
+      obj.setVisible(visible);
+    }
+    this.enemyBarsGraphics?.setVisible(visible);
+    if (!visible) {
+      this.targetPanel.setVisible(false);
+      this.controlsPanel.setVisible(false);
+      this.tutorialPanel.setVisible(false);
+      this.zoneMessagePanel.setVisible(false);
     }
   }
 }

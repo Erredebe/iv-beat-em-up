@@ -706,20 +706,6 @@ export class BaseFighter {
   }
 
   private getClipScaleMultiplier(clipId: AnimationClipId): number {
-    if (!isFeatureEnabled("arcadeArt")) {
-      return 1;
-    }
-
-    if (
-      clipId === "attack1" ||
-      clipId === "attack2" ||
-      clipId === "attack3" ||
-      clipId === "airAttack" ||
-      clipId === "special"
-    ) {
-      return 1.5;
-    }
-
     return 1;
   }
 
