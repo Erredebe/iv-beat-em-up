@@ -45,6 +45,9 @@ export function buildEnemyAttackData(
     knockbackX: archetype === "mini_boss" ? 130 : archetype === "bat_wielder" ? 108 : 90,
     causesKnockdown: archetype === "mini_boss" || archetype === "bat_wielder",
     visualClipId: enemyVisualClipId,
+    hitboxMode: "forward" as const,
+    maxHitsPerTarget: 1,
+    reHitCooldownFrames: 5,
     hitbox: {
       offsetX: archetype === "mini_boss" ? 26 : archetype === "bat_wielder" ? 24 : 18,
       offsetY: -58,
@@ -54,11 +57,11 @@ export function buildEnemyAttackData(
   };
 
   return {
-    ATTACK_1: { ...source.ATTACK_1, visualClipId: "attack1" },
-    ATTACK_2: { ...source.ATTACK_2, visualClipId: "attack2" },
-    ATTACK_3: { ...source.ATTACK_3, visualClipId: "attack3" },
-    AIR_ATTACK: { ...source.AIR_ATTACK, visualClipId: "airAttack" },
-    SPECIAL: { ...source.SPECIAL, visualClipId: "special" },
+    ATTACK_1: { ...source.ATTACK_1, visualClipId: "attack1", hitboxMode: "forward", maxHitsPerTarget: 1 },
+    ATTACK_2: { ...source.ATTACK_2, visualClipId: "attack2", hitboxMode: "forward", maxHitsPerTarget: 1 },
+    ATTACK_3: { ...source.ATTACK_3, visualClipId: "attack3", hitboxMode: "forward", maxHitsPerTarget: 1 },
+    AIR_ATTACK: { ...source.AIR_ATTACK, visualClipId: "airAttack", hitboxMode: "forward", maxHitsPerTarget: 1 },
+    SPECIAL: { ...source.SPECIAL, visualClipId: "special", hitboxMode: "forward", maxHitsPerTarget: 1 },
     ENEMY_ATTACK: enemyBase,
   };
 }

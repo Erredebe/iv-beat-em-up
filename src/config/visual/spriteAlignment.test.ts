@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PNG } from "pngjs";
 import { describe, expect, it } from "vitest";
-import { getFighterAnimationSet, type AnimationClipId } from "./fighterAnimationSets";
+import { getFighterAnimationSet, type AnimationClipId, type AnimationOwner } from "./fighterAnimationSets";
 import { fighterVisualProfiles, type SpritePixelOffset } from "./fighterVisualProfiles";
 
 function readPng(path: string): PNG {
@@ -24,7 +24,7 @@ function getBottomPadding(png: PNG, frameIndex: number, frameWidth: number): num
 }
 
 function getFrameOffset(
-  profileId: "player" | "enemy",
+  profileId: AnimationOwner,
   clipId: AnimationClipId,
   frameIndex: number,
 ): SpritePixelOffset {
@@ -37,7 +37,7 @@ function getFrameOffset(
 
 describe("fighter sprite alignment", () => {
   it("keeps expected 64x128 source dimensions for every arcade runtime sprite", () => {
-    for (const profileId of ["player", "enemy"] as const) {
+    for (const profileId of ["boxeador", "veloz", "tecnico", "enemy"] as AnimationOwner[]) {
       const animationSet = getFighterAnimationSet(profileId);
       for (const clipId of Object.keys(animationSet.clips) as AnimationClipId[]) {
         const clip = animationSet.clips[clipId];
@@ -55,7 +55,7 @@ describe("fighter sprite alignment", () => {
   });
 
   it("keeps visual feet near the baseline across frames", () => {
-    for (const profileId of ["player", "enemy"] as const) {
+    for (const profileId of ["boxeador", "veloz", "tecnico", "enemy"] as AnimationOwner[]) {
       const animationSet = getFighterAnimationSet(profileId);
       for (const clipId of Object.keys(animationSet.clips) as AnimationClipId[]) {
         const clip = animationSet.clips[clipId];

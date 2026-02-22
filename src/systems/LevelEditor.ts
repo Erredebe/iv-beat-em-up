@@ -13,7 +13,7 @@ type ZoneAnchor = "triggerX" | "leftBarrierX" | "rightBarrierX";
 type LaneAnchor = "topY" | "bottomY" | "playerSpawnY";
 
 const EDITOR_TOOLS: EditorTool[] = ["prop", "collision", "spawn", "zone", "lane"];
-const PROP_TEXTURE_OPTIONS = ["prop_booth", "prop_crate", "prop_car"] as const;
+const PROP_TEXTURE_OPTIONS = ["prop_booth_front", "prop_window_panel", "prop_container", "prop_crate"] as const;
 const SCALE_OPTIONS: Array<1 | 2 | 3 | 4> = [1, 2, 3, 4];
 
 interface EditorKeyMap {

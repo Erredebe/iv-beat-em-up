@@ -83,6 +83,7 @@ export class StreetScene extends Phaser.Scene {
   private stageTransitionQueued = false;
   private score = 0;
   private stageEntryState = getSessionState();
+  private selectedCharacter = getPlayableCharacter(this.stageEntryState.selectedCharacter);
   private playerAttackData!: Record<AttackId, AttackFrameData>;
   private readonly comboByCharacter = {
     boxeador: boxeadorComboRaw,
@@ -138,6 +139,7 @@ export class StreetScene extends Phaser.Scene {
     this.stageRenderer.build(this.collisionSystem, this.depthSystem);
 
     const character = getPlayableCharacter(this.stageEntryState.selectedCharacter);
+    this.selectedCharacter = character;
     const comboRaw = (
       featureFlags.combatRework
         ? this.comboByCharacter[character.id]
@@ -150,11 +152,11 @@ export class StreetScene extends Phaser.Scene {
       team: "player",
       x: PLAYER_SPAWN_X,
       y: walkLane.playerSpawnY,
-      texture: "player",
+      animationOwner: character.animationOwner,
       maxHp: character.maxHp,
       moveSpeed: character.moveSpeed,
       attackData: this.playerAttackData,
-      visualProfile: fighterVisualProfiles.player,
+      visualProfile: fighterVisualProfiles[character.animationOwner],
     });
     this.player.sprite.setTint(character.tint);
     this.collisionSystem.attachFootCollider(this.player);
@@ -326,7 +328,7 @@ export class StreetScene extends Phaser.Scene {
       this.audioSystem.playJump();
     }
     if (playerEvents.specialStarted) {
-      this.audioSystem.playSpecial();
+      this.audioSystem.playSpecial(this.selectedCharacter.specialSfxKey);
       this.flashScene();
     }
 
@@ -404,7 +406,7 @@ export class StreetScene extends Phaser.Scene {
       team: "enemy",
       x,
       y,
-      texture: "enemy",
+      animationOwner: "enemy",
       maxHp: profile.maxHp,
       moveSpeed: profile.moveSpeed,
       attackData: enemyAttackData,
@@ -490,13 +492,11 @@ export class StreetScene extends Phaser.Scene {
 
     const stageElapsed = this.time.now - this.stageStartedAt;
     const timeRemainingSec = Math.max(0, Math.ceil((this.stageTimeLimitMs - stageElapsed) / 1000));
-    const character = getPlayableCharacter(this.stageEntryState.selectedCharacter);
-
     this.game.events.emit("hud:update", {
       playerHp: this.player.hp,
       playerMaxHp: this.player.maxHp,
-      playerName: character.displayName,
-      playerPortraitKey: character.portraitKey,
+      playerName: this.selectedCharacter.displayName,
+      playerPortraitKey: this.selectedCharacter.portraitKey,
       score: this.score,
       timeRemainingSec,
       specialCooldownRatio: this.player.getSpecialCooldownRatio(this.time.now),

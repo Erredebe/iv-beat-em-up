@@ -11,6 +11,7 @@ import {
   getAnimationKey,
   getFighterAnimationSet,
   type AnimationClipId,
+  type AnimationOwner,
   type FighterAnimationSet,
 } from "../config/visual/fighterAnimationSets";
 import type { FighterVisualProfile, SpritePixelOffset } from "../config/visual/fighterVisualProfiles";
@@ -22,7 +23,7 @@ interface AttackRuntime {
   elapsedMs: number;
   frame: number;
   instanceId: number;
-  hitTargets: Set<string>;
+  hitTargets: Map<string, { hitCount: number; lastHitFrame: number }>;
   queuedNextAttack: AttackId | null;
 }
 
@@ -59,7 +60,7 @@ interface FighterOptions {
   team: Team;
   x: number;
   y: number;
-  texture: "player" | "enemy";
+  animationOwner: AnimationOwner;
   maxHp: number;
   moveSpeed: number;
   attackData: Record<AttackId, AttackFrameData>;
@@ -93,7 +94,7 @@ export class BaseFighter {
   private airborne = false;
   private visualProfile: FighterVisualProfile;
   private animationSet: FighterAnimationSet;
-  private animationOwner: "player" | "enemy";
+  private animationOwner: AnimationOwner;
   private currentClipId: AnimationClipId;
   private currentClipScaleMultiplier = 1;
   private forceClipRestart = false;
@@ -108,7 +109,7 @@ export class BaseFighter {
     this.moveSpeed = options.moveSpeed;
     this.attackData = options.attackData;
     this.visualProfile = options.visualProfile ?? this.createDefaultVisualProfile();
-    this.animationOwner = options.texture;
+    this.animationOwner = options.animationOwner;
     this.animationSet = getFighterAnimationSet(this.animationOwner);
     this.currentClipId = this.animationSet.idleClip;
     const initialTexture = this.animationSet.clips[this.currentClipId].textureKey;
@@ -259,7 +260,7 @@ export class BaseFighter {
       elapsedMs: 0,
       frame: 1,
       instanceId: this.attackSerial,
-      hitTargets: new Set<string>(),
+      hitTargets: new Map(),
       queuedNextAttack: null,
     };
     this.applyStateForAttack(attackId);
@@ -298,17 +299,48 @@ export class BaseFighter {
   }
 
   hasHitTarget(targetId: string): boolean {
+    return !this.canHitTarget(targetId);
+  }
+
+  canHitTarget(targetId: string): boolean {
     if (!this.attackRuntime) {
       return false;
     }
-    return this.attackRuntime.hitTargets.has(targetId);
+    const attackData = this.attackData[this.attackRuntime.attackId];
+    if (!attackData) {
+      return false;
+    }
+    const targetRuntime = this.attackRuntime.hitTargets.get(targetId);
+    if (!targetRuntime) {
+      return true;
+    }
+
+    const maxHitsPerTarget = Math.max(1, attackData.maxHitsPerTarget ?? 1);
+    if (targetRuntime.hitCount >= maxHitsPerTarget) {
+      return false;
+    }
+
+    const defaultCooldown = Math.max(1, attackData.activeEnd - attackData.activeStart + 1);
+    const reHitCooldownFrames = Math.max(1, attackData.reHitCooldownFrames ?? defaultCooldown);
+    return this.attackRuntime.frame - targetRuntime.lastHitFrame >= reHitCooldownFrames;
   }
 
   markTargetHit(targetId: string): void {
     if (!this.attackRuntime) {
       return;
     }
-    this.attackRuntime.hitTargets.add(targetId);
+    const previous = this.attackRuntime.hitTargets.get(targetId);
+    if (!previous) {
+      this.attackRuntime.hitTargets.set(targetId, {
+        hitCount: 1,
+        lastHitFrame: this.attackRuntime.frame,
+      });
+      return;
+    }
+    this.attackRuntime.hitTargets.set(targetId, {
+      hitCount: previous.hitCount + 1,
+      lastHitFrame: this.attackRuntime.frame,
+    });
   }
 
   getActiveHitbox(): Rect | null {
@@ -321,10 +353,13 @@ export class BaseFighter {
       return null;
     }
 
-    const offsetX = data.hitbox.offsetX;
-    let x = this.facing === 1 ? this.x + offsetX : this.x - offsetX - data.hitbox.width;
-    if (this.attackRuntime.attackId === "SPECIAL") {
+    const hitboxMode = data.hitboxMode ?? (this.attackRuntime.attackId === "SPECIAL" ? "centered" : "forward");
+    let x: number;
+    if (hitboxMode === "centered") {
       x = this.x - data.hitbox.width * 0.5;
+    } else {
+      const offsetX = data.hitbox.offsetX;
+      x = this.facing === 1 ? this.x + offsetX : this.x - offsetX - data.hitbox.width;
     }
     const y = this.y + data.hitbox.offsetY - this.jumpHeight;
 
@@ -504,11 +539,16 @@ export class BaseFighter {
     }
 
     const data = this.attackData[this.attackRuntime.attackId];
+    const previousFrame = this.attackRuntime.frame;
     this.attackRuntime.elapsedMs += deltaMs;
-    this.attackRuntime.frame = Math.min(
+    const nextFrame = Math.min(
       data.totalFrames,
       Math.floor(this.attackRuntime.elapsedMs / ATTACK_FRAME_MS) + 1,
     );
+    this.attackRuntime.frame = nextFrame;
+    if (nextFrame > previousFrame) {
+      this.applyAttackSelfMovement(data, previousFrame + 1, nextFrame);
+    }
 
     if (this.attackRuntime.elapsedMs < data.totalFrames * ATTACK_FRAME_MS) {
       return;
@@ -528,6 +568,27 @@ export class BaseFighter {
       this.state = "IDLE";
     }
     this.forceClipRestart = true;
+  }
+
+  private applyAttackSelfMovement(data: AttackFrameData, fromFrame: number, toFrame: number): void {
+    const selfMoveXPerFrame = data.selfMoveXPerFrame ?? 0;
+    if (selfMoveXPerFrame === 0) {
+      return;
+    }
+    const activeStart = data.selfMoveActiveStart ?? data.activeStart;
+    const activeEnd = data.selfMoveActiveEnd ?? data.activeEnd;
+
+    let movedFrames = 0;
+    for (let frame = fromFrame; frame <= toFrame; frame += 1) {
+      if (frame >= activeStart && frame <= activeEnd) {
+        movedFrames += 1;
+      }
+    }
+    if (movedFrames <= 0) {
+      return;
+    }
+    const displacement = movedFrames * selfMoveXPerFrame * this.facing;
+    this.footCollider.setPosition(this.x + displacement, this.y);
   }
 
   private applyVelocity(deltaMs: number): void {

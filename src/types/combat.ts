@@ -61,6 +61,12 @@ export interface AttackFrameData {
   hitbox: HitboxShape;
   grantsInvulnMs?: number;
   visualClipId?: AttackVisualClipId;
+  hitboxMode?: "forward" | "centered";
+  maxHitsPerTarget?: number;
+  reHitCooldownFrames?: number;
+  selfMoveXPerFrame?: number;
+  selfMoveActiveStart?: number;
+  selfMoveActiveEnd?: number;
 }
 
 export interface DamageEvent {

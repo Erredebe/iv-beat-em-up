@@ -11,5 +11,8 @@ describe("playable roster", () => {
     expect(playableRoster.boxeador.maxHp).toBeGreaterThan(playableRoster.veloz.maxHp);
     expect(playableRoster.veloz.moveSpeed).toBeGreaterThan(playableRoster.boxeador.moveSpeed);
     expect(playableRoster.tecnico.comboWindowBonusFrames).toBeGreaterThanOrEqual(2);
+    expect(playableRoster.boxeador.animationOwner).not.toBe(playableRoster.veloz.animationOwner);
+    expect(playableRoster.boxeador.specialProfileId).not.toBe(playableRoster.veloz.specialProfileId);
+    expect(playableRoster.veloz.specialSfxKey).not.toBe(playableRoster.tecnico.specialSfxKey);
   });
 });

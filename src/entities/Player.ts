@@ -1,5 +1,5 @@
 import { SPECIAL_COOLDOWN_MS, SPECIAL_HP_COST_RATIO } from "../config/constants";
-import type { PlayableCharacterProfile } from "../config/gameplay/playableRoster";
+import type { PlayableCharacterProfile, SpecialProfileId } from "../config/gameplay/playableRoster";
 import type { AttackFrameData, AttackId } from "../types/combat";
 import { BaseFighter } from "./BaseFighter";
 import type { InputManager } from "../systems/InputManager";
@@ -115,24 +115,96 @@ function scaleFrameData(base: AttackFrameData, profile: PlayableCharacterProfile
   };
 }
 
+function applyCommonAttackDefaults(data: AttackFrameData): AttackFrameData {
+  return {
+    ...data,
+    hitboxMode: data.hitboxMode ?? "forward",
+    maxHitsPerTarget: data.maxHitsPerTarget ?? 1,
+    reHitCooldownFrames: data.reHitCooldownFrames ?? Math.max(1, data.activeEnd - data.activeStart + 1),
+    selfMoveXPerFrame: data.selfMoveXPerFrame ?? 0,
+  };
+}
+
+function buildSpecialByProfile(base: AttackFrameData, profileId: SpecialProfileId): AttackFrameData {
+  if (profileId === "boxeador_power") {
+    return applyCommonAttackDefaults({
+      ...base,
+      damage: Math.max(base.damage, 38),
+      knockbackX: Math.max(base.knockbackX, 190),
+      causesKnockdown: true,
+      iFrameMs: Math.max(base.iFrameMs, 220),
+      hitStunMs: Math.max(base.hitStunMs, 300),
+      hitStopMs: Math.max(base.hitStopMs, 120),
+      hitboxMode: "forward",
+      maxHitsPerTarget: 1,
+      reHitCooldownFrames: Math.max(1, base.activeEnd - base.activeStart + 1),
+      selfMoveXPerFrame: 1.2,
+      selfMoveActiveStart: base.activeStart,
+      selfMoveActiveEnd: base.activeEnd,
+    });
+  }
+  if (profileId === "veloz_rush") {
+    return applyCommonAttackDefaults({
+      ...base,
+      damage: Math.max(8, Math.round(base.damage * 0.58)),
+      knockbackX: Math.max(90, Math.round(base.knockbackX * 0.66)),
+      causesKnockdown: false,
+      iFrameMs: 34,
+      hitStunMs: 120,
+      hitStopMs: 55,
+      hitboxMode: "forward",
+      maxHitsPerTarget: 4,
+      reHitCooldownFrames: 2,
+      selfMoveXPerFrame: 3.1,
+      selfMoveActiveStart: Math.max(1, base.activeStart - 1),
+      selfMoveActiveEnd: base.activeEnd + 2,
+    });
+  }
+  return applyCommonAttackDefaults({
+    ...base,
+    damage: Math.max(base.damage, 30),
+    knockbackX: Math.max(base.knockbackX, 150),
+    causesKnockdown: true,
+    iFrameMs: 130,
+    hitStunMs: Math.max(base.hitStunMs, 220),
+    hitStopMs: Math.max(base.hitStopMs, 90),
+    hitbox: {
+      ...base.hitbox,
+      width: Math.max(base.hitbox.width, 62),
+    },
+    hitboxMode: "centered",
+    maxHitsPerTarget: 2,
+    reHitCooldownFrames: 6,
+    selfMoveXPerFrame: 0,
+  });
+}
+
 export function buildPlayerAttackData(
   raw: Record<string, AttackFrameData>,
   profile: PlayableCharacterProfile,
 ): Record<AttackId, AttackFrameData> {
-  const withClips = {
+  const withClips: Record<AttackId, AttackFrameData> = {
     ATTACK_1: { ...raw.ATTACK_1, visualClipId: "attack1" as const },
     ATTACK_2: { ...raw.ATTACK_2, visualClipId: "attack2" as const },
     ATTACK_3: { ...raw.ATTACK_3, visualClipId: "attack3" as const },
     AIR_ATTACK: { ...raw.AIR_ATTACK, visualClipId: "airAttack" as const },
     SPECIAL: { ...raw.SPECIAL, visualClipId: "special" as const },
+    ENEMY_ATTACK: { ...raw.ATTACK_1, visualClipId: "attack1" as const },
   };
 
+  const scaledAttack1 = applyCommonAttackDefaults(scaleFrameData(withClips.ATTACK_1, profile));
+  const scaledAttack2 = applyCommonAttackDefaults(scaleFrameData(withClips.ATTACK_2, profile));
+  const scaledAttack3 = applyCommonAttackDefaults(scaleFrameData(withClips.ATTACK_3, profile));
+  const scaledAirAttack = applyCommonAttackDefaults(scaleFrameData(withClips.AIR_ATTACK, profile));
+  const scaledSpecialBase = scaleFrameData(withClips.SPECIAL, profile);
+  const scaledSpecial = buildSpecialByProfile(scaledSpecialBase, profile.specialProfileId);
+
   return {
-    ATTACK_1: scaleFrameData(withClips.ATTACK_1, profile),
-    ATTACK_2: scaleFrameData(withClips.ATTACK_2, profile),
-    ATTACK_3: scaleFrameData(withClips.ATTACK_3, profile),
-    AIR_ATTACK: scaleFrameData(withClips.AIR_ATTACK, profile),
-    SPECIAL: scaleFrameData(withClips.SPECIAL, profile),
-    ENEMY_ATTACK: scaleFrameData(withClips.ATTACK_1, profile),
+    ATTACK_1: scaledAttack1,
+    ATTACK_2: scaledAttack2,
+    ATTACK_3: scaledAttack3,
+    AIR_ATTACK: scaledAirAttack,
+    SPECIAL: scaledSpecial,
+    ENEMY_ATTACK: scaledAttack1,
   };
 }

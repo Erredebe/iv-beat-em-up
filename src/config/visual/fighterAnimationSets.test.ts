@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getFighterAnimationSet, type AnimationClipId } from "./fighterAnimationSets";
+import { getFighterAnimationSet, type AnimationClipId, type AnimationOwner } from "./fighterAnimationSets";
 
 const REQUIRED_CLIPS: AnimationClipId[] = [
   "idle",
@@ -16,7 +16,7 @@ const REQUIRED_CLIPS: AnimationClipId[] = [
 
 describe("fighter animation sets", () => {
   it("defines all required clips with 10+ frames in arcade set", () => {
-    for (const fighterId of ["player", "enemy"] as const) {
+    for (const fighterId of ["boxeador", "veloz", "tecnico", "enemy"] as AnimationOwner[]) {
       const set = getFighterAnimationSet(fighterId);
       for (const clipId of REQUIRED_CLIPS) {
         const clip = set.clips[clipId];

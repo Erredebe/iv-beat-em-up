@@ -3,11 +3,12 @@ import { featureFlags } from "../config/features";
 
 type ThemeId = "theme_a" | "theme_b";
 type SfxCategory = "hit" | "jump" | "special" | "knockdown" | "break" | "ui";
+export type SpecialSfxKey = "sfx_special_boxeador" | "sfx_special_veloz" | "sfx_special_tecnico";
 
 const SFX_POOL: Record<SfxCategory, string[]> = {
   hit: ["sfx_hit", "sfx_hit_alt"],
   jump: ["sfx_jump"],
-  special: ["sfx_special"],
+  special: ["sfx_special_boxeador", "sfx_special_veloz", "sfx_special_tecnico"],
   knockdown: ["sfx_knockdown"],
   break: ["sfx_break"],
   ui: ["sfx_ui"],
@@ -71,7 +72,11 @@ export class AudioSystem {
     this.playFromPool("jump", 0.38, [0.95, 1.02]);
   }
 
-  playSpecial(): void {
+  playSpecial(sfxKey?: SpecialSfxKey): void {
+    if (sfxKey && this.scene.cache.audio.exists(sfxKey)) {
+      this.playSound(sfxKey, "special", 0.4, [0.96, 1.04]);
+      return;
+    }
     this.playFromPool("special", 0.4, [0.96, 1.04]);
   }
 
@@ -96,19 +101,22 @@ export class AudioSystem {
       return;
     }
 
-    const now = this.scene.time.now;
-    const cooldownUntil = this.categoryCooldownUntil.get(category) ?? 0;
-    if (now < cooldownUntil) {
-      return;
-    }
-    this.categoryCooldownUntil.set(category, now + CATEGORY_COOLDOWN_MS[category]);
-
     const pool = SFX_POOL[category].filter((key) => this.scene.cache.audio.exists(key));
     if (pool.length === 0) {
       return;
     }
 
     const key = featureFlags.enhancedSfx ? pool[Math.floor(Math.random() * pool.length)] : pool[0];
+    this.playSound(key, category, volume, randomRateRange);
+  }
+
+  private playSound(key: string, category: SfxCategory, volume: number, randomRateRange: [number, number]): void {
+    const now = this.scene.time.now;
+    const cooldownUntil = this.categoryCooldownUntil.get(category) ?? 0;
+    if (now < cooldownUntil) {
+      return;
+    }
+    this.categoryCooldownUntil.set(category, now + CATEGORY_COOLDOWN_MS[category]);
     const [minRate, maxRate] = randomRateRange;
     const rate = Phaser.Math.FloatBetween(minRate, maxRate);
     this.scene.sound.play(key, { volume, rate });

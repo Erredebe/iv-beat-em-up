@@ -53,7 +53,7 @@ export class CombatSystem {
         if (target === attacker || target.team === attacker.team || !target.isAlive()) {
           continue;
         }
-        if (attacker.hasHitTarget(target.id)) {
+        if (!attacker.canHitTarget(target.id)) {
           continue;
         }
 
@@ -74,10 +74,10 @@ export class CombatSystem {
         };
 
         const applied = this.applyDamage(target, event, nowMs);
-        attacker.markTargetHit(target.id);
         if (!applied) {
           continue;
         }
+        attacker.markTargetHit(target.id);
 
         this.hitStopSystem.trigger(attackData.hitStopMs);
         this.eventBus?.emit("combat:hit", {

@@ -1,6 +1,5 @@
 import type { FighterState } from "../../types/combat";
-import { isFeatureEnabled } from "../features";
-import type { AnimationClipId } from "./fighterAnimationSets";
+import type { AnimationClipId, AnimationOwner } from "./fighterAnimationSets";
 
 export interface SpritePixelOffset {
   x: number;
@@ -47,72 +46,95 @@ function createStateOffsets(
   return map;
 }
 
-function createLegacyBaselineOffsets(offsets: Record<FighterState, SpritePixelOffset>): Record<FighterState, number> {
-  const map = {} as Record<FighterState, number>;
-  for (const state of ALL_STATES) {
-    map[state] = offsets[state].y;
-  }
-  return map;
-}
-
-function createFrameOffsets(frameCount: number, wave = 0): SpritePixelOffset[] {
-  return Array.from({ length: frameCount }, (_, frame) => ({
+function createFrameOffsets(frameCount: number, bobAmplitude = 0): SpritePixelOffset[] {
+  return Array.from({ length: frameCount }, (_, frameIndex) => ({
     x: 0,
-    y: Math.round(Math.sin((frame / Math.max(1, frameCount - 1)) * Math.PI * 2) * wave),
+    y: Math.round(Math.sin((frameIndex / Math.max(1, frameCount - 1)) * Math.PI * 2) * bobAmplitude),
   }));
 }
 
-const isArcade = isFeatureEnabled("arcadeArt");
-const idleFrameCount = isArcade ? 10 : 4;
-const walkFrameCount = isArcade ? 10 : 4;
+function createConstantFrameOffsets(frameCount: number, yOffset: number): SpritePixelOffset[] {
+  return Array.from({ length: frameCount }, () => ({
+    x: 0,
+    y: yOffset,
+  }));
+}
 
-const playerStateOffsets = createStateOffsets({
-  ATTACK_1: { x: -5, y: 0 },
-  ATTACK_2: { x: -4, y: 0 },
-  ATTACK_3: { x: -4, y: 0 },
-  AIR_ATTACK: { x: -6, y: 2 },
-  SPECIAL: { x: -8, y: 0 },
-  HIT: { x: 3, y: 0 },
-  KNOCKDOWN: { x: -10, y: isArcade ? 18 : 9 },
-  DEAD: { x: -10, y: isArcade ? 18 : 9 },
-});
-
-const enemyStateOffsets = createStateOffsets({
-  ATTACK_1: { x: -5, y: 0 },
-  ATTACK_2: { x: -4, y: 0 },
-  ATTACK_3: { x: -4, y: 0 },
-  AIR_ATTACK: { x: -6, y: 2 },
-  SPECIAL: { x: -8, y: 0 },
-  HIT: { x: 3, y: 0 },
-  KNOCKDOWN: { x: -10, y: isArcade ? 18 : 12 },
-  DEAD: { x: -10, y: isArcade ? 18 : 12 },
-});
-
-export const fighterVisualProfiles: Record<"player" | "enemy", FighterVisualProfile> = {
-  player: {
-    scale: isArcade ? 1 : 3,
-    shadowWidth: isArcade ? 36 : 24,
-    shadowHeight: isArcade ? 10 : 8,
-    spriteAnchorOffsetY: 0,
-    shadowOffsetY: 1,
-    baselineOffsetByState: createLegacyBaselineOffsets(playerStateOffsets),
-    stateOffsetByState: playerStateOffsets,
-    frameOffsetByClip: {
-      idle: createFrameOffsets(idleFrameCount, isArcade ? 1 : 0),
-      walk: createFrameOffsets(walkFrameCount, 0),
-    },
+function createVisualProfile(
+  stateOffsets: Partial<Record<FighterState, Partial<SpritePixelOffset>>>,
+  options: {
+    shadowWidth: number;
+    shadowHeight: number;
+    shadowOffsetY: number;
+    idleBob?: number;
   },
-  enemy: {
-    scale: isArcade ? 1 : 3,
-    shadowWidth: isArcade ? 36 : 24,
-    shadowHeight: isArcade ? 10 : 8,
+): FighterVisualProfile {
+  return {
+    scale: 1,
+    shadowWidth: options.shadowWidth,
+    shadowHeight: options.shadowHeight,
     spriteAnchorOffsetY: 0,
-    shadowOffsetY: 1,
-    baselineOffsetByState: createLegacyBaselineOffsets(enemyStateOffsets),
-    stateOffsetByState: enemyStateOffsets,
+    shadowOffsetY: options.shadowOffsetY,
+    stateOffsetByState: createStateOffsets(stateOffsets),
     frameOffsetByClip: {
-      idle: createFrameOffsets(idleFrameCount, isArcade ? 1 : 0),
-      walk: createFrameOffsets(walkFrameCount, 0),
+      idle: createFrameOffsets(10, options.idleBob ?? 0),
+      walk: createFrameOffsets(10, 0),
     },
-  },
+  };
+}
+
+export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile> = {
+  boxeador: createVisualProfile(
+    {
+      ATTACK_1: { x: -3, y: 0 },
+      ATTACK_2: { x: -3, y: 0 },
+      ATTACK_3: { x: -4, y: 0 },
+      AIR_ATTACK: { x: -4, y: 1 },
+      SPECIAL: { x: -5, y: 0 },
+      KNOCKDOWN: { x: -8, y: 17 },
+      DEAD: { x: -8, y: 17 },
+    },
+    { shadowWidth: 38, shadowHeight: 10, shadowOffsetY: 1, idleBob: 1 },
+  ),
+  veloz: createVisualProfile(
+    {
+      ATTACK_1: { x: -4, y: -1 },
+      ATTACK_2: { x: -4, y: -1 },
+      ATTACK_3: { x: -5, y: -1 },
+      AIR_ATTACK: { x: -6, y: 0 },
+      SPECIAL: { x: -6, y: -1 },
+      HIT: { x: 2, y: 0 },
+      KNOCKDOWN: { x: -8, y: 16 },
+      DEAD: { x: -8, y: 16 },
+    },
+    { shadowWidth: 34, shadowHeight: 9, shadowOffsetY: 1, idleBob: 1 },
+  ),
+  tecnico: createVisualProfile(
+    {
+      ATTACK_1: { x: -2, y: 0 },
+      ATTACK_2: { x: -3, y: 0 },
+      ATTACK_3: { x: -4, y: 0 },
+      AIR_ATTACK: { x: -4, y: 1 },
+      SPECIAL: { x: -4, y: 0 },
+      HIT: { x: 2, y: 0 },
+      KNOCKDOWN: { x: -8, y: 17 },
+      DEAD: { x: -8, y: 17 },
+    },
+    { shadowWidth: 36, shadowHeight: 10, shadowOffsetY: 1, idleBob: 1 },
+  ),
+  enemy: createVisualProfile(
+    {
+      ATTACK_1: { x: -3, y: 0 },
+      ATTACK_2: { x: -3, y: 0 },
+      ATTACK_3: { x: -4, y: 0 },
+      AIR_ATTACK: { x: -4, y: 1 },
+      SPECIAL: { x: -5, y: 0 },
+      HIT: { x: 3, y: 0 },
+      KNOCKDOWN: { x: -8, y: 17 },
+      DEAD: { x: -8, y: 17 },
+    },
+    { shadowWidth: 36, shadowHeight: 10, shadowOffsetY: 1, idleBob: 1 },
+  ),
 };
+
+fighterVisualProfiles.enemy.frameOffsetByClip.knockdown = createConstantFrameOffsets(10, 13);

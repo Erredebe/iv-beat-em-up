@@ -15,7 +15,7 @@
 - HUD arcade ampliado: nombre, retrato, vida, especial, score, tiempo, objetivo y target enemigo
 - Props rompibles con puntuacion
 - Sistema de features por flags (`src/config/features.ts`) con overrides por query/localStorage
-- Pack de assets `arcade_90` activo por defecto + fallback `legacy_sms`
+- Pack de assets runtime unico `arcade_90` (sin fallback legacy)
 - Tests de manifiesto legal, crops, layouts, roster, animaciones y contratos HUD
 
 ## Stack
@@ -32,7 +32,7 @@
 - `src/systems/`: combate, colision, spawn, profundidad, audio, stage renderer, breakables
 - `src/config/gameplay/`: roster jugable, roster enemigo, campana y estado de sesion
 - `src/config/levels/`: catalogo y layouts de escenarios
-- `src/config/assets/`: manifiestos por pack y crops derivados
+- `src/config/assets/`: manifiesto runtime y crops derivados
 - `public/assets/external/arcade/`: pack arcade runtime
 - `ASSETS.md`: trazabilidad legal/licencias
 
@@ -58,6 +58,12 @@ Preview build:
 
 ```bash
 npm run preview
+```
+
+Regenerar sprites runtime por pipeline:
+
+```bash
+npm run build:runtime-images
 ```
 
 Tests:
@@ -89,7 +95,6 @@ Gamepad:
 
 Archivo: `src/config/features.ts`
 
-- `arcadeArt`
 - `combatRework`
 - `enemyRoster`
 - `stagePack`
@@ -100,15 +105,13 @@ Archivo: `src/config/features.ts`
 - `enhancedSfx`
 
 Override por URL (ejemplo):
-- `?ff_arcadeArt=0`
 - `?ff_storyIntro=0`
 
 ## Estado actual
 
-La base tecnica del upgrade arcade esta integrada y funcional con assets placeholder generados en runtime para el pack `arcade_90`.
-
-Si vas a seguir puliendo contenido final (arte/audio), revisa primero:
+La base tecnica usa un pipeline visual runtime unico (sin rama legacy). Si vas a seguir puliendo contenido final (arte/audio), revisa primero:
 - `src/config/assets/packs/arcadeManifest.ts`
+- `scripts/art/build-runtime-images.cjs`
 - `src/config/visual/fighterAnimationSets.ts`
 - `src/config/levels/stageCatalog.ts`
 - `src/scenes/StreetScene.ts`
