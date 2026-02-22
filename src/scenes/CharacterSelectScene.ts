@@ -3,11 +3,14 @@ import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
 import { campaignStageOrder } from "../config/gameplay/campaign";
 import { isFeatureEnabled } from "../config/features";
 import { playableCharacters } from "../config/gameplay/playableRoster";
+import { stageCatalog } from "../config/levels/stageCatalog";
 import { updateSessionState } from "../config/gameplay/sessionState";
 
 export class CharacterSelectScene extends Phaser.Scene {
   private selectedIndex = 0;
+  private selectedStageIndex = 0;
   private cards: Phaser.GameObjects.Container[] = [];
+  private selectedStageText!: Phaser.GameObjects.Text;
 
   constructor() {
     super("CharacterSelectScene");
@@ -66,7 +69,23 @@ export class CharacterSelectScene extends Phaser.Scene {
     }
 
     this.add
-      .text(BASE_WIDTH * 0.5, 214, "LEFT/RIGHT o A/D para elegir  |  ENTER para confirmar", {
+      .text(BASE_WIDTH * 0.5, 205, "NIVEL", {
+        fontFamily: "monospace",
+        fontSize: "10px",
+        color: "#f5ce7b",
+      })
+      .setOrigin(0.5);
+
+    this.selectedStageText = this.add
+      .text(BASE_WIDTH * 0.5, 217, "", {
+        fontFamily: "monospace",
+        fontSize: "11px",
+        color: "#f3f7ff",
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(BASE_WIDTH * 0.5, 232, "LEFT/RIGHT personaje  |  UP/DOWN nivel  |  ENTER confirmar", {
         fontFamily: "monospace",
         fontSize: "10px",
         color: "#f3dceb",
@@ -77,10 +96,15 @@ export class CharacterSelectScene extends Phaser.Scene {
     this.input.keyboard?.on("keydown-A", () => this.moveSelection(-1));
     this.input.keyboard?.on("keydown-RIGHT", () => this.moveSelection(1));
     this.input.keyboard?.on("keydown-D", () => this.moveSelection(1));
+    this.input.keyboard?.on("keydown-UP", () => this.moveStageSelection(-1));
+    this.input.keyboard?.on("keydown-DOWN", () => this.moveStageSelection(1));
+    this.input.keyboard?.on("keydown-W", () => this.moveStageSelection(-1));
+    this.input.keyboard?.on("keydown-S", () => this.moveStageSelection(1));
     this.input.keyboard?.on("keydown-ENTER", () => this.confirmSelection());
     this.input.keyboard?.on("keydown-SPACE", () => this.confirmSelection());
 
     this.refreshSelection();
+    this.refreshStageSelection();
   }
 
   private moveSelection(delta: number): void {
@@ -98,11 +122,23 @@ export class CharacterSelectScene extends Phaser.Scene {
     });
   }
 
+  private moveStageSelection(delta: number): void {
+    this.selectedStageIndex = Phaser.Math.Wrap(this.selectedStageIndex + delta, 0, campaignStageOrder.length);
+    this.refreshStageSelection();
+  }
+
+  private refreshStageSelection(): void {
+    const selectedStageId = campaignStageOrder[this.selectedStageIndex];
+    const selectedStage = stageCatalog[selectedStageId];
+    this.selectedStageText.setText(`< ${selectedStage.displayName.toUpperCase()} >`);
+  }
+
   private confirmSelection(): void {
     const selected = playableCharacters[this.selectedIndex];
+    const selectedStageId = campaignStageOrder[this.selectedStageIndex];
     updateSessionState({
       selectedCharacter: selected.id,
-      currentStageId: campaignStageOrder[0],
+      currentStageId: selectedStageId,
       score: 0,
       elapsedMs: 0,
     });
