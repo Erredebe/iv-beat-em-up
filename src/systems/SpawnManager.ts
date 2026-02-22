@@ -1,11 +1,11 @@
 import type { EnemyBasic } from "../entities/EnemyBasic";
-import { cloneSpawnZones, street95Zone1Spawns, type StageSpawnZoneConfig } from "../config/levels/street95Zone1Spawns";
+import { cloneSpawnZones, street95Zone1Spawns, type StageSpawnPointConfig, type StageSpawnZoneConfig } from "../config/levels/street95Zone1Spawns";
 import type { GroundObstacle, CollisionSystem } from "./CollisionSystem";
 
 interface ZoneRuntime {
   id: string;
   triggerX: number;
-  spawns: Array<{ x: number; y: number }>;
+  spawns: StageSpawnPointConfig[];
   leftBarrier: GroundObstacle;
   rightBarrier: GroundObstacle;
   started: boolean;
@@ -16,13 +16,13 @@ interface ZoneRuntime {
 
 export class SpawnManager {
   private readonly zones: ZoneRuntime[];
-  private readonly createEnemy: (x: number, y: number) => EnemyBasic;
+  private readonly createEnemy: (spawn: StageSpawnPointConfig) => EnemyBasic;
   private readonly collisionSystem: CollisionSystem;
   private activeZoneId: string | null = null;
 
   constructor(
     collisionSystem: CollisionSystem,
-    createEnemy: (x: number, y: number) => EnemyBasic,
+    createEnemy: (spawn: StageSpawnPointConfig) => EnemyBasic,
     zoneConfig: StageSpawnZoneConfig[] = street95Zone1Spawns,
   ) {
     this.collisionSystem = collisionSystem;
@@ -106,7 +106,7 @@ export class SpawnManager {
     this.collisionSystem.setObstacleEnabled(zone.leftBarrier, true);
     this.collisionSystem.setObstacleEnabled(zone.rightBarrier, true);
 
-    zone.enemies = zone.spawns.map((spawn) => this.createEnemy(spawn.x, spawn.y));
+    zone.enemies = zone.spawns.map((spawn) => this.createEnemy(spawn));
     return zone.enemies;
   }
 

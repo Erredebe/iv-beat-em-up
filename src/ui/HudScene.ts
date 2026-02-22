@@ -12,6 +12,7 @@ interface HudPayload {
   isGameOver: boolean;
   zoneMessage: string | null;
   bindingHints: { keyboard: string[]; gamepad: string[] };
+  objectiveText: string;
 }
 
 export class HudScene extends Phaser.Scene {
@@ -37,6 +38,7 @@ export class HudScene extends Phaser.Scene {
   private displayedPlayerHp = 0;
   private renderedHintsKey = "";
   private zoneMessageText!: Phaser.GameObjects.Text;
+  private objectiveText!: Phaser.GameObjects.Text;
   private wasGameOverVisible = false;
   private previousPlayerHp = 0;
 
@@ -53,6 +55,7 @@ export class HudScene extends Phaser.Scene {
     this.createPausePanel();
     this.createTutorialPanel();
     this.createZoneMessagePanel();
+    this.createObjectivePanel();
     this.createGameOverPanel();
     this.createCrtOverlay();
 
@@ -92,6 +95,7 @@ export class HudScene extends Phaser.Scene {
     this.tutorialPanel.setVisible(this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
     this.zoneMessagePanel.setVisible(Boolean(this.currentPayload.zoneMessage) && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
     this.zoneMessageText.setText(this.currentPayload.zoneMessage ?? "");
+    this.objectiveText.setText(this.currentPayload.objectiveText);
     this.gameOverPanel.setVisible(this.currentPayload.isGameOver);
 
     this.pauseDim.setVisible(this.currentPayload.isPaused && !this.currentPayload.isGameOver);
@@ -224,6 +228,21 @@ export class HudScene extends Phaser.Scene {
     panel.add(this.zoneMessageText);
     this.zoneMessagePanel = panel;
     panel.setVisible(false);
+  }
+
+
+  private createObjectivePanel(): void {
+    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5960);
+    panel.add(this.add.rectangle(84, 12, 262, 24, 0x040409, 0.9).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(84, 12, 262, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
+    this.objectiveText = this.add.text(92, 18, "", {
+      fontFamily: "monospace",
+      fontSize: "10px",
+      color: "#d9f4ff",
+      stroke: "#041018",
+      strokeThickness: 2,
+    });
+    panel.add(this.objectiveText);
   }
 
   private createGameOverPanel(): void {
