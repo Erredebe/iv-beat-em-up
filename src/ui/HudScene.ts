@@ -146,7 +146,7 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createMainHud(): void {
-    const mainHudScale = 0.8;
+    const mainHudScale = 0.9;
     const panel = this.add.container(6, 6).setScrollFactor(0).setDepth(5600).setScale(mainHudScale);
 
     const bg = this.add.rectangle(0, 0, 246, 66, 0x070a12, 0.68).setOrigin(0, 0);
@@ -168,7 +168,7 @@ export class HudScene extends Phaser.Scene {
 
     this.hpValue = this.add.text(46, 14, "120 / 120", {
       fontFamily: "monospace",
-      fontSize: "9px",
+      fontSize: "10px",
       color: "#ffffff",
       stroke: "#06080d",
       strokeThickness: 2,
@@ -176,7 +176,7 @@ export class HudScene extends Phaser.Scene {
 
     this.specialLabel = this.add.text(46, 37, "ESP", {
       fontFamily: "monospace",
-      fontSize: "9px",
+      fontSize: "10px",
       color: "#9fd6e3",
       stroke: "#06080d",
       strokeThickness: 2,
@@ -184,7 +184,7 @@ export class HudScene extends Phaser.Scene {
 
     this.stageLabel = this.add.text(0, 68, "STAGE", {
       fontFamily: "monospace",
-      fontSize: "9px",
+      fontSize: "10px",
       color: "#9fd6e3",
       stroke: "#06080d",
       strokeThickness: 2,
@@ -193,7 +193,7 @@ export class HudScene extends Phaser.Scene {
     this.scoreLabel = this.add
       .text(242, 2, "PUNTOS 000000", {
         fontFamily: "monospace",
-        fontSize: "9px",
+        fontSize: "10px",
         color: "#fff1c3",
         stroke: "#06080d",
         strokeThickness: 2,
@@ -203,7 +203,7 @@ export class HudScene extends Phaser.Scene {
     this.timeLabel = this.add
       .text(242, 13, "TIEMPO 000", {
         fontFamily: "monospace",
-        fontSize: "9px",
+        fontSize: "10px",
         color: "#ffcc88",
         stroke: "#06080d",
         strokeThickness: 2,
@@ -230,14 +230,16 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createTargetHud(): void {
+    const panelWidth = 174;
+    const panelX = BASE_WIDTH - panelWidth - 8;
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5600);
-    panel.add(this.add.rectangle(266, 8, 174, 32, 0x090910, 0.62).setOrigin(0, 0));
-    panel.add(this.add.rectangle(274, 22, this.targetBarWidth, 7, 0x232334, 0.92).setOrigin(0, 0.5));
-    panel.add(this.add.tileSprite(266, 8, 174, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
+    panel.add(this.add.rectangle(panelX, 8, panelWidth, 32, 0x090910, 0.62).setOrigin(0, 0));
+    panel.add(this.add.rectangle(panelX + 8, 22, this.targetBarWidth, 7, 0x232334, 0.92).setOrigin(0, 0.5));
+    panel.add(this.add.tileSprite(panelX, 8, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
 
-    this.targetFill = this.add.rectangle(274, 22, this.targetBarWidth, 7, 0xff5a6f, 1).setOrigin(0, 0.5).setDepth(5602);
+    this.targetFill = this.add.rectangle(panelX + 8, 22, this.targetBarWidth, 7, 0xff5a6f, 1).setOrigin(0, 0.5).setDepth(5602);
     this.targetLabel = this.add
-      .text(274, 11, "OBJETIVO", {
+      .text(panelX + 8, 11, "OBJETIVO", {
         fontFamily: "monospace",
         fontSize: "10px",
         color: "#ffd1e8",
@@ -299,14 +301,15 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createObjectivePanel(): void {
-    const panelX = 266;
+    const panelWidth = 174;
+    const panelX = BASE_WIDTH - panelWidth - 8;
     const panelY = 44;
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5590);
-    panel.add(this.add.rectangle(panelX, panelY, 174, 30, 0x040409, 0.58).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(panelX, panelY, 174, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
+    panel.add(this.add.rectangle(panelX, panelY, panelWidth, 30, 0x040409, 0.58).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
     this.objectiveText = this.add.text(panelX + 8, panelY + 6, "", {
       fontFamily: "monospace",
-      fontSize: "9px",
+      fontSize: "10px",
       color: "#d9f4ff",
       stroke: "#041018",
       strokeThickness: 2,
