@@ -78,9 +78,8 @@ export const market95Spawns: StageSpawnZoneConfig[] = [
     leftBarrierX: 92,
     rightBarrierX: 880,
     spawns: [
-      { x: 612, y: 204, archetype: "brawler" },
-      { x: 760, y: 196, archetype: "agile_f" },
-      { x: 840, y: 210, archetype: "rusher" },
+      { x: 620, y: 204, archetype: "brawler" },
+      { x: 792, y: 198, archetype: "rusher" },
     ],
   },
   {
@@ -93,9 +92,9 @@ export const market95Spawns: StageSpawnZoneConfig[] = [
     leftBarrierX: 1020,
     rightBarrierX: 1710,
     spawns: [
-      { x: 1360, y: 212, archetype: "bat_wielder" },
-      { x: 1490, y: 194, archetype: "rusher" },
-      { x: 1620, y: 210, archetype: "tank" },
+      { x: 1310, y: 208, archetype: "brawler" },
+      { x: 1450, y: 194, archetype: "rusher" },
+      { x: 1600, y: 210, archetype: "rusher" },
     ],
   },
 ];

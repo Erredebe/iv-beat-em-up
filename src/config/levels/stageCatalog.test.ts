@@ -17,4 +17,20 @@ describe("stage catalog", () => {
       expect(bundle.layout.breakableProps.length, `${bundle.id} must define breakables`).toBeGreaterThan(0);
     }
   });
+
+  it("keeps spawn volume non-decreasing across campaign order", () => {
+    const totalEnemiesByStage = campaignStageOrder.map((stageId) => {
+      const totalEnemies = stageCatalog[stageId].spawns.reduce((acc, zone) => acc + zone.spawns.length, 0);
+      return { stageId, totalEnemies };
+    });
+
+    for (let index = 1; index < totalEnemiesByStage.length; index += 1) {
+      const previous = totalEnemiesByStage[index - 1];
+      const current = totalEnemiesByStage[index];
+      expect(
+        current.totalEnemies,
+        `${current.stageId} total enemies (${current.totalEnemies}) must be >= ${previous.stageId} (${previous.totalEnemies})`,
+      ).toBeGreaterThanOrEqual(previous.totalEnemies);
+    }
+  });
 });

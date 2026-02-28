@@ -78,9 +78,10 @@ export const puertoRojoSpawns: StageSpawnZoneConfig[] = [
     leftBarrierX: 108,
     rightBarrierX: 920,
     spawns: [
-      { x: 640, y: 210, archetype: "brawler" },
-      { x: 780, y: 198, archetype: "bat_wielder" },
-      { x: 870, y: 206, archetype: "agile_f" },
+      { x: 620, y: 210, archetype: "brawler" },
+      { x: 730, y: 198, archetype: "rusher" },
+      { x: 820, y: 206, archetype: "agile_f" },
+      { x: 900, y: 198, archetype: "bat_wielder" },
     ],
   },
   {
@@ -93,9 +94,12 @@ export const puertoRojoSpawns: StageSpawnZoneConfig[] = [
     leftBarrierX: 1140,
     rightBarrierX: 1880,
     spawns: [
-      { x: 1460, y: 212, archetype: "rusher" },
-      { x: 1620, y: 198, archetype: "tank" },
-      { x: 1780, y: 208, archetype: "mini_boss" },
+      { x: 1360, y: 212, archetype: "rusher" },
+      { x: 1480, y: 198, archetype: "brawler" },
+      { x: 1600, y: 208, archetype: "agile_f" },
+      { x: 1700, y: 206, archetype: "bat_wielder" },
+      { x: 1780, y: 208, archetype: "tank" },
+      { x: 1840, y: 206, archetype: "mini_boss" },
     ],
   },
 ];
