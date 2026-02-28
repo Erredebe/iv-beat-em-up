@@ -74,6 +74,7 @@ export const market95Spawns: StageSpawnZoneConfig[] = [
   {
     id: "market_zone_1",
     triggerX: 340,
+    lockType: "full_lock",
     leftBarrierX: 92,
     rightBarrierX: 880,
     spawns: [
@@ -85,6 +86,10 @@ export const market95Spawns: StageSpawnZoneConfig[] = [
   {
     id: "market_zone_2",
     triggerX: 1060,
+    lockType: "partial_lock",
+    barrier: {
+      openRailIds: ["rail_mid"],
+    },
     leftBarrierX: 1020,
     rightBarrierX: 1710,
     spawns: [

@@ -5,9 +5,10 @@ import type { GroundObstacle, CollisionSystem } from "./CollisionSystem";
 interface ZoneRuntime {
   id: string;
   triggerX: number;
+  lockType: StageSpawnZoneConfig["lockType"];
   spawns: StageSpawnPointConfig[];
-  leftBarrier: GroundObstacle;
-  rightBarrier: GroundObstacle;
+  leftBarriers: GroundObstacle[];
+  rightBarriers: GroundObstacle[];
   started: boolean;
   active: boolean;
   cleared: boolean;
@@ -30,35 +31,20 @@ export class SpawnManager {
 
     const configs = cloneSpawnZones(zoneConfig);
 
-    const walkLane = this.collisionSystem.getWalkLane();
-    const barrierHeight = walkLane.bottomY - walkLane.topY;
     this.zones = configs.map((config) => {
-      const leftBarrier = this.collisionSystem.registerGroundObstacle({
-        id: `${config.id}_left`,
-        x: config.leftBarrierX,
-        y: walkLane.topY + barrierHeight * 0.5,
-        width: 12,
-        height: barrierHeight,
-        color: 0xff00ff,
-      });
-      const rightBarrier = this.collisionSystem.registerGroundObstacle({
-        id: `${config.id}_right`,
-        x: config.rightBarrierX,
-        y: walkLane.topY + barrierHeight * 0.5,
-        width: 12,
-        height: barrierHeight,
-        color: 0x00ffff,
-      });
+      const leftBarriers = this.createZoneBarriers(config, "left");
+      const rightBarriers = this.createZoneBarriers(config, "right");
 
-      this.collisionSystem.setObstacleEnabled(leftBarrier, false);
-      this.collisionSystem.setObstacleEnabled(rightBarrier, false);
+      this.setBarriersEnabled(leftBarriers, false);
+      this.setBarriersEnabled(rightBarriers, false);
 
       return {
         id: config.id,
         triggerX: config.triggerX,
+        lockType: config.lockType,
         spawns: config.spawns,
-        leftBarrier,
-        rightBarrier,
+        leftBarriers,
+        rightBarriers,
         started: false,
         active: false,
         cleared: false,
@@ -85,8 +71,8 @@ export class SpawnManager {
         zone.active = false;
         zone.cleared = true;
         this.activeZoneId = null;
-        this.collisionSystem.setObstacleEnabled(zone.leftBarrier, false);
-        this.collisionSystem.setObstacleEnabled(zone.rightBarrier, false);
+        this.setBarriersEnabled(zone.leftBarriers, false);
+        this.setBarriersEnabled(zone.rightBarriers, false);
       }
     }
 
@@ -103,8 +89,11 @@ export class SpawnManager {
     zone.active = true;
     zone.cleared = false;
     this.activeZoneId = zone.id;
-    this.collisionSystem.setObstacleEnabled(zone.leftBarrier, true);
-    this.collisionSystem.setObstacleEnabled(zone.rightBarrier, true);
+
+    if (zone.lockType !== "soft_lock") {
+      this.setBarriersEnabled(zone.leftBarriers, true);
+      this.setBarriersEnabled(zone.rightBarriers, true);
+    }
 
     zone.enemies = zone.spawns.map((spawn) => this.createEnemy(spawn));
     return zone.enemies;
@@ -126,7 +115,43 @@ export class SpawnManager {
     return this.activeZoneId;
   }
 
+  getZoneLockType(zoneId: string): StageSpawnZoneConfig["lockType"] | null {
+    const zone = this.zones.find((entry) => entry.id === zoneId);
+    return zone ? zone.lockType : null;
+  }
+
   getRemainingEnemies(): number {
     return this.zones.reduce((count, zone) => count + zone.enemies.filter((enemy) => enemy.isAlive()).length, 0);
+  }
+
+  private setBarriersEnabled(barriers: GroundObstacle[], enabled: boolean): void {
+    for (const barrier of barriers) {
+      this.collisionSystem.setObstacleEnabled(barrier, enabled);
+    }
+  }
+
+  private createZoneBarriers(config: StageSpawnZoneConfig, side: "left" | "right"): GroundObstacle[] {
+    const x = side === "left" ? config.leftBarrierX : config.rightBarrierX;
+    const railBlocks = config.lockType === "partial_lock"
+      ? this.collisionSystem.getWalkRails().filter((rail) => !config.barrier?.openRailIds?.includes(rail.id))
+      : this.collisionSystem.getWalkRails();
+
+    if (railBlocks.length === 0) {
+      return [];
+    }
+
+    return railBlocks.map((rail, index) => {
+      const height = rail.bottomY - rail.topY;
+      return this.collisionSystem.registerGroundObstacle({
+        id: `${config.id}_${side}_${index}`,
+        x,
+        y: rail.topY + height * 0.5,
+        width: 12,
+        height,
+        topGap: config.lockType === "full_lock" ? config.barrier?.topGap : undefined,
+        bottomGap: config.lockType === "full_lock" ? config.barrier?.bottomGap : undefined,
+        color: side === "left" ? 0xff00ff : 0x00ffff,
+      });
+    });
   }
 }

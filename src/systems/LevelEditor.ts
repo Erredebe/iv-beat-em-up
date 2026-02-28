@@ -493,6 +493,7 @@ export class LevelEditor {
         this.spawnZones.push({
           id: this.nextId("zone", this.spawnZones.map((entry) => entry.id)),
           triggerX: centerX,
+          lockType: "full_lock",
           leftBarrierX: leftX,
           rightBarrierX: rightX,
           spawns: [{ x: centerX, y: this.layout.walkLane?.playerSpawnY ?? this.pointerWorldY }],
@@ -882,6 +883,7 @@ export class LevelEditor {
     this.spawnZones.push({
       id: this.nextId("zone", this.spawnZones.map((entry) => entry.id)),
       triggerX: centerX,
+      lockType: "full_lock",
       leftBarrierX: Phaser.Math.Clamp(centerX - 80, 0, this.mapWidthPx),
       rightBarrierX: Phaser.Math.Clamp(centerX + 80, 0, this.mapWidthPx),
       spawns: [],

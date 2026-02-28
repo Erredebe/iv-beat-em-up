@@ -74,6 +74,7 @@ export const puertoRojoSpawns: StageSpawnZoneConfig[] = [
   {
     id: "puerto_zone_1",
     triggerX: 360,
+    lockType: "full_lock",
     leftBarrierX: 108,
     rightBarrierX: 920,
     spawns: [
@@ -85,6 +86,10 @@ export const puertoRojoSpawns: StageSpawnZoneConfig[] = [
   {
     id: "puerto_zone_2",
     triggerX: 1180,
+    lockType: "partial_lock",
+    barrier: {
+      openRailIds: ["rail_east"],
+    },
     leftBarrierX: 1140,
     rightBarrierX: 1880,
     spawns: [
