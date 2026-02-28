@@ -83,7 +83,7 @@ export class TitleScene extends Phaser.Scene {
     this.add
       .text(BASE_WIDTH * 0.5, 70, "BARRIO. GOLPES. NOCHE.", {
         fontFamily: "monospace",
-        fontSize: "10px",
+        fontSize: "11px",
         color: "#a9deea",
         stroke: "#061017",
         strokeThickness: 2,
@@ -93,7 +93,7 @@ export class TitleScene extends Phaser.Scene {
     this.add
       .text(BASE_WIDTH * 0.5, 96, "Madrid, 1995. Recupera tu calle zona por zona.", {
         fontFamily: "monospace",
-        fontSize: "11px",
+        fontSize: "12px",
         color: "#fff4fb",
         stroke: "#08080b",
         strokeThickness: 2,
@@ -136,9 +136,9 @@ export class TitleScene extends Phaser.Scene {
     }
 
     this.add
-      .text(50, 234, "UP/DOWN para navegar  |  ENTER confirmar", {
+      .text(50, 228, "UP/DOWN para navegar  |  ENTER confirmar", {
         fontFamily: "monospace",
-        fontSize: "10px",
+        fontSize: "11px",
         color: "#ffd7ec",
       })
       .setDepth(5);
