@@ -804,8 +804,11 @@ export class BaseFighter {
   }
 
   private getClipScaleMultiplier(clipId: AnimationClipId): number {
-    void clipId;
-    return 1;
+    const clipScale = this.visualProfile.clipScaleByClip?.[clipId];
+    if (!clipScale || !Number.isFinite(clipScale)) {
+      return 1;
+    }
+    return Phaser.Math.Clamp(clipScale, 0.85, 1.2);
   }
 
   private applyStateForAttack(attackId: AttackId): void {
