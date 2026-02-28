@@ -78,9 +78,9 @@ export const metroSurSpawns: StageSpawnZoneConfig[] = [
     leftBarrierX: 108,
     rightBarrierX: 920,
     spawns: [
-      { x: 640, y: 210, archetype: "rusher" },
-      { x: 760, y: 200, archetype: "agile_f" },
-      { x: 870, y: 210, archetype: "bat_wielder" },
+      { x: 620, y: 210, archetype: "brawler" },
+      { x: 760, y: 200, archetype: "rusher" },
+      { x: 870, y: 210, archetype: "rusher" },
     ],
   },
   {
@@ -93,9 +93,9 @@ export const metroSurSpawns: StageSpawnZoneConfig[] = [
     leftBarrierX: 1140,
     rightBarrierX: 1820,
     spawns: [
-      { x: 1410, y: 212, archetype: "tank" },
-      { x: 1550, y: 198, archetype: "brawler" },
-      { x: 1690, y: 208, archetype: "mini_boss" },
+      { x: 1380, y: 212, archetype: "brawler" },
+      { x: 1530, y: 198, archetype: "agile_f" },
+      { x: 1680, y: 208, archetype: "bat_wielder" },
     ],
   },
 ];

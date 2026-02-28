@@ -82,9 +82,10 @@ export const playaNocheSpawns: StageSpawnZoneConfig[] = [
     leftBarrierX: 104,
     rightBarrierX: 930,
     spawns: [
-      { x: 620, y: 206, archetype: "agile_f" },
-      { x: 760, y: 194, archetype: "rusher" },
-      { x: 860, y: 210, archetype: "brawler" },
+      { x: 600, y: 206, archetype: "brawler" },
+      { x: 730, y: 194, archetype: "rusher" },
+      { x: 840, y: 210, archetype: "agile_f" },
+      { x: 900, y: 200, archetype: "bat_wielder" },
     ],
   },
   {
@@ -94,9 +95,10 @@ export const playaNocheSpawns: StageSpawnZoneConfig[] = [
     leftBarrierX: 1120,
     rightBarrierX: 1840,
     spawns: [
-      { x: 1430, y: 212, archetype: "bat_wielder" },
-      { x: 1590, y: 198, archetype: "tank" },
-      { x: 1730, y: 206, archetype: "mini_boss" },
+      { x: 1360, y: 212, archetype: "rusher" },
+      { x: 1500, y: 198, archetype: "agile_f" },
+      { x: 1620, y: 206, archetype: "bat_wielder" },
+      { x: 1760, y: 208, archetype: "tank" },
     ],
   },
 ];
