@@ -74,6 +74,11 @@ export const playaNocheSpawns: StageSpawnZoneConfig[] = [
   {
     id: "playa_zone_1",
     triggerX: 360,
+    lockType: "full_lock",
+    barrier: {
+      topGap: 54,
+      bottomGap: 126,
+    },
     leftBarrierX: 104,
     rightBarrierX: 930,
     spawns: [
@@ -85,6 +90,7 @@ export const playaNocheSpawns: StageSpawnZoneConfig[] = [
   {
     id: "playa_zone_2",
     triggerX: 1160,
+    lockType: "soft_lock",
     leftBarrierX: 1120,
     rightBarrierX: 1840,
     spawns: [

@@ -74,6 +74,7 @@ export const metroSurSpawns: StageSpawnZoneConfig[] = [
   {
     id: "metro_zone_1",
     triggerX: 360,
+    lockType: "full_lock",
     leftBarrierX: 108,
     rightBarrierX: 920,
     spawns: [
@@ -85,6 +86,10 @@ export const metroSurSpawns: StageSpawnZoneConfig[] = [
   {
     id: "metro_zone_2",
     triggerX: 1180,
+    lockType: "partial_lock",
+    barrier: {
+      openRailIds: ["rail_west"],
+    },
     leftBarrierX: 1140,
     rightBarrierX: 1820,
     spawns: [

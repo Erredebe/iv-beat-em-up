@@ -29,8 +29,8 @@ export interface FootColliderOwner {
 
 export interface GroundObstacle {
   id: string;
-  shape: Phaser.GameObjects.Rectangle;
-  body: Phaser.Physics.Arcade.StaticBody;
+  shapes: Phaser.GameObjects.Rectangle[];
+  bodies: Phaser.Physics.Arcade.StaticBody[];
   enabled: boolean;
 }
 
@@ -40,6 +40,8 @@ interface GroundObstacleConfig {
   y: number;
   width: number;
   height: number;
+  topGap?: number;
+  bottomGap?: number;
   color?: number;
 }
 
@@ -105,18 +107,27 @@ export class CollisionSystem {
 
   registerGroundObstacle(config: GroundObstacleConfig): GroundObstacle {
     const color = config.color ?? 0x0088ff;
-    const shape = this.scene.add
-      .rectangle(config.x, config.y, config.width, config.height, color, this.debugEnabled ? 0.25 : 0)
-      .setOrigin(0.5);
-    this.scene.physics.add.existing(shape, true);
-    const body = shape.body as Phaser.Physics.Arcade.StaticBody;
-    this.obstacles.add(shape);
-    body.updateFromGameObject();
+    const segments = this.getObstacleSegments(config.height, config.topGap, config.bottomGap);
+    const shapes: Phaser.GameObjects.Rectangle[] = [];
+    const bodies: Phaser.Physics.Arcade.StaticBody[] = [];
+
+    for (const segment of segments) {
+      const segmentY = config.y - config.height * 0.5 + segment.start + segment.height * 0.5;
+      const shape = this.scene.add
+        .rectangle(config.x, segmentY, config.width, segment.height, color, this.debugEnabled ? 0.25 : 0)
+        .setOrigin(0.5);
+      this.scene.physics.add.existing(shape, true);
+      const body = shape.body as Phaser.Physics.Arcade.StaticBody;
+      this.obstacles.add(shape);
+      body.updateFromGameObject();
+      shapes.push(shape);
+      bodies.push(body);
+    }
 
     return {
       id: config.id,
-      shape,
-      body,
+      shapes,
+      bodies,
       enabled: true,
     };
   }
@@ -135,8 +146,10 @@ export class CollisionSystem {
 
   setObstacleEnabled(obstacle: GroundObstacle, enabled: boolean): void {
     obstacle.enabled = enabled;
-    obstacle.body.enable = enabled;
-    obstacle.shape.setVisible(this.debugEnabled && enabled);
+    for (let i = 0; i < obstacle.bodies.length; i += 1) {
+      obstacle.bodies[i].enable = enabled;
+      obstacle.shapes[i].setVisible(this.debugEnabled && enabled);
+    }
   }
 
   setDebugEnabled(enabled: boolean): void {
@@ -147,6 +160,29 @@ export class CollisionSystem {
       shape.setVisible(enabled && body.enable);
       shape.setFillStyle(shape.fillColor, enabled ? 0.25 : 0);
     }
+  }
+
+  private getObstacleSegments(height: number, topGap?: number, bottomGap?: number): Array<{ start: number; height: number }> {
+    const safeHeight = Math.max(1, height);
+    if (topGap === undefined || bottomGap === undefined) {
+      return [{ start: 0, height: safeHeight }];
+    }
+
+    const gapStart = Phaser.Math.Clamp(Math.min(topGap, bottomGap), 0, safeHeight);
+    const gapEnd = Phaser.Math.Clamp(Math.max(topGap, bottomGap), 0, safeHeight);
+    if (gapEnd - gapStart < 2) {
+      return [{ start: 0, height: safeHeight }];
+    }
+
+    const segments: Array<{ start: number; height: number }> = [];
+    if (gapStart > 0) {
+      segments.push({ start: 0, height: gapStart });
+    }
+    if (gapEnd < safeHeight) {
+      segments.push({ start: gapEnd, height: safeHeight - gapEnd });
+    }
+
+    return segments.length > 0 ? segments : [{ start: 0, height: safeHeight }];
   }
 
   private sanitizeRails(rails: StageWalkRailConfig[]): StageWalkRailConfig[] {

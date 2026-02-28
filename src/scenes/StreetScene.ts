@@ -538,32 +538,59 @@ export class StreetScene extends Phaser.Scene {
 
   private announceZoneLock(zoneId: string, now: number): void {
     this.announcedZoneId = zoneId;
-    this.zoneMessage = "Zona bloqueada. Derrota a todos para avanzar";
+    const lockType = this.spawnManager.getZoneLockType(zoneId);
+    this.zoneMessage = lockType === "soft_lock"
+      ? "Zona de combate activa. Mantente dentro del perímetro"
+      : lockType === "partial_lock"
+        ? "Zona parcialmente bloqueada. Rodea por los carriles abiertos"
+        : "Zona bloqueada. Derrota a todos para avanzar";
     this.zoneMessageUntil = now + 3200;
-    this.playBarrierLockFx(zoneId);
+    this.playBarrierLockFx(zoneId, lockType);
     this.audioSystem.playZoneLock();
   }
 
-  private playBarrierLockFx(zoneId: string): void {
+  private playBarrierLockFx(zoneId: string, lockType: "full_lock" | "partial_lock" | "soft_lock" | null): void {
     const zoneConfig = this.stageBundle.spawns.find((zone) => zone.id === zoneId);
     if (!zoneConfig) {
       return;
     }
 
+    const rails = this.collisionSystem.getWalkRails();
     const lane = this.collisionSystem.getWalkLane();
-    const laneHeight = lane.bottomY - lane.topY;
-    const fxY = lane.topY + laneHeight * 0.5;
     const fxDepth = lane.bottomY + 26;
-    const barriers = [zoneConfig.leftBarrierX, zoneConfig.rightBarrierX].map((x) =>
-      this.add
-        .rectangle(x, fxY, 16, laneHeight + 8, 0xff4b89, 0.28)
-        .setDepth(fxDepth),
-    );
+    const lockColor = lockType === "soft_lock" ? 0xf5d76e : lockType === "partial_lock" ? 0x6ec9ff : 0xff4b89;
+    const alpha = lockType === "soft_lock" ? 0.18 : 0.28;
+    const openRails = new Set(zoneConfig.barrier?.openRailIds ?? []);
+
+    const barriers = [zoneConfig.leftBarrierX, zoneConfig.rightBarrierX].flatMap((x) => {
+      if (lockType === "partial_lock") {
+        return rails
+          .filter((rail) => !openRails.has(rail.id))
+          .map((rail) => this.add.rectangle(x, (rail.topY + rail.bottomY) * 0.5, 16, rail.bottomY - rail.topY + 6, lockColor, alpha).setDepth(fxDepth));
+      }
+
+      const laneHeight = lane.bottomY - lane.topY;
+      if (lockType === "full_lock" && zoneConfig.barrier?.topGap !== undefined && zoneConfig.barrier?.bottomGap !== undefined) {
+        const gapStart = Phaser.Math.Clamp(Math.min(zoneConfig.barrier.topGap, zoneConfig.barrier.bottomGap), 0, laneHeight);
+        const gapEnd = Phaser.Math.Clamp(Math.max(zoneConfig.barrier.topGap, zoneConfig.barrier.bottomGap), 0, laneHeight);
+        const blocks: Phaser.GameObjects.Rectangle[] = [];
+        if (gapStart > 0) {
+          blocks.push(this.add.rectangle(x, lane.topY + gapStart * 0.5, 16, gapStart, lockColor, alpha).setDepth(fxDepth));
+        }
+        if (gapEnd < laneHeight) {
+          const lowerHeight = laneHeight - gapEnd;
+          blocks.push(this.add.rectangle(x, lane.topY + gapEnd + lowerHeight * 0.5, 16, lowerHeight, lockColor, alpha).setDepth(fxDepth));
+        }
+        return blocks;
+      }
+
+      return [this.add.rectangle(x, lane.topY + laneHeight * 0.5, 16, laneHeight + 8, lockColor, alpha).setDepth(fxDepth)];
+    });
 
     for (const barrier of barriers) {
       this.tweens.add({
         targets: barrier,
-        alpha: { from: 0.45, to: 0 },
+        alpha: { from: lockType === "soft_lock" ? 0.35 : 0.45, to: 0 },
         scaleX: { from: 1.1, to: 0.92 },
         duration: 320,
         yoyo: true,
