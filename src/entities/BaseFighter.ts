@@ -17,6 +17,7 @@ import {
 import type { FighterVisualProfile, SpritePixelOffset } from "../config/visual/fighterVisualProfiles";
 import { isFrameActive, isFrameInComboWindow } from "../systems/combatMath";
 import type { AttackFrameData, AttackId, DamageEvent, FighterState, Rect, Team } from "../types/combat";
+import type { NavigationSystem, NavigationZoneState } from "../systems/NavigationSystem";
 
 export type PositionClampFn = (x: number, y: number) => Phaser.Math.Vector2;
 
@@ -68,7 +69,10 @@ interface FighterOptions {
   attackData: Record<AttackId, AttackFrameData>;
   visualProfile?: FighterVisualProfile;
   clampPosition?: PositionClampFn;
+  navigationSystem?: NavigationSystem;
+  getNavigationZoneState?: () => NavigationZoneState | null;
 }
+
 
 export class BaseFighter {
   readonly id: string;
@@ -104,6 +108,8 @@ export class BaseFighter {
   private lastAppliedOffset: SpritePixelOffset = { x: 0, y: 0 };
   private lastBaselineY = 0;
   private readonly clampPosition?: PositionClampFn;
+  private readonly navigationSystem?: NavigationSystem;
+  private readonly getNavigationZoneState?: () => NavigationZoneState | null;
 
   constructor(scene: Phaser.Scene, options: FighterOptions) {
     this.id = options.id;
@@ -120,6 +126,8 @@ export class BaseFighter {
 
     this.lastBaselineY = options.y + this.visualProfile.spriteAnchorOffsetY;
     this.clampPosition = options.clampPosition;
+    this.navigationSystem = options.navigationSystem;
+    this.getNavigationZoneState = options.getNavigationZoneState;
 
     this.shadow = scene.add
       .ellipse(
@@ -624,6 +632,15 @@ export class BaseFighter {
     const velocityX = moveX * speed + this.externalVelocity.x;
     const velocityY = moveY * speed + this.externalVelocity.y;
     body.setVelocity(velocityX, velocityY);
+
+    if (this.navigationSystem && this.getNavigationZoneState) {
+      const dt = deltaMs / 1000;
+      const from = this.navigationSystem.projectToNearestRail(this.x, this.y);
+      const to = this.navigationSystem.projectToNearestRail(this.x + body.velocity.x * dt, this.y + body.velocity.y * dt);
+      if (this.navigationSystem.isPathBlocked(from, to, this.getNavigationZoneState())) {
+        body.setVelocity(0, 0);
+      }
+    }
 
     if (this.clampPosition) {
       const previousY = this.y;

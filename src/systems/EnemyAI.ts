@@ -1,5 +1,6 @@
 import type { EnemyBasic } from "../entities/EnemyBasic";
 import type { Player } from "../entities/Player";
+import type { NavigationSystem, NavigationZoneState } from "./NavigationSystem";
 
 const DEFAULT_ATTACK_RANGE_X = 44;
 const DEFAULT_ATTACK_RANGE_Y = 14;
@@ -11,6 +12,13 @@ const DEFAULT_RAIL_SNAP_TOLERANCE = 6;
 export class EnemyAI {
   private activeTokenEnemyId: string | null = null;
   private tokenUntil = 0;
+  private readonly navigationSystem?: NavigationSystem;
+  private readonly getZoneState?: () => NavigationZoneState | null;
+
+  constructor(navigationSystem?: NavigationSystem, getZoneState?: () => NavigationZoneState | null) {
+    this.navigationSystem = navigationSystem;
+    this.getZoneState = getZoneState;
+  }
 
   requestAttackToken(enemy: EnemyBasic, nowMs: number): boolean {
     if (this.activeTokenEnemyId === enemy.id) {
@@ -55,8 +63,12 @@ export class EnemyAI {
     const railSwitchAggressiveness = enemy.combatProfile?.railSwitchAggressiveness ?? DEFAULT_RAIL_SWITCH_AGGRESSIVENESS;
     const railSnapTolerance = enemy.combatProfile?.railSnapTolerance ?? DEFAULT_RAIL_SNAP_TOLERANCE;
 
-    const dx = player.x - enemy.x;
-    const targetRailY = player.y;
+    const projectedPlayer = this.navigationSystem
+      ? this.navigationSystem.projectToNearestRail(player.x, player.y)
+      : { x: player.x, y: player.y };
+
+    const dx = projectedPlayer.x - enemy.x;
+    const targetRailY = projectedPlayer.y;
     const railDelta = targetRailY - enemy.y;
     enemy.faceTowards(player.x);
 
@@ -86,7 +98,15 @@ export class EnemyAI {
 
     const railAlignmentThreshold = Math.max(railSnapTolerance, attackRangeY * Math.max(0.45, 1.1 - railSwitchAggressiveness * 0.35));
     const isRailAligned = absRailDelta <= railAlignmentThreshold;
-    const moveX = isRailAligned && absDx > attackRangeX * 0.7 ? Math.sign(dx) : 0;
+
+    let moveX = isRailAligned && absDx > attackRangeX * 0.7 ? Math.sign(dx) : 0;
+    if (moveX !== 0 && this.navigationSystem && this.getZoneState) {
+      const from = this.navigationSystem.projectToNearestRail(enemy.x, enemy.y);
+      const to = this.navigationSystem.projectToNearestRail(enemy.x + moveX * 32, enemy.y);
+      if (this.navigationSystem.isPathBlocked(from, to, this.getZoneState())) {
+        moveX = 0;
+      }
+    }
 
     const smoothing = Math.min(1, dtMs / 16.667);
     enemy.setMoveIntent(moveX * smoothing, moveY * smoothing);
