@@ -15,6 +15,7 @@ export interface FighterVisualProfile {
   baselineOffsetByState?: Record<FighterState, number>;
   stateOffsetByState: Record<FighterState, SpritePixelOffset>;
   frameOffsetByClip: Partial<Record<AnimationClipId, SpritePixelOffset[]>>;
+  clipScaleByClip?: Partial<Record<AnimationClipId, number>>;
 }
 
 const ALL_STATES: FighterState[] = [
@@ -73,6 +74,7 @@ function createVisualProfile(
     shadowWidth: number;
     shadowHeight: number;
     shadowOffsetY: number;
+    clipScaleByClip?: Partial<Record<AnimationClipId, number>>;
   },
 ): FighterVisualProfile {
   return {
@@ -86,6 +88,7 @@ function createVisualProfile(
       idle: createFrameOffsets(10, 0),
       walk: createFrameOffsets(10, 0),
     },
+    clipScaleByClip: options.clipScaleByClip,
   };
 }
 
@@ -100,7 +103,18 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       KNOCKDOWN: { x: -8, y: 17 },
       DEAD: { x: -8, y: 17 },
     },
-    { shadowWidth: 38, shadowHeight: 10, shadowOffsetY: 1 },
+    {
+      shadowWidth: 38,
+      shadowHeight: 10,
+      shadowOffsetY: 1,
+      clipScaleByClip: {
+        walk: 0.98,
+        attack1: 0.98,
+        attack2: 0.98,
+        special: 0.97,
+        hurt: 0.98,
+      },
+    },
   ),
   marina: createVisualProfile(
     {
@@ -113,7 +127,19 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       KNOCKDOWN: { x: -8, y: 16 },
       DEAD: { x: -8, y: 16 },
     },
-    { shadowWidth: 34, shadowHeight: 9, shadowOffsetY: 1 },
+    {
+      shadowWidth: 34,
+      shadowHeight: 9,
+      shadowOffsetY: 1,
+      clipScaleByClip: {
+        walk: 0.99,
+        attack1: 1.02,
+        attack2: 1.02,
+        attack3: 1.02,
+        airAttack: 1.03,
+        special: 1.01,
+      },
+    },
   ),
   meneillos: createVisualProfile(
     {
@@ -126,7 +152,18 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       KNOCKDOWN: { x: -8, y: 17 },
       DEAD: { x: -8, y: 17 },
     },
-    { shadowWidth: 36, shadowHeight: 10, shadowOffsetY: 1 },
+    {
+      shadowWidth: 36,
+      shadowHeight: 10,
+      shadowOffsetY: 1,
+      clipScaleByClip: {
+        walk: 0.99,
+        attack1: 0.99,
+        attack2: 0.99,
+        special: 0.99,
+        hurt: 0.99,
+      },
+    },
   ),
   enemy: createVisualProfile(
     {
@@ -139,7 +176,19 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       KNOCKDOWN: { x: -8, y: 17 },
       DEAD: { x: -8, y: 17 },
     },
-    { shadowWidth: 36, shadowHeight: 10, shadowOffsetY: 1 },
+    {
+      shadowWidth: 36,
+      shadowHeight: 10,
+      shadowOffsetY: 1,
+      clipScaleByClip: {
+        walk: 0.99,
+        attack1: 1.01,
+        attack2: 1.01,
+        attack3: 1.02,
+        airAttack: 1.02,
+        hurt: 0.95,
+      },
+    },
   ),
 };
 
