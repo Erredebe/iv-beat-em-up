@@ -10,11 +10,11 @@ export const metroSurLayout: StageLayoutConfig = {
   sourceTilesPerRow: 20,
   tilesetKey: "street_clean_tileset",
   cameraYOffset: 0,
-  walkLane: {
-    topY: 182,
-    bottomY: 226,
-    playerSpawnY: 204,
-  },
+  walkRails: [
+    { id: "rail_west", xStart: 0, xEnd: 860, topY: 180, bottomY: 222, preferredY: 202 },
+    { id: "rail_mid", xStart: 860, xEnd: 1640, topY: 184, bottomY: 228, preferredY: 206 },
+    { id: "rail_east", xStart: 1640, xEnd: 2560, topY: 178, bottomY: 224, preferredY: 201 },
+  ],
   layers: [
     { id: "facade", depth: 82, alpha: 0.95, targetRows: [1, 2, 3], sourceRows: [0, 2, 1] },
     { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [10] },

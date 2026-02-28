@@ -10,11 +10,11 @@ export const playaNocheLayout: StageLayoutConfig = {
   sourceTilesPerRow: 20,
   tilesetKey: "street_clean_tileset",
   cameraYOffset: 0,
-  walkLane: {
-    topY: 180,
-    bottomY: 224,
-    playerSpawnY: 202,
-  },
+  walkRails: [
+    { id: "rail_west", xStart: 0, xEnd: 880, topY: 178, bottomY: 220, preferredY: 200 },
+    { id: "rail_mid", xStart: 880, xEnd: 1680, topY: 182, bottomY: 226, preferredY: 204 },
+    { id: "rail_east", xStart: 1680, xEnd: 2560, topY: 176, bottomY: 222, preferredY: 199 },
+  ],
   layers: [
     { id: "facade", depth: 78, alpha: 0.92, targetRows: [1, 2, 3], sourceRows: [1, 2, 0] },
     { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [10] },

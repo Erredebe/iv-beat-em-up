@@ -65,6 +65,15 @@ export interface StageWalkLaneConfig {
   playerSpawnY: number;
 }
 
+export interface StageWalkRailConfig {
+  id: string;
+  xStart: number;
+  xEnd: number;
+  topY: number;
+  bottomY: number;
+  preferredY?: number;
+}
+
 export interface StageAmbientFxConfig {
   rain?: boolean;
   fogAlpha?: number;
@@ -81,6 +90,7 @@ export interface StageLayoutConfig {
   tilesetKey: string;
   cameraYOffset: number;
   walkLane?: StageWalkLaneConfig;
+  walkRails?: StageWalkRailConfig[];
   layers: StageLayerConfig[];
   props: StagePropConfig[];
   breakableProps: StageBreakablePropConfig[];
@@ -107,6 +117,14 @@ export function cloneStageLayoutConfig(layout: StageLayoutConfig): StageLayoutCo
           playerSpawnY: layout.walkLane.playerSpawnY,
         }
       : undefined,
+    walkRails: getStageWalkRails(layout).map((rail) => ({
+      id: rail.id,
+      xStart: rail.xStart,
+      xEnd: rail.xEnd,
+      topY: rail.topY,
+      bottomY: rail.bottomY,
+      preferredY: rail.preferredY,
+    })),
     layers: layout.layers.map((layer) => ({
       id: layer.id,
       depth: layer.depth,
@@ -166,4 +184,26 @@ export function cloneStageLayoutConfig(layout: StageLayoutConfig): StageLayoutCo
       colorGrade: layout.ambientFx.colorGrade,
     },
   };
+}
+
+export function getStageWalkRails(layout: StageLayoutConfig): StageWalkRailConfig[] {
+  if (layout.walkRails && layout.walkRails.length > 0) {
+    return layout.walkRails;
+  }
+
+  if (layout.walkLane) {
+    const mapWidthPx = layout.mapWidthTiles * layout.tileSize;
+    return [
+      {
+        id: "fallback_lane",
+        xStart: 0,
+        xEnd: mapWidthPx,
+        topY: layout.walkLane.topY,
+        bottomY: layout.walkLane.bottomY,
+        preferredY: layout.walkLane.playerSpawnY,
+      },
+    ];
+  }
+
+  return [];
 }

@@ -18,6 +18,8 @@ import type { FighterVisualProfile, SpritePixelOffset } from "../config/visual/f
 import { isFrameActive, isFrameInComboWindow } from "../systems/combatMath";
 import type { AttackFrameData, AttackId, DamageEvent, FighterState, Rect, Team } from "../types/combat";
 
+export type PositionClampFn = (x: number, y: number) => Phaser.Math.Vector2;
+
 interface AttackRuntime {
   attackId: AttackId;
   elapsedMs: number;
@@ -65,6 +67,7 @@ interface FighterOptions {
   moveSpeed: number;
   attackData: Record<AttackId, AttackFrameData>;
   visualProfile?: FighterVisualProfile;
+  clampPosition?: PositionClampFn;
 }
 
 export class BaseFighter {
@@ -100,6 +103,7 @@ export class BaseFighter {
   private forceClipRestart = false;
   private lastAppliedOffset: SpritePixelOffset = { x: 0, y: 0 };
   private lastBaselineY = 0;
+  private readonly clampPosition?: PositionClampFn;
 
   constructor(scene: Phaser.Scene, options: FighterOptions) {
     this.id = options.id;
@@ -115,6 +119,7 @@ export class BaseFighter {
     const initialTexture = this.animationSet.clips[this.currentClipId].textureKey;
 
     this.lastBaselineY = options.y + this.visualProfile.spriteAnchorOffsetY;
+    this.clampPosition = options.clampPosition;
 
     this.shadow = scene.add
       .ellipse(
@@ -619,6 +624,17 @@ export class BaseFighter {
     const velocityX = moveX * speed + this.externalVelocity.x;
     const velocityY = moveY * speed + this.externalVelocity.y;
     body.setVelocity(velocityX, velocityY);
+
+    if (this.clampPosition) {
+      const previousY = this.y;
+      const clamped = this.clampPosition(this.x, previousY);
+      if (clamped.x !== this.x || clamped.y !== previousY) {
+        this.footCollider.setPosition(clamped.x, clamped.y);
+      }
+      if ((clamped.y < previousY && body.velocity.y < 0) || (clamped.y > previousY && body.velocity.y > 0)) {
+        body.setVelocityY(0);
+      }
+    }
 
     this.externalVelocity.scale(Math.max(0, 1 - deltaMs * 0.008));
     if (Math.abs(this.externalVelocity.x) < 4) {
