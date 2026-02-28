@@ -5,6 +5,8 @@ import { isFeatureEnabled } from "../config/features";
 import { playableCharacters } from "../config/gameplay/playableRoster";
 import { stageCatalog } from "../config/levels/stageCatalog";
 import { updateSessionState } from "../config/gameplay/sessionState";
+import { getUiThemeTokens } from "../config/ui/uiTheme";
+import { createPanel, createSceneTitle } from "../ui/sceneChrome";
 
 export class CharacterSelectScene extends Phaser.Scene {
   private selectedIndex = 0;
@@ -17,16 +19,16 @@ export class CharacterSelectScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.cameras.main.setBackgroundColor("#05070d");
+    const theme = getUiThemeTokens();
+    this.cameras.main.setBackgroundColor(theme.palette.bgPrimary);
 
     this.add.rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, BASE_WIDTH, BASE_HEIGHT, 0x0a1220, 1).setOrigin(0.5);
-    this.add
-      .text(BASE_WIDTH * 0.5, 24, "SELECCIONA PERSONAJE", {
-        fontFamily: "monospace",
-        fontSize: "14px",
-        color: "#ffe7b4",
-      })
-      .setOrigin(0.5);
+    createSceneTitle(this, {
+      x: BASE_WIDTH * 0.5,
+      y: 16,
+      title: "SELECCIONA PERSONAJE",
+      titleSize: theme.typography.title,
+    });
 
     const startX = 18;
     const spacing = 132;
@@ -34,26 +36,26 @@ export class CharacterSelectScene extends Phaser.Scene {
       const character = playableCharacters[i];
       const x = startX + i * spacing;
       const card = this.add.container(x, 56);
-      const panel = this.add.rectangle(0, 0, 124, 140, 0x05070f, 0.92).setOrigin(0, 0);
-      const border = this.add.rectangle(0, 0, 124, 140, 0x68abff, 0).setOrigin(0, 0).setStrokeStyle(2, 0x68abff, 0.7);
-      const portrait = this.add
-        .image(62, 44, character.portraitKey)
-        .setScale(2)
-        .setTint(character.tint)
-        .setOrigin(0.5);
+      const panel = createPanel(this, {
+        x: 0,
+        y: 0,
+        width: 124,
+        height: 140,
+      });
+      const portrait = this.add.image(62, 44, character.portraitKey).setScale(2).setTint(character.tint).setOrigin(0.5);
       const name = this.add
         .text(12, 82, character.displayName, {
           fontFamily: "monospace",
-          fontSize: "12px",
-          color: "#f3f7ff",
+          fontSize: theme.typography.body,
+          color: theme.palette.textPrimary,
         })
         .setOrigin(0, 0);
       const stats = this.add.text(12, 100, `HP ${character.maxHp}\nSPD ${character.moveSpeed}`, {
         fontFamily: "monospace",
-        fontSize: "10px",
-        color: "#cfe8ff",
+        fontSize: theme.typography.caption,
+        color: theme.palette.textSecondary,
       });
-      card.add([panel, border, portrait, name, stats]);
+      card.add([panel.fill, panel.border, portrait, name, stats]);
       card.setSize(124, 140);
       card.setInteractive(new Phaser.Geom.Rectangle(0, 0, 124, 140), Phaser.Geom.Rectangle.Contains);
       card.on("pointerdown", () => {
@@ -71,24 +73,24 @@ export class CharacterSelectScene extends Phaser.Scene {
     this.add
       .text(BASE_WIDTH * 0.5, 205, "NIVEL", {
         fontFamily: "monospace",
-        fontSize: "10px",
-        color: "#f5ce7b",
+        fontSize: theme.typography.caption,
+        color: theme.palette.accentGold,
       })
       .setOrigin(0.5);
 
     this.selectedStageText = this.add
       .text(BASE_WIDTH * 0.5, 217, "", {
         fontFamily: "monospace",
-        fontSize: "11px",
-        color: "#f3f7ff",
+        fontSize: theme.typography.subtitle,
+        color: theme.palette.textPrimary,
       })
       .setOrigin(0.5);
 
     this.add
       .text(BASE_WIDTH * 0.5, 232, "LEFT/RIGHT personaje  |  UP/DOWN nivel  |  ENTER confirmar", {
         fontFamily: "monospace",
-        fontSize: "10px",
-        color: "#f3dceb",
+        fontSize: theme.typography.caption,
+        color: theme.palette.textSecondary,
       })
       .setOrigin(0.5);
 
@@ -113,12 +115,20 @@ export class CharacterSelectScene extends Phaser.Scene {
   }
 
   private refreshSelection(): void {
+    const theme = getUiThemeTokens();
     this.cards.forEach((card, index) => {
       const active = index === this.selectedIndex;
       const panel = card.list[0] as Phaser.GameObjects.Rectangle;
       const border = card.list[1] as Phaser.GameObjects.Rectangle;
-      panel.setFillStyle(active ? 0x182336 : 0x05070f, active ? 0.98 : 0.92);
-      border.setStrokeStyle(2, active ? 0xffce6e : 0x68abff, active ? 1 : 0.7);
+      panel.setFillStyle(
+        active ? Number.parseInt(theme.panel.highlightFill.replace("#", "0x"), 16) : Number.parseInt(theme.palette.panelFill.replace("#", "0x"), 16),
+        active ? 0.98 : theme.panel.fillAlpha,
+      );
+      border.setStrokeStyle(
+        2,
+        active ? Number.parseInt(theme.palette.accentGold.replace("#", "0x"), 16) : Number.parseInt(theme.palette.accentBlue.replace("#", "0x"), 16),
+        active ? 1 : theme.panel.borderAlpha,
+      );
     });
   }
 

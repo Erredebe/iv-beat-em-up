@@ -2,6 +2,8 @@ import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
 import { isFeatureEnabled } from "../config/features";
 import { resetSessionState } from "../config/gameplay/sessionState";
+import { getUiThemeTokens } from "../config/ui/uiTheme";
+import { createPanel, createSceneTitle } from "../ui/sceneChrome";
 
 type MenuAction = "play" | "options" | "instructions" | "credits";
 
@@ -31,10 +33,11 @@ export class TitleScene extends Phaser.Scene {
   }
 
   create(): void {
+    const theme = getUiThemeTokens();
     this.loadPersistedOptions();
     this.sound.volume = this.volume;
 
-    this.cameras.main.setBackgroundColor("#07040d");
+    this.cameras.main.setBackgroundColor(theme.palette.bgPrimary);
     this.createBackdrop();
     this.createTitleBlock();
     this.createMenu();
@@ -45,12 +48,13 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private createBackdrop(): void {
+    const theme = getUiThemeTokens();
     this.add.rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, BASE_WIDTH, BASE_HEIGHT, 0x0d1022, 1).setOrigin(0.5);
     this.add.rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.42, BASE_WIDTH, 120, 0x28174a, 0.45).setOrigin(0.5);
     this.add.rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.6, BASE_WIDTH, 84, 0x11091e, 0.66).setOrigin(0.5);
 
     const grid = this.add.graphics().setDepth(2);
-    grid.lineStyle(1, 0x4f376f, 0.22);
+    grid.lineStyle(1, Number.parseInt(theme.palette.accentBlue.replace("#", "0x"), 16), 0.22);
     for (let y = 92; y < BASE_HEIGHT; y += 18) {
       grid.lineBetween(0, y, BASE_WIDTH, y);
     }
@@ -67,41 +71,32 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private createTitleBlock(): void {
-    this.add.rectangle(BASE_WIDTH * 0.5, 54, 282, 78, 0x05050a, 0.88).setOrigin(0.5);
-    this.add.rectangle(BASE_WIDTH * 0.5, 16, 282, 2, 0xff5ea8, 1).setOrigin(0.5, 0);
+    const theme = getUiThemeTokens();
+    createPanel(this, {
+      x: BASE_WIDTH * 0.5 - 141,
+      y: 15,
+      width: 282,
+      height: 78,
+      fillColor: 0x05050a,
+      fillAlpha: 0.88,
+      topAccentColor: Number.parseInt(theme.palette.accentPink.replace("#", "0x"), 16),
+      topAccentHeight: 2,
+    });
 
-    this.add
-      .text(BASE_WIDTH * 0.5, 42, "SPAIN 90", {
-        fontFamily: "monospace",
-        fontSize: "34px",
-        color: "#ffd6ea",
-        stroke: "#18040f",
-        strokeThickness: 5,
-      })
-      .setOrigin(0.5);
-
-    this.add
-      .text(BASE_WIDTH * 0.5, 70, "BARRIO. GOLPES. NOCHE.", {
-        fontFamily: "monospace",
-        fontSize: "11px",
-        color: "#a9deea",
-        stroke: "#061017",
-        strokeThickness: 2,
-      })
-      .setOrigin(0.5);
-
-    this.add
-      .text(BASE_WIDTH * 0.5, 96, "Madrid, 1995. Recupera tu calle zona por zona.", {
-        fontFamily: "monospace",
-        fontSize: "12px",
-        color: "#fff4fb",
-        stroke: "#08080b",
-        strokeThickness: 2,
-      })
-      .setOrigin(0.5);
+    createSceneTitle(this, {
+      x: BASE_WIDTH * 0.5,
+      y: 28,
+      title: "SPAIN 90",
+      subtitle: "BARRIO. GOLPES. NOCHE.",
+      description: "Madrid, 1995. Recupera tu calle zona por zona.",
+      titleSize: theme.typography.hero,
+      subtitleSize: theme.typography.subtitle,
+      descriptionSize: theme.typography.body,
+    });
   }
 
   private createMenu(): void {
+    const theme = getUiThemeTokens();
     const startY = 126;
     const spacing = 26;
 
@@ -110,23 +105,27 @@ export class TitleScene extends Phaser.Scene {
       const y = startY + i * spacing;
 
       const row = this.add.container(50, y).setDepth(5).setSize(160, 22);
-      const background = this.add.rectangle(0, 0, 160, 22, 0x06070d, 0.85).setOrigin(0, 0);
-      const border = this.add.rectangle(0, 0, 160, 22, 0x68abff, 0).setOrigin(0, 0).setStrokeStyle(1, 0x68abff, 0.85);
+      const panel = createPanel(this, {
+        x: 0,
+        y: 0,
+        width: 160,
+        height: 22,
+        fillAlpha: 0.85,
+        borderWidth: 1,
+        borderAlpha: 0.85,
+      });
       const label = this.add
         .text(10, 5, item.label, {
           fontFamily: "monospace",
-          fontSize: "11px",
-          color: "#f2f5ff",
-          stroke: "#04070b",
-          strokeThickness: 2,
+          fontSize: theme.typography.subtitle,
+          color: theme.palette.textPrimary,
+          stroke: theme.textStroke.light.color,
+          strokeThickness: theme.textStroke.light.thickness,
         })
         .setName("menu-label");
 
-      row.add([background, border, label]);
-      row.setInteractive(
-        new Phaser.Geom.Rectangle(0, 0, 160, 22),
-        Phaser.Geom.Rectangle.Contains,
-      );
+      row.add([panel.fill, panel.border, label]);
+      row.setInteractive(new Phaser.Geom.Rectangle(0, 0, 160, 22), Phaser.Geom.Rectangle.Contains);
       row.on("pointerover", () => {
         this.selectedIndex = i;
         this.refreshSelection();
@@ -138,37 +137,48 @@ export class TitleScene extends Phaser.Scene {
     this.add
       .text(50, 228, "UP/DOWN para navegar  |  ENTER confirmar", {
         fontFamily: "monospace",
-        fontSize: "11px",
-        color: "#ffd7ec",
+        fontSize: theme.typography.subtitle,
+        color: theme.palette.textSecondary,
       })
       .setDepth(5);
   }
 
   private createInfoPanel(): void {
-    this.infoPanel = this.add.container(222, 124).setDepth(5);
-    this.infoPanel.add(this.add.rectangle(0, 0, 188, 108, 0x05050a, 0.9).setOrigin(0, 0));
-    this.infoPanel.add(this.add.rectangle(0, 0, 188, 2, 0xffc870, 1).setOrigin(0, 0));
+    const theme = getUiThemeTokens();
+    const panel = createPanel(this, {
+      x: 222,
+      y: 124,
+      width: 188,
+      height: 108,
+      depth: 5,
+      fillColor: 0x05050a,
+      fillAlpha: 0.9,
+      borderAlpha: 0,
+      topAccentColor: Number.parseInt(theme.palette.accentGold.replace("#", "0x"), 16),
+      topAccentHeight: 2,
+    });
 
+    this.infoPanel = panel.container;
     this.infoPanelTitle = this.add.text(10, 8, "INSTRUCCIONES", {
       fontFamily: "monospace",
-      fontSize: "11px",
-      color: "#ffe2b3",
-      stroke: "#130f08",
-      strokeThickness: 2,
+      fontSize: theme.typography.subtitle,
+      color: theme.palette.textHighlight,
+      stroke: theme.textStroke.light.color,
+      strokeThickness: theme.textStroke.light.thickness,
     });
 
     this.infoPanelText = this.add.text(10, 24, "", {
       fontFamily: "monospace",
-      fontSize: "10px",
-      color: "#f6f7fb",
+      fontSize: theme.typography.caption,
+      color: theme.palette.textPrimary,
       wordWrap: { width: 166 },
       lineSpacing: 5,
     });
 
     this.optionsVolumeText = this.add.text(10, 24, "", {
       fontFamily: "monospace",
-      fontSize: "10px",
-      color: "#e7f8ff",
+      fontSize: theme.typography.caption,
+      color: theme.palette.textSecondary,
       lineSpacing: 5,
     });
 
@@ -191,14 +201,15 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private refreshSelection(): void {
+    const theme = getUiThemeTokens();
     this.buttons.forEach((button, index) => {
       const active = index === this.selectedIndex;
       const background = button.list[0] as Phaser.GameObjects.Rectangle;
       const border = button.list[1] as Phaser.GameObjects.Rectangle;
       const label = button.getByName("menu-label") as Phaser.GameObjects.Text;
-      background.setFillStyle(active ? 0x1d1b30 : 0x06070d, active ? 0.95 : 0.85);
-      border.setStrokeStyle(1, active ? 0xff6fb5 : 0x68abff, active ? 1 : 0.45);
-      label.setColor(active ? "#fff7cf" : "#f2f5ff");
+      background.setFillStyle(active ? Number.parseInt(theme.panel.highlightFill.replace("#", "0x"), 16) : Number.parseInt(theme.palette.panelFill.replace("#", "0x"), 16), active ? 0.95 : 0.85);
+      border.setStrokeStyle(1, active ? Number.parseInt(theme.palette.accentPink.replace("#", "0x"), 16) : Number.parseInt(theme.palette.accentBlue.replace("#", "0x"), 16), active ? 1 : 0.45);
+      label.setColor(active ? theme.palette.textHighlight : theme.palette.textPrimary);
     });
 
     const action = this.menuItems[this.selectedIndex].action;

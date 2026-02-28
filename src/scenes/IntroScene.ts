@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
+import { getUiThemeTokens } from "../config/ui/uiTheme";
+import { createPanel, createSceneTitle } from "../ui/sceneChrome";
 
 const INTRO_LINES = [
   "ESPANA, 1995.",
@@ -17,24 +19,33 @@ export class IntroScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.cameras.main.setBackgroundColor("#07040d");
+    const theme = getUiThemeTokens();
+    this.cameras.main.setBackgroundColor(theme.palette.bgPrimary);
     this.add.rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, BASE_WIDTH, BASE_HEIGHT, 0x09040f, 1).setOrigin(0.5);
-    this.add.rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, 360, 164, 0x080b14, 0.96).setOrigin(0.5);
-    this.add.rectangle(BASE_WIDTH * 0.5, 44, 360, 2, 0xff6fb5, 1).setOrigin(0.5, 0.5);
 
-    this.add
-      .text(BASE_WIDTH * 0.5, 34, "INTRO", {
-        fontFamily: "monospace",
-        fontSize: "13px",
-        color: "#ffd9eb",
-      })
-      .setOrigin(0.5);
+    createPanel(this, {
+      x: BASE_WIDTH * 0.5 - 180,
+      y: BASE_HEIGHT * 0.5 - 82,
+      width: 360,
+      height: 164,
+      fillColor: 0x080b14,
+      fillAlpha: 0.96,
+      topAccentColor: Number.parseInt(theme.palette.accentPink.replace("#", "0x"), 16),
+      topAccentHeight: 2,
+    });
+
+    createSceneTitle(this, {
+      x: BASE_WIDTH * 0.5,
+      y: 28,
+      title: "INTRO",
+      titleSize: theme.typography.subtitle,
+    });
 
     this.lineText = this.add
       .text(BASE_WIDTH * 0.5, 108, INTRO_LINES[0], {
         fontFamily: "monospace",
-        fontSize: "12px",
-        color: "#f4f9ff",
+        fontSize: theme.typography.body,
+        color: theme.palette.textPrimary,
         align: "center",
         wordWrap: { width: 320 },
       })
@@ -43,8 +54,8 @@ export class IntroScene extends Phaser.Scene {
     this.add
       .text(BASE_WIDTH * 0.5, 198, "ENTER: continuar  |  SPACE: saltar", {
         fontFamily: "monospace",
-        fontSize: "10px",
-        color: "#ffd6a7",
+        fontSize: theme.typography.caption,
+        color: theme.palette.accentGold,
       })
       .setOrigin(0.5);
 
