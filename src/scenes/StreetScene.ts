@@ -18,6 +18,7 @@ import { featureFlags } from "../config/features";
 import { getPlayableCharacter } from "../config/gameplay/playableRoster";
 import { getSessionState, resetSessionState, updateSessionState } from "../config/gameplay/sessionState";
 import { getStageBundle, type StageBundle } from "../config/levels/stageCatalog";
+import { getStageWalkRails } from "../config/levels/stageTypes";
 import { fighterVisualProfiles } from "../config/visual/fighterVisualProfiles";
 import { ensureFighterAnimations } from "../config/visual/fighterAnimationSets";
 import { EnemyBasic, buildEnemyAttackData, type EnemyArchetype } from "../entities/EnemyBasic";
@@ -123,13 +124,12 @@ export class StreetScene extends Phaser.Scene {
 
     this.inputManager = new InputManager(this);
 
-    const walkLane = this.stageBundle.layout.walkLane ?? {
-      topY: 152,
-      bottomY: 224,
-      playerSpawnY: 198,
-    };
+    const walkRails = getStageWalkRails(this.stageBundle.layout);
 
-    this.collisionSystem = new CollisionSystem(this, walkLane, this.stageWorldWidth);
+    this.collisionSystem = new CollisionSystem(this, walkRails, this.stageWorldWidth);
+    const spawnRail = this.collisionSystem.getRailAtX(PLAYER_SPAWN_X);
+    const fallbackSpawnY = (spawnRail.topY + spawnRail.bottomY) * 0.5;
+    const playerSpawnY = spawnRail.preferredY ?? this.stageBundle.layout.walkLane?.playerSpawnY ?? fallbackSpawnY;
     this.depthSystem = new DepthSystem();
     this.hitStopSystem = new HitStopSystem(this);
     this.enemyAI = new EnemyAI();
@@ -151,12 +151,13 @@ export class StreetScene extends Phaser.Scene {
       id: "P1",
       team: "player",
       x: PLAYER_SPAWN_X,
-      y: walkLane.playerSpawnY,
+      y: playerSpawnY,
       animationOwner: character.animationOwner,
       maxHp: character.maxHp,
       moveSpeed: character.moveSpeed,
       attackData: this.playerAttackData,
       visualProfile: fighterVisualProfiles[character.animationOwner],
+      clampPosition: (x, y) => this.collisionSystem.clampPositionToRail(x, y),
     });
     this.player.sprite.setTint(character.tint);
     this.collisionSystem.attachFootCollider(this.player);
@@ -411,6 +412,7 @@ export class StreetScene extends Phaser.Scene {
       moveSpeed: profile.moveSpeed,
       attackData: enemyAttackData,
       visualProfile: fighterVisualProfiles.enemy,
+      clampPosition: (x, y) => this.collisionSystem.clampPositionToRail(x, y),
     }, archetype);
     enemy.sprite.setTint(profile.tint);
     this.collisionSystem.attachFootCollider(enemy);
@@ -548,11 +550,7 @@ export class StreetScene extends Phaser.Scene {
       return;
     }
 
-    const lane = this.stageBundle.layout.walkLane;
-    if (!lane) {
-      return;
-    }
-
+    const lane = this.collisionSystem.getWalkLane();
     const laneHeight = lane.bottomY - lane.topY;
     const fxY = lane.topY + laneHeight * 0.5;
     const fxDepth = lane.bottomY + 26;
@@ -660,8 +658,6 @@ export class StreetScene extends Phaser.Scene {
     }
 
     this.debugGraphics.clear();
-    const cam = this.cameras.main;
-
     const fighters = [this.player, ...this.enemies];
     for (const fighter of fighters) {
       const hurtbox = fighter.getHurtbox();
@@ -692,12 +688,11 @@ export class StreetScene extends Phaser.Scene {
       this.debugGraphics.fillCircle(fighter.shadow.x, fighter.shadow.y, 2);
     }
 
-    const lane = this.stageBundle.layout.walkLane;
-    if (lane) {
-      this.debugGraphics.lineStyle(1, 0x4cd7ff, 0.8);
-      this.debugGraphics.lineBetween(cam.scrollX, lane.topY, cam.scrollX + cam.width, lane.topY);
-      this.debugGraphics.lineStyle(1, 0xffaf5a, 0.8);
-      this.debugGraphics.lineBetween(cam.scrollX, lane.bottomY, cam.scrollX + cam.width, lane.bottomY);
+    for (const rail of this.collisionSystem.getWalkRails()) {
+      this.debugGraphics.lineStyle(1, 0x4cd7ff, 0.55);
+      this.debugGraphics.lineBetween(rail.xStart, rail.topY, rail.xEnd, rail.topY);
+      this.debugGraphics.lineStyle(1, 0xffaf5a, 0.55);
+      this.debugGraphics.lineBetween(rail.xStart, rail.bottomY, rail.xEnd, rail.bottomY);
     }
 
     const fps = this.game.loop.actualFps.toFixed(1);

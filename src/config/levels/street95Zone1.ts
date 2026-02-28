@@ -6,6 +6,7 @@ export type {
   StageParallaxBand,
   StageNeonLabel,
   StageWalkLaneConfig,
+  StageWalkRailConfig,
   StageAmbientFxConfig,
   StageLayoutConfig,
 } from "./stageTypes";

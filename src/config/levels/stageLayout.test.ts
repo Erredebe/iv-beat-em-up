@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { derivedTextureCrops } from "../assets/derivedTextureCrops";
 import { stageCatalog } from "./stageCatalog";
-import type { StageLayoutConfig } from "./stageTypes";
+import { getStageWalkRails, type StageLayoutConfig } from "./stageTypes";
 
 function getPropSourceSize(textureKey: string): { width: number; height: number } {
   const crop = derivedTextureCrops.find((entry) => entry.targetKey === textureKey);
@@ -15,28 +15,31 @@ describe("stage layout calibration", () => {
   it("keeps walk lane and layer depth ordering coherent", () => {
     for (const bundle of Object.values(stageCatalog)) {
       const layout = bundle.layout;
-      const lane = layout.walkLane;
-      expect(lane, `${bundle.id} lane missing`).toBeDefined();
-      if (!lane) {
-        continue;
-      }
+      const rails = getStageWalkRails(layout);
+      expect(rails.length, `${bundle.id} rails missing`).toBeGreaterThan(0);
 
       const mapHeightPx = layout.mapHeightTiles * layout.tileSize;
-      expect(lane.topY, `${bundle.id} lane top out of bounds`).toBeGreaterThanOrEqual(0);
-      expect(lane.bottomY, `${bundle.id} lane bottom out of bounds`).toBeLessThanOrEqual(mapHeightPx);
-      expect(lane.topY, `${bundle.id} lane top >= bottom`).toBeLessThan(lane.bottomY);
-      expect(lane.playerSpawnY, `${bundle.id} player spawn above lane`).toBeGreaterThanOrEqual(lane.topY);
-      expect(lane.playerSpawnY, `${bundle.id} player spawn below lane`).toBeLessThanOrEqual(lane.bottomY);
+      let laneBottom = Number.NEGATIVE_INFINITY;
+      for (const rail of rails) {
+        expect(rail.xStart, `${bundle.id}:${rail.id} xStart > xEnd`).toBeLessThan(rail.xEnd);
+        expect(rail.topY, `${bundle.id}:${rail.id} top out of bounds`).toBeGreaterThanOrEqual(0);
+        expect(rail.bottomY, `${bundle.id}:${rail.id} bottom out of bounds`).toBeLessThanOrEqual(mapHeightPx);
+        expect(rail.topY, `${bundle.id}:${rail.id} top >= bottom`).toBeLessThan(rail.bottomY);
+        const preferred = rail.preferredY ?? (rail.topY + rail.bottomY) * 0.5;
+        expect(preferred, `${bundle.id}:${rail.id} preferred above rail`).toBeGreaterThanOrEqual(rail.topY);
+        expect(preferred, `${bundle.id}:${rail.id} preferred below rail`).toBeLessThanOrEqual(rail.bottomY);
+        laneBottom = Math.max(laneBottom, rail.bottomY);
+      }
 
       const foreground = layout.layers.find((layer) => layer.id === "foreground_deco");
       expect(foreground, `${bundle.id} missing foreground layer`).toBeDefined();
-      expect(foreground!.depth, `${bundle.id} foreground depth below lane`).toBeGreaterThan(lane.bottomY);
+      expect(foreground!.depth, `${bundle.id} foreground depth below lane`).toBeGreaterThan(laneBottom);
 
       const backLayers = ["facade", "sidewalk", "road"] as const;
       for (const id of backLayers) {
         const layer = layout.layers.find((candidate) => candidate.id === id);
         expect(layer, `${bundle.id} missing ${id}`).toBeDefined();
-        expect(layer!.depth, `${bundle.id} ${id} depth too high`).toBeLessThan(lane.bottomY + 4);
+        expect(layer!.depth, `${bundle.id} ${id} depth too high`).toBeLessThan(laneBottom + 4);
       }
     }
   });
