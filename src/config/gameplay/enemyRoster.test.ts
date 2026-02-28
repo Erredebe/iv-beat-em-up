@@ -17,5 +17,11 @@ describe("enemy roster", () => {
     expect(ENEMY_PROFILES.mini_boss.damageMultiplier).toBeGreaterThan(ENEMY_PROFILES.brawler.damageMultiplier);
     expect(ENEMY_PROFILES.rusher.moveSpeedMultiplier).toBeGreaterThan(ENEMY_PROFILES.tank.moveSpeedMultiplier);
     expect(ENEMY_PROFILES.bat_wielder.attackRangeX).toBeGreaterThan(ENEMY_PROFILES.brawler.attackRangeX);
+    expect(ENEMY_PROFILES.agile_f.attackRangeY).toBeGreaterThan(ENEMY_PROFILES.tank.attackRangeY);
+  });
+
+  it("defines rail switching tuning per archetype", () => {
+    expect(ENEMY_PROFILES.rusher.railSwitchAggressiveness).toBeGreaterThan(ENEMY_PROFILES.tank.railSwitchAggressiveness);
+    expect(ENEMY_PROFILES.mini_boss.railSnapTolerance).toBeGreaterThan(ENEMY_PROFILES.agile_f.railSnapTolerance);
   });
 });
