@@ -17,7 +17,10 @@ export function createGameConfig(): Phaser.Types.Core.GameConfig {
     backgroundColor: "#120019",
     pixelArt: true,
     antialias: false,
+    antialiasGL: false,
     roundPixels: true,
+    autoRound: true,
+    powerPreference: "high-performance",
     physics: {
       default: "arcade",
       arcade: {

@@ -27,6 +27,7 @@ function applyIntegerScale(): void {
   canvas.style.left = `${Math.floor((viewportWidth - displayWidth) * 0.5)}px`;
   canvas.style.top = `${Math.floor((viewportHeight - displayHeight) * 0.5)}px`;
   canvas.style.imageRendering = "pixelated";
+  canvas.style.setProperty("image-rendering", "crisp-edges");
 }
 
 window.addEventListener("resize", applyIntegerScale);
