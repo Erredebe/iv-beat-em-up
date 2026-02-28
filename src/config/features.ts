@@ -7,6 +7,7 @@ export interface FeatureFlags {
   storyIntro: boolean;
   breakableProps: boolean;
   enhancedSfx: boolean;
+  uiThemeV2: boolean;
 }
 
 const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
@@ -18,6 +19,7 @@ const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   storyIntro: true,
   breakableProps: true,
   enhancedSfx: true,
+  uiThemeV2: false,
 };
 
 const STORAGE_KEY = "spain90.featureFlags";
