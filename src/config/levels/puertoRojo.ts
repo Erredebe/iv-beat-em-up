@@ -46,8 +46,8 @@ export const puertoRojoLayout: StageLayoutConfig = {
     },
   ],
   breakableProps: [
-    { id: "crate_final_1", textureKey: "prop_crate", x: 930, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 28, points: 180 },
-    { id: "crate_final_2", textureKey: "prop_crate", x: 1760, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 28, points: 180 },
+    { id: "crate_final_1", textureKey: "prop_crate", x: 930, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 28, points: 180, dropType: "small_heal", dropChance: 0.45, healAmount: 16 },
+    { id: "crate_final_2", textureKey: "prop_crate", x: 1760, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 28, points: 180, dropType: "medium_heal", dropChance: 0.2, healAmount: 24 },
   ],
   collisionFootprints: [
     { id: "booth_harbor_feet", x: 510, y: 218, width: 66, height: 14, color: 0x65d9ff },

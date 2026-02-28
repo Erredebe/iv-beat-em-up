@@ -39,6 +39,9 @@ export interface StageBreakablePropConfig {
   scale: 1 | 2 | 3 | 4;
   maxHp: number;
   points: number;
+  dropType?: "none" | "small_heal" | "medium_heal";
+  dropChance?: number;
+  healAmount?: number;
 }
 
 export interface StageParallaxBand {
@@ -153,6 +156,9 @@ export function cloneStageLayoutConfig(layout: StageLayoutConfig): StageLayoutCo
       scale: prop.scale,
       maxHp: prop.maxHp,
       points: prop.points,
+      dropType: prop.dropType,
+      dropChance: prop.dropChance,
+      healAmount: prop.healAmount,
     })),
     collisionFootprints: layout.collisionFootprints.map((footprint) => ({
       id: footprint.id,

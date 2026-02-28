@@ -18,6 +18,7 @@ import type { FighterVisualProfile, SpritePixelOffset } from "../config/visual/f
 import { isFrameActive, isFrameInComboWindow } from "../systems/combatMath";
 import type { AttackFrameData, AttackId, DamageEvent, FighterState, Rect, Team } from "../types/combat";
 import type { NavigationSystem, NavigationZoneState } from "../systems/NavigationSystem";
+import { restoreHpClamped } from "./fighterHealth";
 
 export type PositionClampFn = (x: number, y: number) => Phaser.Math.Vector2;
 
@@ -459,6 +460,15 @@ export class BaseFighter {
     this.state = "JUMP";
     this.forceClipRestart = true;
     return true;
+  }
+
+  restoreHp(amount: number): number {
+    if (!this.isAlive()) {
+      return 0;
+    }
+    const outcome = restoreHpClamped(this.hp, this.maxHp, amount);
+    this.hp = outcome.hp;
+    return outcome.restored;
   }
 
   consumeHealthRatio(ratio: number, minRemainingHp = 1): boolean {
