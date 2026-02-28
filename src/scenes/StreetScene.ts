@@ -24,7 +24,7 @@ import { ensureFighterAnimations } from "../config/visual/fighterAnimationSets";
 import { EnemyBasic, buildEnemyAttackData, type EnemyArchetype } from "../entities/EnemyBasic";
 import { Player, buildPlayerAttackData } from "../entities/Player";
 import { AudioSystem } from "../systems/AudioSystem";
-import { BreakablePropSystem } from "../systems/BreakablePropSystem";
+import { BreakablePropSystem, type BreakablePickupSpawn } from "../systems/BreakablePropSystem";
 import { CollisionSystem } from "../systems/CollisionSystem";
 import { CombatSystem } from "../systems/CombatSystem";
 import { DepthSystem } from "../systems/DepthSystem";
@@ -40,6 +40,12 @@ import type { AttackFrameData, AttackId } from "../types/combat";
 interface TargetEnemyTracker {
   id: string;
   expiresAt: number;
+}
+
+interface ActiveHealPickup {
+  id: string;
+  sprite: Phaser.GameObjects.Image;
+  healAmount: number;
 }
 
 const ENEMY_POINTS_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
@@ -70,6 +76,7 @@ export class StreetScene extends Phaser.Scene {
   private stageRenderer!: StageRenderer;
   private levelEditor!: LevelEditor;
   private breakablePropSystem: BreakablePropSystem | null = null;
+  private healPickups: ActiveHealPickup[] = [];
   private flashOverlay!: Phaser.GameObjects.Rectangle;
   private damageFlashOverlay!: Phaser.GameObjects.Rectangle;
   private isPausedByPlayer = false;
@@ -110,6 +117,7 @@ export class StreetScene extends Phaser.Scene {
     this.zoneMessageUntil = 0;
     this.announcedZoneId = null;
     this.stageTransitionQueued = false;
+    this.healPickups = [];
 
     if (!this.scene.isActive("HudScene")) {
       this.scene.launch("HudScene");
@@ -197,6 +205,7 @@ export class StreetScene extends Phaser.Scene {
       this.stageRenderer.destroy();
       this.levelEditor.destroy();
       this.breakablePropSystem?.destroy();
+      this.destroyHealPickups();
     });
 
     this.spawnManager = new SpawnManager(this.collisionSystem, (spawn) => this.spawnEnemy(spawn.x, spawn.y, spawn.archetype), this.stageBundle.spawns);
@@ -365,8 +374,12 @@ export class StreetScene extends Phaser.Scene {
         this.audioSystem.playBreakableBreak();
         this.createHitSpark(this.player.x + this.player.facing * 24, this.player.y - 24);
       }
+      if (breakResult.spawnedPickups.length > 0) {
+        this.spawnHealPickups(breakResult.spawnedPickups);
+      }
     }
 
+    this.resolveHealPickupCollection();
     this.cleanupDeadEnemies();
 
     if (this.spawnManager.getActiveZoneId()) {
@@ -781,6 +794,94 @@ export class StreetScene extends Phaser.Scene {
       `AVG ${avg.toFixed(1)}`,
       `MIN ${this.perfMinFps.toFixed(1)}`,
     ]);
+  }
+
+  private spawnHealPickups(pickups: BreakablePickupSpawn[]): void {
+    for (const pickup of pickups) {
+      const sprite = this.add
+        .image(pickup.x, pickup.y - 16, "utility-white")
+        .setDisplaySize(14, 14)
+        .setTint(pickup.dropType === "medium_heal" ? 0x54ff9f : 0xb7ffd7)
+        .setAlpha(0.95)
+        .setDepth(236);
+      this.tweens.add({
+        targets: sprite,
+        y: sprite.y - 4,
+        duration: 340,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.InOut",
+      });
+      this.healPickups.push({
+        id: pickup.id,
+        sprite,
+        healAmount: pickup.healAmount,
+      });
+    }
+  }
+
+  private resolveHealPickupCollection(): void {
+    if (this.healPickups.length === 0 || this.player.hp >= this.player.maxHp) {
+      return;
+    }
+
+    const remaining: ActiveHealPickup[] = [];
+    let collectedAny = false;
+    for (const pickup of this.healPickups) {
+      const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, pickup.sprite.x, pickup.sprite.y);
+      if (distance > 26) {
+        remaining.push(pickup);
+        continue;
+      }
+
+      const restoredHp = this.player.restoreHp(pickup.healAmount);
+      if (restoredHp <= 0) {
+        remaining.push(pickup);
+        continue;
+      }
+
+      collectedAny = true;
+      this.audioSystem.playUi();
+      this.flashScene();
+      this.showHealFloatingText(pickup.sprite.x, pickup.sprite.y - 12, restoredHp);
+      this.tweens.killTweensOf(pickup.sprite);
+      pickup.sprite.destroy();
+    }
+
+    this.healPickups = remaining;
+    if (collectedAny) {
+      this.updateHud();
+    }
+  }
+
+  private showHealFloatingText(x: number, y: number, amount: number): void {
+    const text = this.add
+      .text(x, y, `+${amount} HP`, {
+        fontFamily: "monospace",
+        fontSize: "12px",
+        color: "#8dffb2",
+        stroke: "#102618",
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5)
+      .setDepth(5100);
+
+    this.tweens.add({
+      targets: text,
+      y: y - 22,
+      alpha: 0,
+      duration: 420,
+      ease: "Quad.Out",
+      onComplete: () => text.destroy(),
+    });
+  }
+
+  private destroyHealPickups(): void {
+    for (const pickup of this.healPickups) {
+      this.tweens.killTweensOf(pickup.sprite);
+      pickup.sprite.destroy();
+    }
+    this.healPickups.length = 0;
   }
 
   private createHitSpark(x: number, y: number): void {

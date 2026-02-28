@@ -3,6 +3,18 @@ import type { BaseFighter } from "../entities/BaseFighter";
 import type { StageBreakablePropConfig } from "../config/levels/stageTypes";
 import type { DepthSystem } from "./DepthSystem";
 import type { CollisionSystem, GroundObstacle } from "./CollisionSystem";
+import { resolveBreakablePickupDrop, type BreakablePickupSpawn } from "./breakableDropResolver";
+
+export type { BreakablePickupSpawn } from "./breakableDropResolver";
+
+function rectIntersects(a: Phaser.Geom.Rectangle, b: Phaser.Geom.Rectangle): boolean {
+  return !(
+    a.right < b.left ||
+    a.left > b.right ||
+    a.bottom < b.top ||
+    a.top > b.bottom
+  );
+}
 
 interface BreakableRuntime {
   id: string;
@@ -14,20 +26,15 @@ interface BreakableRuntime {
   hitByAttack: Set<string>;
   hurtbox: Phaser.Geom.Rectangle;
   obstacle: GroundObstacle;
-}
-
-function rectIntersects(a: Phaser.Geom.Rectangle, b: Phaser.Geom.Rectangle): boolean {
-  return !(
-    a.right < b.left ||
-    a.left > b.right ||
-    a.bottom < b.top ||
-    a.top > b.bottom
-  );
+  dropType: StageBreakablePropConfig["dropType"];
+  dropChance: number;
+  healAmount?: number;
 }
 
 export interface BreakableHitResult {
   pointsAwarded: number;
   brokenCount: number;
+  spawnedPickups: BreakablePickupSpawn[];
 }
 
 export class BreakablePropSystem {
@@ -35,11 +42,19 @@ export class BreakablePropSystem {
   private readonly depthSystem: DepthSystem;
   private readonly collisionSystem: CollisionSystem;
   private readonly props: BreakableRuntime[] = [];
+  private readonly randomFn: () => number;
 
-  constructor(scene: Phaser.Scene, depthSystem: DepthSystem, collisionSystem: CollisionSystem, props: StageBreakablePropConfig[]) {
+  constructor(
+    scene: Phaser.Scene,
+    depthSystem: DepthSystem,
+    collisionSystem: CollisionSystem,
+    props: StageBreakablePropConfig[],
+    randomFn: () => number = Math.random,
+  ) {
     this.scene = scene;
     this.depthSystem = depthSystem;
     this.collisionSystem = collisionSystem;
+    this.randomFn = randomFn;
 
     for (const config of props) {
       const sprite = scene.add
@@ -75,6 +90,9 @@ export class BreakablePropSystem {
         hitByAttack: new Set<string>(),
         hurtbox: new Phaser.Geom.Rectangle(left, top, width, height),
         obstacle,
+        dropType: config.dropType,
+        dropChance: config.dropChance ?? 1,
+        healAmount: config.healAmount,
       });
     }
   }
@@ -82,6 +100,7 @@ export class BreakablePropSystem {
   resolveHits(fighters: BaseFighter[]): BreakableHitResult {
     let pointsAwarded = 0;
     let brokenCount = 0;
+    const spawnedPickups: BreakablePickupSpawn[] = [];
 
     for (const fighter of fighters) {
       const hitbox = fighter.getActiveHitbox();
@@ -126,11 +145,26 @@ export class BreakablePropSystem {
             duration: 100,
             onComplete: () => prop.sprite.destroy(),
           });
+
+          const spawnedPickup = resolveBreakablePickupDrop(
+            {
+              id: prop.id,
+              x: prop.sprite.x,
+              y: prop.sprite.y,
+              dropType: prop.dropType,
+              dropChance: prop.dropChance,
+              healAmount: prop.healAmount,
+            },
+            this.randomFn,
+          );
+          if (spawnedPickup) {
+            spawnedPickups.push(spawnedPickup);
+          }
         }
       }
     }
 
-    return { pointsAwarded, brokenCount };
+    return { pointsAwarded, brokenCount, spawnedPickups };
   }
 
   getRemainingCount(): number {
