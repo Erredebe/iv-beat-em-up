@@ -32,6 +32,7 @@ import { EnemyAI } from "../systems/EnemyAI";
 import { HitStopSystem } from "../systems/HitStopSystem";
 import { InputManager } from "../systems/InputManager";
 import { LevelEditor } from "../systems/LevelEditor";
+import { NavigationSystem } from "../systems/NavigationSystem";
 import { SpawnManager } from "../systems/SpawnManager";
 import { StageRenderer } from "../systems/StageRenderer";
 import type { AttackFrameData, AttackId } from "../types/combat";
@@ -58,6 +59,7 @@ export class StreetScene extends Phaser.Scene {
   private combatSystem!: CombatSystem;
   private enemyAI!: EnemyAI;
   private spawnManager!: SpawnManager;
+  private navigationSystem!: NavigationSystem;
   private audioSystem!: AudioSystem;
   private player!: Player;
   private enemies: EnemyBasic[] = [];
@@ -126,13 +128,14 @@ export class StreetScene extends Phaser.Scene {
 
     const walkRails = getStageWalkRails(this.stageBundle.layout);
 
+    this.navigationSystem = new NavigationSystem(walkRails, this.stageWorldWidth);
     this.collisionSystem = new CollisionSystem(this, walkRails, this.stageWorldWidth);
     const spawnRail = this.collisionSystem.getRailAtX(PLAYER_SPAWN_X);
     const fallbackSpawnY = (spawnRail.topY + spawnRail.bottomY) * 0.5;
     const playerSpawnY = spawnRail.preferredY ?? this.stageBundle.layout.walkLane?.playerSpawnY ?? fallbackSpawnY;
     this.depthSystem = new DepthSystem();
     this.hitStopSystem = new HitStopSystem(this);
-    this.enemyAI = new EnemyAI();
+    this.enemyAI = new EnemyAI(this.navigationSystem, () => this.spawnManager.getNavigationState());
     this.audioSystem = new AudioSystem(this);
 
     this.stageRenderer = new StageRenderer(this, this.stageBundle.layout);
@@ -158,6 +161,8 @@ export class StreetScene extends Phaser.Scene {
       attackData: this.playerAttackData,
       visualProfile: fighterVisualProfiles[character.animationOwner],
       clampPosition: (x, y) => this.collisionSystem.clampPositionToRail(x, y),
+      navigationSystem: this.navigationSystem,
+      getNavigationZoneState: () => this.spawnManager.getNavigationState(),
     });
     this.player.sprite.setTint(character.tint);
     this.collisionSystem.attachFootCollider(this.player);
@@ -413,6 +418,8 @@ export class StreetScene extends Phaser.Scene {
       attackData: enemyAttackData,
       visualProfile: fighterVisualProfiles.enemy,
       clampPosition: (x, y) => this.collisionSystem.clampPositionToRail(x, y),
+      navigationSystem: this.navigationSystem,
+      getNavigationZoneState: () => this.spawnManager.getNavigationState(),
     }, archetype);
     enemy.sprite.setTint(profile.tint);
     this.collisionSystem.attachFootCollider(enemy);
@@ -715,11 +722,30 @@ export class StreetScene extends Phaser.Scene {
       this.debugGraphics.fillCircle(fighter.shadow.x, fighter.shadow.y, 2);
     }
 
-    for (const rail of this.collisionSystem.getWalkRails()) {
-      this.debugGraphics.lineStyle(1, 0x4cd7ff, 0.55);
+    for (const rail of this.navigationSystem.getRails()) {
+      this.debugGraphics.lineStyle(1, 0x4cd7ff, 0.65);
       this.debugGraphics.lineBetween(rail.xStart, rail.topY, rail.xEnd, rail.topY);
-      this.debugGraphics.lineStyle(1, 0xffaf5a, 0.55);
+      this.debugGraphics.lineStyle(1, 0xffaf5a, 0.65);
       this.debugGraphics.lineBetween(rail.xStart, rail.bottomY, rail.xEnd, rail.bottomY);
+      this.debugGraphics.fillStyle(0xd5f3ff, 0.75);
+      this.debugGraphics.fillCircle((rail.xStart + rail.xEnd) * 0.5, rail.preferredY ?? (rail.topY + rail.bottomY) * 0.5, 1.8);
+    }
+
+    for (const connection of this.navigationSystem.getConnections()) {
+      this.debugGraphics.lineStyle(1, 0x98ffb6, 0.65);
+      this.debugGraphics.lineBetween(connection.x, connection.fromY, connection.x, connection.toY);
+      this.debugGraphics.fillStyle(0x98ffb6, 0.9);
+      this.debugGraphics.fillCircle(connection.x, connection.fromY, 1.6);
+      this.debugGraphics.fillCircle(connection.x, connection.toY, 1.6);
+    }
+
+    const navState = this.spawnManager.getNavigationState();
+    for (const blocker of navState.blockers) {
+      if (!blocker.active) {
+        continue;
+      }
+      this.debugGraphics.lineStyle(2, 0xff3d7d, 0.95);
+      this.debugGraphics.lineBetween(blocker.x, blocker.topY, blocker.x, blocker.bottomY);
     }
 
     const fps = this.game.loop.actualFps.toFixed(1);
@@ -736,7 +762,8 @@ export class StreetScene extends Phaser.Scene {
       `P1 CLIP ${playerVisual.textureStateId}:${playerVisual.frame} OFF ${playerVisual.appliedOffset.x},${playerVisual.appliedOffset.y}`,
       `P1 DEPTH ${Math.round(playerDepth)} | FOOT ${Math.round(playerVisual.footY)} BASE ${Math.round(playerVisual.baselineY)} SHADOW ${Math.round(playerVisual.shadowY)}`,
       `STAGE ${this.stageBundle.id} | SCORE ${this.score}`,
-      `ENEMIES ${this.enemies.length} | PAUSE ${this.isPausedByPlayer ? "ON" : "OFF"}`,
+      `ENEMIES ${this.enemies.length} | ZONE ${this.spawnManager.getActiveZoneId() ?? "-"} | BLOCKERS ${this.spawnManager.getNavigationState().blockers.length}`,
+      `PAUSE ${this.isPausedByPlayer ? "ON" : "OFF"}`,
     ]);
   }
 

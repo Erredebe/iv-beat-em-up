@@ -91,6 +91,22 @@ describe("EnemyAI", () => {
     expect(enemy.moveIntent.y).toBeGreaterThan(0);
   });
 
+
+  it("no avanza en X si navegación reporta bloqueo en el trayecto", () => {
+    const navigation = {
+      projectToNearestRail: (x: number, y: number) => ({ x, y }),
+      isPathBlocked: () => true,
+    };
+    const ai = new EnemyAI(navigation as never, () => ({ activeZoneId: "z1", blockers: [] }));
+    const enemy = makeEnemy({ x: 100, y: 156 });
+    const player = makePlayer(240, 160);
+
+    ai.update(enemy as never, player as never, 16.667, 100);
+
+    expect(enemy.moveIntent.x).toBe(0);
+    expect(enemy.moveIntent.y).toBeGreaterThanOrEqual(0);
+  });
+
   it("usa umbrales de Y distintos según separación entre rails", () => {
     const ai = new EnemyAI();
     const enemyFar = makeEnemy({ y: 80 });
