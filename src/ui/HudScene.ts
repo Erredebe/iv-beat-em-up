@@ -246,16 +246,20 @@ export class HudScene extends Phaser.Scene {
 
   private createControlsPanel(): void {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_CONTROLS);
-    panel.add(this.add.rectangle(20, 152, 388, 88, 0x07090f, 0.45).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(20, 152, 388, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
+    const panelX = BASE_WIDTH - 176;
+    const panelY = 68;
+    const panelWidth = 168;
+    const panelHeight = 68;
+
+    panel.add(this.add.rectangle(panelX, panelY, panelWidth, panelHeight, 0x07090f, 0.56).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
     panel.add(
-      this.add.text(26, 158, "CONTROLES", {
+      this.add.text(panelX + 8, panelY + 6, "CONTROLES", {
         fontFamily: getUiThemeTokens().typography.families.hudText,
-        fontSize: "11px",
+        fontSize: "9px",
         color: "#ffffff",
         stroke: "#030408",
         strokeThickness: 1,
-        wordWrap: { width: 378, useAdvancedWrap: true },
       }),
     );
     this.controlsPanel = panel;
@@ -264,12 +268,17 @@ export class HudScene extends Phaser.Scene {
 
   private createTutorialPanel(): void {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_TUTORIAL);
-    panel.add(this.add.rectangle(78, 224, 272, 28, 0x05050a, 0.86).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(78, 224, 272, 2, "hud_frame").setOrigin(0, 0).setTint(0xffc870));
+    const panelWidth = 214;
+    const panelHeight = 18;
+    const panelX = Math.floor((BASE_WIDTH - panelWidth) * 0.5);
+    const panelY = BASE_HEIGHT - panelHeight - 6;
+
+    panel.add(this.add.rectangle(panelX, panelY, panelWidth, panelHeight, 0x05050a, 0.82).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0xffc870));
     panel.add(
-      this.add.text(86, 233, "Pulsa ENTER para cerrar la ayuda", {
+      this.add.text(panelX + 8, panelY + 5, "ENTER para cerrar ayuda", {
         fontFamily: getUiThemeTokens().typography.families.hudText,
-        fontSize: "10px",
+        fontSize: "9px",
         color: "#ffe6b5",
       }),
     );
@@ -375,33 +384,33 @@ export class HudScene extends Phaser.Scene {
     }
 
     const compact = this.add
-      .text(26, 174, `${hints.keyboard[0]}  |  ${hints.keyboard[1]}  |  ${hints.keyboard[2]}`, {
+      .text(BASE_WIDTH - 164, 88, `${hints.keyboard[0]}`, {
         fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "10px",
         color: "#e8f7ff",
         stroke: "#04070b",
         strokeThickness: 1,
-        wordWrap: { width: 376, useAdvancedWrap: true },
+        wordWrap: { width: 152, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     const compact2 = this.add
-      .text(26, 192, `${hints.keyboard[3]}  |  ${hints.keyboard[4]}`, {
+      .text(BASE_WIDTH - 164, 102, `${hints.keyboard[1]}  |  ${hints.keyboard[2]}`, {
         fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "10px",
         color: "#ffdeea",
         stroke: "#080307",
         strokeThickness: 1,
-        wordWrap: { width: 376, useAdvancedWrap: true },
+        wordWrap: { width: 152, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     const compact3 = this.add
-      .text(26, 210, `${hints.gamepad[0]}  |  ${hints.gamepad[1]}`, {
+      .text(BASE_WIDTH - 164, 116, `${hints.keyboard[3]}  |  ${hints.keyboard[4]}`, {
         fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "10px",
         color: "#ffd6e7",
         stroke: "#080307",
         strokeThickness: 1,
-        wordWrap: { width: 376, useAdvancedWrap: true },
+        wordWrap: { width: 152, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     this.controlsPanel.add([compact, compact2, compact3]);

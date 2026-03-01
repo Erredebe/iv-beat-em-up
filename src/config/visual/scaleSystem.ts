@@ -1,4 +1,4 @@
-export type ScaleTier = "compact" | "standard" | "large" | "hero";
+export type ScaleTier = "tiny" | "compact" | "standard" | "large" | "hero";
 export type PixelUnit = "px1";
 export type SpriteSpecId = "fighter_arcade" | "stage_prop_arcade" | "stage_breakable_arcade";
 
@@ -13,13 +13,14 @@ export interface SpriteScaleReference {
   spriteSpecId: SpriteSpecId;
 }
 
-export const SCALE_TIER_ORDER: ScaleTier[] = ["compact", "standard", "large", "hero"];
+export const SCALE_TIER_ORDER: ScaleTier[] = ["tiny", "compact", "standard", "large", "hero"];
 
 const PIXEL_UNIT_VALUE: Record<PixelUnit, number> = {
   px1: 1,
 };
 
 const SCALE_TIER_UNITS: Record<ScaleTier, number> = {
+  tiny: 0.4,
   compact: 1,
   standard: 2,
   large: 3,

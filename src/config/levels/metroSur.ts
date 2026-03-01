@@ -27,7 +27,7 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
       id: "booth_ticket",
       visual: {
         textureKey: "prop_booth_front",
-        scaleTier: "standard",
+        scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
       },
       transform: {
@@ -43,9 +43,9 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
         color: 0x66d1ff,
         footprint: {
           mode: "explicit",
-          width: 66,
-          height: 14,
-          offsetY: -2,
+          width: 48,
+          height: 12,
+          offsetY: -1,
         },
       },
       behavior: {
@@ -55,8 +55,8 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
     {
       id: "container_service",
       visual: {
-        textureKey: "prop_container",
-        scaleTier: "standard",
+        textureKey: "prop_container_green",
+        scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
       },
       transform: {
@@ -72,8 +72,8 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
         color: 0xff7e98,
         footprint: {
           mode: "explicit",
-          width: 96,
-          height: 16,
+          width: 36,
+          height: 10,
         },
       },
       behavior: {
@@ -84,7 +84,7 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
       id: "barrel_1",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
@@ -127,7 +127,7 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
       id: "barrel_2",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
@@ -170,7 +170,7 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
       id: "barrel_3",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
@@ -213,7 +213,7 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
       id: "barrel_4",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
