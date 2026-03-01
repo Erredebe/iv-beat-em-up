@@ -1,5 +1,6 @@
 import type { StageLayoutConfig } from "./stageTypes";
 import type { StageSpawnZoneConfig } from "./stageSpawnTypes";
+import { createStageVisualProfile } from "./stageVisualPresets";
 
 export const puertoRojoLayout: StageLayoutConfig = {
   stageId: "puerto_rojo",
@@ -63,11 +64,10 @@ export const puertoRojoLayout: StageLayoutConfig = {
     { x: 1014, y: 82, text: "MUELLE 9", color: "#62d5ff", fontSize: "10px" },
     { x: 1508, y: 80, text: "LOS GRISES", color: "#ffe783", fontSize: "10px" },
   ],
-  ambientFx: {
-    rain: true,
-    fogAlpha: 0.16,
-    colorGrade: 0x201220,
-  },
+  visualProfile: createStageVisualProfile("crimsonHarbor", {
+    rainIntensity: 0.7,
+    colorGrade: { color: 0x201220, alpha: 0.12 },
+  }),
 };
 
 export const puertoRojoSpawns: StageSpawnZoneConfig[] = [

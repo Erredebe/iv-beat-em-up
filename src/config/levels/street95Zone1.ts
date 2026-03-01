@@ -7,7 +7,10 @@ export type {
   StageNeonLabel,
   StageWalkLaneConfig,
   StageWalkRailConfig,
-  StageAmbientFxConfig,
+  StageBaseGradientConfig,
+  StageColorGradeConfig,
+  StageForegroundAccentsConfig,
+  StageVisualProfile,
   StageLayoutConfig,
 } from "./stageTypes";
 

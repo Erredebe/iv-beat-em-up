@@ -1,5 +1,6 @@
 import type { StageLayoutConfig } from "./stageTypes";
 import type { StageSpawnZoneConfig } from "./stageSpawnTypes";
+import { createStageVisualProfile } from "./stageVisualPresets";
 
 export const metroSurLayout: StageLayoutConfig = {
   stageId: "metro_sur",
@@ -63,11 +64,10 @@ export const metroSurLayout: StageLayoutConfig = {
     { x: 1006, y: 78, text: "ULTIMO TREN", color: "#ffd768", fontSize: "10px" },
     { x: 1480, y: 78, text: "VIA 6", color: "#ff5eb3", fontSize: "10px" },
   ],
-  ambientFx: {
-    rain: true,
-    fogAlpha: 0.14,
-    colorGrade: 0x121a2c,
-  },
+  visualProfile: createStageVisualProfile("wetNight", {
+    rainIntensity: 0.86,
+    colorGrade: { color: 0x121a2c, alpha: 0.1 },
+  }),
 };
 
 export const metroSurSpawns: StageSpawnZoneConfig[] = [

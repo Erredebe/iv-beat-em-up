@@ -1,5 +1,6 @@
 import type { StageLayoutConfig } from "./stageTypes";
 import type { StageSpawnZoneConfig } from "./stageSpawnTypes";
+import { createStageVisualProfile } from "./stageVisualPresets";
 
 export const playaNocheLayout: StageLayoutConfig = {
   stageId: "playa_noche",
@@ -63,11 +64,18 @@ export const playaNocheLayout: StageLayoutConfig = {
     { x: 1060, y: 78, text: "CHIRINGUITO", color: "#8ce8ff", fontSize: "10px" },
     { x: 1520, y: 76, text: "RUTA NORTE", color: "#ffe773", fontSize: "10px" },
   ],
-  ambientFx: {
-    rain: false,
-    fogAlpha: 0.12,
-    colorGrade: 0x111b2a,
-  },
+  visualProfile: createStageVisualProfile("neonCoast", {
+    neonIntensity: 1,
+    foregroundAccents: {
+      skylineFar: 0x5f89c4,
+      skylineMid: 0x6fa0cc,
+      skylineClose: 0x8db2cf,
+      facade: 0xb6c7d4,
+      foregroundDeco: 0x7fa8be,
+      crateTint: 0x568b8f,
+      crateAlpha: 0.84,
+    },
+  }),
 };
 
 export const playaNocheSpawns: StageSpawnZoneConfig[] = [

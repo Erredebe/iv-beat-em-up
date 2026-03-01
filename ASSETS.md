@@ -34,3 +34,11 @@ Politica aplicada:
 ## Ubicacion runtime
 
 - `public/assets/external/arcade/`
+
+## Guia de arte tecnico para nuevos stages
+
+1. **Elegir mood base** en `src/config/levels/stageVisualPresets.ts` (`wetNight`, `industrialWarm`, `neonCoast`, `crimsonHarbor`).
+2. **Crear `visualProfile` en el layout** con `createStageVisualProfile(...)`; usar overrides solo para diferenciar identidad del stage.
+3. **Calibrar gradiente y grade**: deja el fondo con contraste, sin oscurecer sprites jugables ni efectos de impacto.
+4. **Afinar acentos de primer plano** (`facade`, `foregroundDeco`, skyline y crates) para separar capas y mejorar lectura de profundidad.
+5. **Validar legibilidad**: run `npm test` + sesion manual Title → Select → Street revisando HUD, personajes y hit effects.
