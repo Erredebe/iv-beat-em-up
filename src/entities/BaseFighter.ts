@@ -142,7 +142,7 @@ export class BaseFighter {
       .setOrigin(0.5, 0.5);
 
     this.spriteOutline = scene.add.sprite(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, initialTexture, 0);
-    this.spriteOutline.setOrigin(0.5, 1);
+    this.spriteOutline.setOrigin(this.visualProfile.spritePivot.x, this.visualProfile.spritePivot.y);
     this.spriteOutline.setScale(this.visualProfile.scale);
     if (this.team === "player") {
       this.spriteOutline.setTint(0xcfe6ff);
@@ -153,7 +153,7 @@ export class BaseFighter {
     }
 
     this.sprite = scene.add.sprite(options.x, options.y + this.visualProfile.spriteAnchorOffsetY, initialTexture, 0);
-    this.sprite.setOrigin(0.5, 1);
+    this.sprite.setOrigin(this.visualProfile.spritePivot.x, this.visualProfile.spritePivot.y);
     this.sprite.setScale(this.visualProfile.scale);
 
     this.playClip(this.currentClipId, true);
@@ -170,6 +170,8 @@ export class BaseFighter {
   setVisualProfile(profile: FighterVisualProfile): void {
     this.visualProfile = profile;
     this.shadow.setSize(profile.shadowWidth + 2, profile.shadowHeight + 1);
+    this.spriteOutline.setOrigin(profile.spritePivot.x, profile.spritePivot.y);
+    this.sprite.setOrigin(profile.spritePivot.x, profile.spritePivot.y);
     const scale = profile.scale * this.currentClipScaleMultiplier;
     this.spriteOutline.setScale(scale);
     this.sprite.setScale(scale);
@@ -518,6 +520,10 @@ export class BaseFighter {
       shadowWidth: 22,
       shadowHeight: 8,
       spriteAnchorOffsetY: 8,
+      spritePivot: {
+        x: 0.5,
+        y: 1,
+      },
       shadowOffsetY: 3,
       baselineOffsetByState,
       stateOffsetByState,

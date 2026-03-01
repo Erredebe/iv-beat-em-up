@@ -1,18 +1,13 @@
 import type Phaser from "phaser";
+import {
+  ANIMATION_CLIP_IDS,
+  ANIMATION_OWNERS,
+  getFighterSpriteSpec,
+  type AnimationClipId,
+  type AnimationOwner,
+} from "./fighterSpriteSpecs";
 
-export type AnimationOwner = "kastro" | "marina" | "meneillos" | "enemy";
-
-export type AnimationClipId =
-  | "idle"
-  | "walk"
-  | "attack1"
-  | "attack2"
-  | "attack3"
-  | "airAttack"
-  | "special"
-  | "hurt"
-  | "knockdown"
-  | "getup";
+export type { AnimationClipId, AnimationOwner } from "./fighterSpriteSpecs";
 
 export interface AnimationClipConfig {
   clipId: AnimationClipId;
@@ -26,19 +21,6 @@ export interface FighterAnimationSet {
   idleClip: AnimationClipId;
   clips: Record<AnimationClipId, AnimationClipConfig>;
 }
-
-const CLIP_ORDER: AnimationClipId[] = [
-  "idle",
-  "walk",
-  "attack1",
-  "attack2",
-  "attack3",
-  "airAttack",
-  "special",
-  "hurt",
-  "knockdown",
-  "getup",
-];
 
 interface OwnerTempo {
   idle: number;
@@ -55,17 +37,12 @@ const OWNER_TEMPO: Record<AnimationOwner, OwnerTempo> = {
   enemy: { idle: 12, walk: 14, attack: 15, hurt: 12, knockdown: 10 },
 };
 
-function clipSuffix(clipId: AnimationClipId): string {
-  if (clipId === "airAttack") {
-    return "air_attack_strip10";
-  }
-  return `${clipId}_strip10`;
-}
-
 function createSet(owner: AnimationOwner): FighterAnimationSet {
   const tempo = OWNER_TEMPO[owner];
+  const spriteSpec = getFighterSpriteSpec(owner);
   const clips = {} as Record<AnimationClipId, AnimationClipConfig>;
-  for (const clipId of CLIP_ORDER) {
+  for (const clipId of ANIMATION_CLIP_IDS) {
+    const requiredClip = spriteSpec.requiredClips[clipId];
     const frameRate =
       clipId === "idle"
         ? tempo.idle
@@ -79,8 +56,8 @@ function createSet(owner: AnimationOwner): FighterAnimationSet {
 
     clips[clipId] = {
       clipId,
-      textureKey: `${owner}_${clipSuffix(clipId)}`,
-      frameCount: 10,
+      textureKey: requiredClip.textureKey,
+      frameCount: requiredClip.frameCount,
       frameRate,
       repeat: clipId === "idle" || clipId === "walk" ? -1 : 0,
     };
@@ -91,12 +68,50 @@ function createSet(owner: AnimationOwner): FighterAnimationSet {
   };
 }
 
-const ACTIVE_SETS: Record<AnimationOwner, FighterAnimationSet> = {
-  kastro: createSet("kastro"),
-  marina: createSet("marina"),
-  meneillos: createSet("meneillos"),
-  enemy: createSet("enemy"),
-};
+const ACTIVE_SETS = Object.fromEntries(
+  ANIMATION_OWNERS.map((owner) => [owner, createSet(owner)]),
+) as Record<AnimationOwner, FighterAnimationSet>;
+
+function validateAnimationSetsAgainstSpecs(sets: Record<AnimationOwner, FighterAnimationSet>): void {
+  const knownClipIds = new Set<string>(ANIMATION_CLIP_IDS);
+  for (const owner of ANIMATION_OWNERS) {
+    const set = sets[owner];
+    const spec = getFighterSpriteSpec(owner);
+    if (!set) {
+      throw new Error(`Missing animation set for owner ${owner}`);
+    }
+    if (!set.clips[set.idleClip]) {
+      throw new Error(`Invalid idle clip ${set.idleClip} for owner ${owner}`);
+    }
+
+    const clipIds = Object.keys(set.clips) as AnimationClipId[];
+    for (const clipId of clipIds) {
+      if (!knownClipIds.has(clipId)) {
+        throw new Error(`Unexpected clip ${clipId} for owner ${owner}`);
+      }
+    }
+
+    for (const clipId of ANIMATION_CLIP_IDS) {
+      const requiredClip = spec.requiredClips[clipId];
+      const clip = set.clips[clipId];
+      if (!clip) {
+        throw new Error(`Missing clip ${clipId} for owner ${owner}`);
+      }
+      if (clip.textureKey !== requiredClip.textureKey) {
+        throw new Error(
+          `Texture mismatch for ${owner}.${clipId}: expected ${requiredClip.textureKey}, got ${clip.textureKey}`,
+        );
+      }
+      if (clip.frameCount !== requiredClip.frameCount) {
+        throw new Error(
+          `Frame count mismatch for ${owner}.${clipId}: expected ${requiredClip.frameCount}, got ${clip.frameCount}`,
+        );
+      }
+    }
+  }
+}
+
+validateAnimationSetsAgainstSpecs(ACTIVE_SETS);
 
 function animationKey(owner: AnimationOwner, clipId: AnimationClipId): string {
   return `${owner}_${clipId}`;
@@ -111,9 +126,9 @@ export function getAnimationKey(owner: AnimationOwner, clipId: AnimationClipId):
 }
 
 export function ensureFighterAnimations(scene: Phaser.Scene): void {
-  for (const owner of Object.keys(ACTIVE_SETS) as AnimationOwner[]) {
+  for (const owner of ANIMATION_OWNERS) {
     const set = getFighterAnimationSet(owner);
-    for (const clipId of Object.keys(set.clips) as AnimationClipId[]) {
+    for (const clipId of ANIMATION_CLIP_IDS) {
       const clip = set.clips[clipId];
       const key = animationKey(owner, clipId);
       if (scene.anims.exists(key)) {

@@ -1,27 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { getFighterAnimationSet, type AnimationClipId, type AnimationOwner } from "./fighterAnimationSets";
-
-const REQUIRED_CLIPS: AnimationClipId[] = [
-  "idle",
-  "walk",
-  "attack1",
-  "attack2",
-  "attack3",
-  "airAttack",
-  "special",
-  "hurt",
-  "knockdown",
-  "getup",
-];
+import { getFighterAnimationSet, type AnimationClipId } from "./fighterAnimationSets";
+import { ANIMATION_CLIP_IDS, ANIMATION_OWNERS, getFighterSpriteSpec } from "./fighterSpriteSpecs";
 
 describe("fighter animation sets", () => {
-  it("defines all required clips with 10+ frames in arcade set", () => {
-    for (const fighterId of ["kastro", "marina", "meneillos", "enemy"] as AnimationOwner[]) {
+  it("stay aligned with fighter sprite specs", () => {
+    for (const fighterId of ANIMATION_OWNERS) {
       const set = getFighterAnimationSet(fighterId);
-      for (const clipId of REQUIRED_CLIPS) {
+      const spriteSpec = getFighterSpriteSpec(fighterId);
+      expect(ANIMATION_CLIP_IDS.includes(set.idleClip), `${fighterId} has invalid idleClip`).toBe(true);
+
+      for (const clipId of ANIMATION_CLIP_IDS) {
         const clip = set.clips[clipId];
         expect(clip, `${fighterId} missing clip ${clipId}`).toBeDefined();
-        expect(clip.frameCount, `${fighterId} ${clipId} must be fluid`).toBeGreaterThanOrEqual(10);
+        expect(clip.textureKey, `${fighterId} ${clipId} texture mismatch`).toBe(
+          spriteSpec.requiredClips[clipId].textureKey,
+        );
+        expect(clip.frameCount, `${fighterId} ${clipId} frame count mismatch`).toBe(
+          spriteSpec.requiredClips[clipId].frameCount,
+        );
+      }
+
+      const clipIds = Object.keys(set.clips) as AnimationClipId[];
+      expect(clipIds.length, `${fighterId} has unexpected number of clips`).toBe(ANIMATION_CLIP_IDS.length);
+      for (const clipId of clipIds) {
+        expect(ANIMATION_CLIP_IDS.includes(clipId), `${fighterId} has unknown clip ${clipId}`).toBe(true);
       }
     }
   });

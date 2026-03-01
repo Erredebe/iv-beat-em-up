@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { assetManifest, requiredAssetKeys } from "../config/assets/assetManifest";
 import { derivedTextureCrops } from "../config/assets/derivedTextureCrops";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
+import { ANIMATION_CLIP_IDS, ANIMATION_OWNERS, getFighterSpriteSpec } from "../config/visual/fighterSpriteSpecs";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -72,8 +73,26 @@ export class PreloadScene extends Phaser.Scene {
         missing.push(key);
       }
     }
-    if (missing.length > 0) {
-      throw new Error(`Missing required assets: ${missing.join(", ")}`);
+
+    const missingByOwner: string[] = [];
+    for (const owner of ANIMATION_OWNERS) {
+      const spec = getFighterSpriteSpec(owner);
+      for (const clipId of ANIMATION_CLIP_IDS) {
+        const textureKey = spec.requiredClips[clipId].textureKey;
+        if (!this.textures.exists(textureKey)) {
+          missingByOwner.push(`${owner}.${clipId}:${textureKey}`);
+        }
+      }
+    }
+
+    if (missing.length > 0 || missingByOwner.length > 0) {
+      const message = [
+        missing.length > 0 ? `Missing required assets: ${missing.join(", ")}` : "",
+        missingByOwner.length > 0 ? `Missing fighter textures: ${missingByOwner.join(", ")}` : "",
+      ]
+        .filter((part) => part.length > 0)
+        .join(" | ");
+      throw new Error(message);
     }
   }
 

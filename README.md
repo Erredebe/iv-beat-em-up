@@ -111,10 +111,25 @@ Override por URL (ejemplo):
 
 La base tecnica usa un pipeline visual runtime unico (sin rama legacy). Si vas a seguir puliendo contenido final (arte/audio), revisa primero:
 - `src/config/assets/packs/arcadeManifest.ts`
+- `src/config/visual/fighterSpriteSpecs.ts`
 - `scripts/art/build-runtime-images.cjs`
 - `src/config/visual/fighterAnimationSets.ts`
 - `src/config/levels/stageCatalog.ts`
 - `src/scenes/StreetScene.ts`
+
+## Flujo: anadir nuevo personaje
+
+Sigue siempre este orden para mantener consistencia entre carga, animacion y render:
+
+1. `manifest`
+   - Anade los spritesheets del personaje en `src/config/assets/packs/arcadeManifest.ts`.
+   - Usa `key` por clip (`owner_clip`) y define `frameConfig` correcto.
+2. `spec`
+   - Registra el owner en `src/config/visual/fighterSpriteSpecs.ts`.
+   - Define `requiredClips`, `frameSize`, `pivot`, `anchorOffsetY` y `baseStateOffsetByState`.
+3. `frame-data`
+   - Ajusta tempos/frame-data visual en `src/config/visual/fighterAnimationSets.ts` y offsets finos en `src/config/visual/fighterVisualProfiles.ts`.
+   - Verifica tests cruzados (`fighterAnimationSets`, `fighterVisualProfiles`, `assetManifest`) para detectar clips faltantes, cambios de frame size o owner desalineado.
 
 ## Guia rapida: calibracion visual de stages
 
