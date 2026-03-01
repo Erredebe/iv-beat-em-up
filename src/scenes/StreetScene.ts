@@ -338,7 +338,7 @@ export class StreetScene extends Phaser.Scene {
     }
 
     this.hitStopSystem.update(time);
-    if (this.isPausedByPlayer || this.hitStopSystem.isActive()) {
+    if (this.isPausedByPlayer) {
       this.updateParallax();
       this.updateHud();
       this.updatePerfOverlay();
