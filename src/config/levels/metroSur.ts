@@ -47,8 +47,10 @@ export const metroSurLayout: StageLayoutConfig = {
     },
   ],
   breakableProps: [
-    { id: "barrel_1", textureKey: "prop_crate", x: 940, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 30, points: 160, dropType: "small_heal", dropChance: 0.7, healAmount: 18 },
-    { id: "barrel_2", textureKey: "prop_crate", x: 1320, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 30, points: 160, dropType: "medium_heal", dropChance: 0.4, healAmount: 30 },
+    { id: "barrel_1", textureKey: "prop_crate", x: 940, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 30, points: 160, dropType: "small_heal", dropChance: 1, healAmount: 30 },
+    { id: "barrel_2", textureKey: "prop_crate", x: 1320, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 30, points: 160, dropType: "medium_heal", dropChance: 0.9, healAmount: 46 },
+    { id: "barrel_3", textureKey: "prop_crate", x: 540, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 28, points: 140, dropType: "small_heal", dropChance: 0.82, healAmount: 28 },
+    { id: "barrel_4", textureKey: "prop_crate", x: 1720, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 28, points: 140, dropType: "small_heal", dropChance: 0.85, healAmount: 30 },
   ],
   collisionFootprints: [
     { id: "booth_ticket_feet", x: 704, y: 218, width: 66, height: 14, color: 0x66d1ff },

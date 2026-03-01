@@ -47,8 +47,10 @@ export const market95Layout: StageLayoutConfig = {
     },
   ],
   breakableProps: [
-    { id: "crate_1", textureKey: "prop_crate", x: 810, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 26, points: 120, dropType: "small_heal", dropChance: 0.85, healAmount: 20 },
-    { id: "crate_2", textureKey: "prop_crate", x: 1530, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 26, points: 120, dropType: "medium_heal", dropChance: 0.55, healAmount: 34 },
+    { id: "crate_1", textureKey: "prop_crate", x: 810, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 26, points: 120, dropType: "small_heal", dropChance: 1, healAmount: 26 },
+    { id: "crate_2", textureKey: "prop_crate", x: 1530, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 26, points: 120, dropType: "medium_heal", dropChance: 0.8, healAmount: 40 },
+    { id: "crate_3", textureKey: "prop_crate", x: 460, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 24, points: 110, dropType: "small_heal", dropChance: 0.75, healAmount: 24 },
+    { id: "crate_4", textureKey: "prop_crate", x: 1200, y: 220, originX: 0.5, originY: 1, scale: 1, maxHp: 24, points: 110, dropType: "small_heal", dropChance: 0.8, healAmount: 24 },
   ],
   collisionFootprints: [
     { id: "booth_a_feet", x: 560, y: 218, width: 66, height: 14, color: 0x00c5ff },

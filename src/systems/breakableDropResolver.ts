@@ -22,7 +22,7 @@ function clamp01(value: number): number {
 }
 
 function getDefaultHealAmount(dropType: "small_heal" | "medium_heal"): number {
-  return dropType === "medium_heal" ? 38 : 20;
+  return dropType === "medium_heal" ? 48 : 28;
 }
 
 export function resolveBreakablePickupDrop(

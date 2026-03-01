@@ -43,7 +43,7 @@ describe("resolveBreakablePickupDrop", () => {
     expect(withDrop).toMatchObject({
       id: "crate_b_pickup",
       dropType: "small_heal",
-      healAmount: 20,
+      healAmount: 28,
     });
     expect(noDrop).toBeNull();
   });
