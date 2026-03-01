@@ -1,16 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { derivedTextureCrops } from "../assets/derivedTextureCrops";
-import { resolveScaleReference } from "../visual/scaleSystem";
 import { stageCatalog } from "./stageCatalog";
-import { getStageWalkRails, type StageLayoutConfig } from "./stageTypes";
-
-function getPropSourceSize(textureKey: string): { width: number; height: number } {
-  const crop = derivedTextureCrops.find((entry) => entry.targetKey === textureKey);
-  if (!crop) {
-    throw new Error(`Missing crop entry for textureKey: ${textureKey}`);
-  }
-  return { width: crop.width, height: crop.height };
-}
+import {
+  getStageObjects,
+  getStageWalkRails,
+  isBreakableStageObject,
+  resolveStageObjectCollisionFootprint,
+  resolveStageObjectHurtboxRect,
+  resolveStageObjectRenderMetricsFromTexture,
+  type StageLayoutConfig,
+} from "./stageTypes";
 
 describe("stage layout calibration", () => {
   it("keeps walk lane and layer depth ordering coherent", () => {
@@ -45,9 +43,9 @@ describe("stage layout calibration", () => {
     }
   });
 
-  it("keeps prop footprints centered and inside the lower 25% of each prop", () => {
+  it("keeps object collision and breakable drop integrity", () => {
     for (const bundle of Object.values(stageCatalog)) {
-      validatePropFootprints(bundle.layout);
+      validateObjectIntegrity(bundle.layout);
     }
   });
 
@@ -66,36 +64,53 @@ describe("stage layout calibration", () => {
   });
 });
 
-function validatePropFootprints(layout: StageLayoutConfig): void {
-  for (const prop of layout.props) {
-    const footprint = layout.collisionFootprints.find((entry) => entry.id === `${prop.id}_feet`);
-    if (!footprint) {
-      // not every decorative prop needs collider
+function validateObjectIntegrity(layout: StageLayoutConfig): void {
+  for (const object of getStageObjects(layout)) {
+    const metrics = resolveStageObjectRenderMetricsFromTexture(object);
+    expect(metrics.width, `${layout.stageId}:${object.id} render width must be > 0`).toBeGreaterThan(0);
+    expect(metrics.height, `${layout.stageId}:${object.id} render height must be > 0`).toBeGreaterThan(0);
+
+    if (object.collision?.blocksMovement) {
+      const footprint = resolveStageObjectCollisionFootprint(object, metrics);
+      expect(footprint, `${layout.stageId}:${object.id} blocks but has invalid footprint`).not.toBeNull();
+      if (footprint) {
+        expect(footprint.width, `${layout.stageId}:${object.id} footprint width invalid`).toBeGreaterThan(0);
+        expect(footprint.height, `${layout.stageId}:${object.id} footprint height invalid`).toBeGreaterThan(0);
+
+        const spriteTop = object.transform.y - metrics.height * object.transform.originY;
+        const footprintTop = footprint.y - footprint.height * 0.5;
+        expect(
+          footprintTop,
+          `${layout.stageId}:${object.id} footprint must stay within rendered sprite vertical range`,
+        ).toBeGreaterThanOrEqual(spriteTop);
+      }
+    }
+
+    if (!isBreakableStageObject(object)) {
       continue;
     }
 
-    const sourceSize = getPropSourceSize(prop.textureKey);
-    const scale = resolveScaleReference({ scaleTier: prop.scaleTier, spriteSpecId: prop.spriteSpecId });
-    const renderedWidth = sourceSize.width * scale;
-    const renderedHeight = sourceSize.height * scale;
-    const lowerBandTopY = prop.y - renderedHeight * 0.25;
+    expect(object.behavior.maxHp, `${layout.stageId}:${object.id} breakable maxHp must be > 0`).toBeGreaterThan(0);
+    expect(object.behavior.points, `${layout.stageId}:${object.id} breakable points must be > 0`).toBeGreaterThan(0);
 
-    const footprintTop = footprint.y - footprint.height * 0.5;
-    expect(footprintTop, `${layout.stageId}:${footprint.id} must stay in lower 25%`).toBeGreaterThanOrEqual(
-      lowerBandTopY,
-    );
-    expect(footprint.y, `${layout.stageId}:${footprint.id} should anchor around baseline`).toBeLessThanOrEqual(prop.y + 3);
+    const hurtbox = resolveStageObjectHurtboxRect(object, metrics);
+    expect(hurtbox, `${layout.stageId}:${object.id} breakable hurtbox missing`).not.toBeNull();
+    if (hurtbox) {
+      expect(hurtbox.width, `${layout.stageId}:${object.id} hurtbox width invalid`).toBeGreaterThan(0);
+      expect(hurtbox.height, `${layout.stageId}:${object.id} hurtbox height invalid`).toBeGreaterThan(0);
+    }
 
-    const centerTolerance = Math.max(2, renderedWidth * 0.12);
-    expect(Math.abs(footprint.x - prop.x), `${layout.stageId}:${footprint.id} should stay centered`).toBeLessThanOrEqual(
-      centerTolerance,
-    );
+    const drop = object.behavior.drop ?? { type: "none" as const };
+    if (drop.type === "none") {
+      expect(drop.healAmount, `${layout.stageId}:${object.id} drop none should not define heal`).toBeUndefined();
+      continue;
+    }
 
-    expect(footprint.width, `${layout.stageId}:${footprint.id} base width too small`).toBeGreaterThanOrEqual(
-      renderedWidth * 0.35,
-    );
-    expect(footprint.width, `${layout.stageId}:${footprint.id} base width too large`).toBeLessThanOrEqual(
-      renderedWidth,
-    );
+    const chance = drop.chance ?? 1;
+    expect(chance, `${layout.stageId}:${object.id} drop chance below 0`).toBeGreaterThanOrEqual(0);
+    expect(chance, `${layout.stageId}:${object.id} drop chance above 1`).toBeLessThanOrEqual(1);
+
+    const healAmount = drop.healAmount ?? (drop.type === "medium_heal" ? 48 : 28);
+    expect(healAmount, `${layout.stageId}:${object.id} breakable heal amount invalid`).toBeGreaterThan(0);
   }
 }

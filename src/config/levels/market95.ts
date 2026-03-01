@@ -1,8 +1,8 @@
-import type { StageLayoutConfig } from "./stageTypes";
+import { defineStageLayout, type StageLayoutConfig } from "./stageTypes";
 import type { StageSpawnZoneConfig } from "./stageSpawnTypes";
 import { createStageVisualProfile } from "./stageVisualPresets";
 
-export const market95Layout: StageLayoutConfig = {
+export const market95Layout: StageLayoutConfig = defineStageLayout({
   stageId: "market_95",
   displayName: "MERCADO 95",
   tileSize: 32,
@@ -22,41 +22,236 @@ export const market95Layout: StageLayoutConfig = {
     { id: "road", depth: 12, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
     { id: "foreground_deco", depth: 500, alpha: 0.94, targetRows: [7], sourceRows: [9] },
   ],
-  props: [
+  objects: [
     {
       id: "booth_a",
-      textureKey: "prop_booth_front",
-      x: 560,
-      y: 220,
-      originX: 0.5,
-      originY: 1,
-      scaleTier: "standard",
-      spriteSpecId: "stage_prop_arcade",
-      depthAnchorY: 236,
-      depthOffset: 0,
+      visual: {
+        textureKey: "prop_booth_front",
+        scaleTier: "standard",
+        spriteSpecId: "stage_prop_arcade",
+      },
+      transform: {
+        x: 560,
+        y: 220,
+        originX: 0.5,
+        originY: 1,
+        depthAnchorY: 236,
+        depthOffset: 0,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0x00c5ff,
+        footprint: {
+          mode: "explicit",
+          width: 66,
+          height: 14,
+          offsetY: -2,
+        },
+      },
+      behavior: {
+        type: "static",
+      },
     },
     {
       id: "container_a",
-      textureKey: "prop_container",
-      x: 1110,
-      y: 220,
-      originX: 0.5,
-      originY: 1,
-      scaleTier: "standard",
-      spriteSpecId: "stage_prop_arcade",
-      depthAnchorY: 224,
-      depthOffset: 2,
+      visual: {
+        textureKey: "prop_container",
+        scaleTier: "standard",
+        spriteSpecId: "stage_prop_arcade",
+      },
+      transform: {
+        x: 1110,
+        y: 220,
+        originX: 0.5,
+        originY: 1,
+        depthAnchorY: 224,
+        depthOffset: 2,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0xff5f7c,
+        footprint: {
+          mode: "explicit",
+          width: 96,
+          height: 16,
+        },
+      },
+      behavior: {
+        type: "static",
+      },
     },
-  ],
-  breakableProps: [
-    { id: "crate_1", textureKey: "prop_crate", x: 810, y: 220, originX: 0.5, originY: 1, scaleTier: "compact", spriteSpecId: "stage_breakable_arcade", maxHp: 26, points: 120, dropType: "small_heal", dropChance: 1, healAmount: 26 },
-    { id: "crate_2", textureKey: "prop_crate", x: 1530, y: 220, originX: 0.5, originY: 1, scaleTier: "compact", spriteSpecId: "stage_breakable_arcade", maxHp: 26, points: 120, dropType: "medium_heal", dropChance: 0.8, healAmount: 40 },
-    { id: "crate_3", textureKey: "prop_crate", x: 460, y: 220, originX: 0.5, originY: 1, scaleTier: "compact", spriteSpecId: "stage_breakable_arcade", maxHp: 24, points: 110, dropType: "small_heal", dropChance: 0.75, healAmount: 24 },
-    { id: "crate_4", textureKey: "prop_crate", x: 1200, y: 220, originX: 0.5, originY: 1, scaleTier: "compact", spriteSpecId: "stage_breakable_arcade", maxHp: 24, points: 110, dropType: "small_heal", dropChance: 0.8, healAmount: 24 },
-  ],
-  collisionFootprints: [
-    { id: "booth_a_feet", x: 560, y: 218, width: 66, height: 14, color: 0x00c5ff },
-    { id: "container_a_feet", x: 1110, y: 220, width: 96, height: 16, color: 0xff5f7c },
+    {
+      id: "crate_1",
+      visual: {
+        textureKey: "prop_crate",
+        scaleTier: "compact",
+        spriteSpecId: "stage_breakable_arcade",
+      },
+      transform: {
+        x: 810,
+        y: 220,
+        originX: 0.5,
+        originY: 1,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0xffcc66,
+        footprint: {
+          mode: "rule",
+          rule: "sprite_base_band",
+          widthRatio: 0.58,
+          minWidth: 18,
+          maxWidthRatio: 1,
+          height: 14,
+          baselineOffset: 7,
+        },
+      },
+      behavior: {
+        type: "breakable",
+        maxHp: 26,
+        points: 120,
+        drop: {
+          type: "small_heal",
+          chance: 1,
+          healAmount: 26,
+        },
+        hurtbox: {
+          mode: "rule",
+          rule: "sprite_bounds",
+        },
+        intactTint: 0xb8c7d2,
+        hitTint: 0xffd2d2,
+      },
+    },
+    {
+      id: "crate_2",
+      visual: {
+        textureKey: "prop_crate",
+        scaleTier: "compact",
+        spriteSpecId: "stage_breakable_arcade",
+      },
+      transform: {
+        x: 1530,
+        y: 220,
+        originX: 0.5,
+        originY: 1,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0xffcc66,
+        footprint: {
+          mode: "rule",
+          rule: "sprite_base_band",
+          widthRatio: 0.58,
+          minWidth: 18,
+          maxWidthRatio: 1,
+          height: 14,
+          baselineOffset: 7,
+        },
+      },
+      behavior: {
+        type: "breakable",
+        maxHp: 26,
+        points: 120,
+        drop: {
+          type: "medium_heal",
+          chance: 0.8,
+          healAmount: 40,
+        },
+        hurtbox: {
+          mode: "rule",
+          rule: "sprite_bounds",
+        },
+        intactTint: 0xb8c7d2,
+        hitTint: 0xffd2d2,
+      },
+    },
+    {
+      id: "crate_3",
+      visual: {
+        textureKey: "prop_crate",
+        scaleTier: "compact",
+        spriteSpecId: "stage_breakable_arcade",
+      },
+      transform: {
+        x: 460,
+        y: 220,
+        originX: 0.5,
+        originY: 1,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0xffcc66,
+        footprint: {
+          mode: "rule",
+          rule: "sprite_base_band",
+          widthRatio: 0.58,
+          minWidth: 18,
+          maxWidthRatio: 1,
+          height: 14,
+          baselineOffset: 7,
+        },
+      },
+      behavior: {
+        type: "breakable",
+        maxHp: 24,
+        points: 110,
+        drop: {
+          type: "small_heal",
+          chance: 0.75,
+          healAmount: 24,
+        },
+        hurtbox: {
+          mode: "rule",
+          rule: "sprite_bounds",
+        },
+        intactTint: 0xb8c7d2,
+        hitTint: 0xffd2d2,
+      },
+    },
+    {
+      id: "crate_4",
+      visual: {
+        textureKey: "prop_crate",
+        scaleTier: "compact",
+        spriteSpecId: "stage_breakable_arcade",
+      },
+      transform: {
+        x: 1200,
+        y: 220,
+        originX: 0.5,
+        originY: 1,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0xffcc66,
+        footprint: {
+          mode: "rule",
+          rule: "sprite_base_band",
+          widthRatio: 0.58,
+          minWidth: 18,
+          maxWidthRatio: 1,
+          height: 14,
+          baselineOffset: 7,
+        },
+      },
+      behavior: {
+        type: "breakable",
+        maxHp: 24,
+        points: 110,
+        drop: {
+          type: "small_heal",
+          chance: 0.8,
+          healAmount: 24,
+        },
+        hurtbox: {
+          mode: "rule",
+          rule: "sprite_bounds",
+        },
+        intactTint: 0xb8c7d2,
+        hitTint: 0xffd2d2,
+      },
+    },
   ],
   parallaxBands: [
     { id: "skyline_far", textureKey: "city_far_band", y: 0, height: 88, depth: 2, alpha: 0.56, scrollFactor: 0.06 },
@@ -71,7 +266,7 @@ export const market95Layout: StageLayoutConfig = {
   visualProfile: createStageVisualProfile("industrialWarm", {
     neonIntensity: 0.82,
   }),
-};
+});
 
 export const market95Spawns: StageSpawnZoneConfig[] = [
   {

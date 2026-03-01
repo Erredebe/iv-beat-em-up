@@ -22,33 +22,21 @@ describe("scale system contracts", () => {
     }
   });
 
-  it("keeps stage props and breakables using valid specs with expected effective scales", () => {
+  it("keeps stage objects using valid specs with expected effective scales", () => {
     for (const bundle of Object.values(stageCatalog)) {
-      for (const prop of bundle.layout.props) {
-        expect(getSpriteSpec(prop.spriteSpecId).id, `${bundle.id}:${prop.id} sprite spec is invalid`).toBe(
-          prop.spriteSpecId,
-        );
+      for (const object of bundle.layout.objects) {
+        const expectedScale = object.behavior.type === "breakable" ? 0.5 : 1;
+        expect(
+          getSpriteSpec(object.visual.spriteSpecId).id,
+          `${bundle.id}:${object.id} sprite spec is invalid`,
+        ).toBe(object.visual.spriteSpecId);
         expect(
           resolveScaleReference({
-            scaleTier: prop.scaleTier,
-            spriteSpecId: prop.spriteSpecId,
+            scaleTier: object.visual.scaleTier,
+            spriteSpecId: object.visual.spriteSpecId,
           }),
-          `${bundle.id}:${prop.id} effective prop scale drifted`,
-        ).toBe(1);
-      }
-
-      for (const breakable of bundle.layout.breakableProps) {
-        expect(
-          getSpriteSpec(breakable.spriteSpecId).id,
-          `${bundle.id}:${breakable.id} sprite spec is invalid`,
-        ).toBe(breakable.spriteSpecId);
-        expect(
-          resolveScaleReference({
-            scaleTier: breakable.scaleTier,
-            spriteSpecId: breakable.spriteSpecId,
-          }),
-          `${bundle.id}:${breakable.id} effective breakable scale drifted`,
-        ).toBe(0.5);
+          `${bundle.id}:${object.id} effective scale drifted`,
+        ).toBe(expectedScale);
       }
     }
   });

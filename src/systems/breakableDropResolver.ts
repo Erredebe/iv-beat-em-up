@@ -1,4 +1,4 @@
-import type { StageBreakablePropConfig } from "../config/levels/stageTypes";
+import type { StageBreakableDropType } from "../config/levels/stageTypes";
 
 export interface BreakablePickupSpawn {
   id: string;
@@ -12,7 +12,7 @@ export interface BreakablePickupDropConfig {
   id: string;
   x: number;
   y: number;
-  dropType?: StageBreakablePropConfig["dropType"];
+  dropType?: StageBreakableDropType;
   dropChance?: number;
   healAmount?: number;
 }

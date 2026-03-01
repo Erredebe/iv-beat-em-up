@@ -161,7 +161,7 @@ export class StreetScene extends Phaser.Scene {
     this.audioSystem = new AudioSystem(this);
 
     this.stageRenderer = new StageRenderer(this, this.stageBundle.layout);
-    this.stageRenderer.build(this.collisionSystem, this.depthSystem);
+    const stageRuntime = this.stageRenderer.build(this.collisionSystem, this.depthSystem);
 
     const character = getPlayableCharacter(this.stageEntryState.selectedCharacter);
     this.selectedCharacter = character;
@@ -241,7 +241,7 @@ export class StreetScene extends Phaser.Scene {
     }
 
     this.breakablePropSystem = featureFlags.breakableProps
-      ? new BreakablePropSystem(this, this.depthSystem, this.collisionSystem, this.stageBundle.layout.breakableProps)
+      ? new BreakablePropSystem(this, this.depthSystem, this.collisionSystem, stageRuntime.objects)
       : null;
 
     this.levelEditor = new LevelEditor(this, {

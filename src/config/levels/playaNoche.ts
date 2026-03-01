@@ -1,8 +1,8 @@
-import type { StageLayoutConfig } from "./stageTypes";
+import { defineStageLayout, type StageLayoutConfig } from "./stageTypes";
 import type { StageSpawnZoneConfig } from "./stageSpawnTypes";
 import { createStageVisualProfile } from "./stageVisualPresets";
 
-export const playaNocheLayout: StageLayoutConfig = {
+export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
   stageId: "playa_noche",
   displayName: "PLAYA NOCHE",
   tileSize: 32,
@@ -22,41 +22,236 @@ export const playaNocheLayout: StageLayoutConfig = {
     { id: "road", depth: 106, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
     { id: "foreground_deco", depth: 236, alpha: 0.9, targetRows: [7], sourceRows: [9] },
   ],
-  props: [
+  objects: [
     {
       id: "booth_beach",
-      textureKey: "prop_booth_front",
-      x: 630,
-      y: 218,
-      originX: 0.5,
-      originY: 1,
-      scaleTier: "standard",
-      spriteSpecId: "stage_prop_arcade",
-      depthAnchorY: 234,
-      depthOffset: 0,
+      visual: {
+        textureKey: "prop_booth_front",
+        scaleTier: "standard",
+        spriteSpecId: "stage_prop_arcade",
+      },
+      transform: {
+        x: 630,
+        y: 218,
+        originX: 0.5,
+        originY: 1,
+        depthAnchorY: 234,
+        depthOffset: 0,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0x74dcff,
+        footprint: {
+          mode: "explicit",
+          width: 66,
+          height: 14,
+          offsetY: -2,
+        },
+      },
+      behavior: {
+        type: "static",
+      },
     },
     {
       id: "container_beach",
-      textureKey: "prop_container",
-      x: 1460,
-      y: 216,
-      originX: 0.5,
-      originY: 1,
-      scaleTier: "standard",
-      spriteSpecId: "stage_prop_arcade",
-      depthAnchorY: 222,
-      depthOffset: 2,
+      visual: {
+        textureKey: "prop_container",
+        scaleTier: "standard",
+        spriteSpecId: "stage_prop_arcade",
+      },
+      transform: {
+        x: 1460,
+        y: 216,
+        originX: 0.5,
+        originY: 1,
+        depthAnchorY: 222,
+        depthOffset: 2,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0xff8bb0,
+        footprint: {
+          mode: "explicit",
+          width: 96,
+          height: 16,
+        },
+      },
+      behavior: {
+        type: "static",
+      },
     },
-  ],
-  breakableProps: [
-    { id: "table_1", textureKey: "prop_crate", x: 870, y: 216, originX: 0.5, originY: 1, scaleTier: "compact", spriteSpecId: "stage_breakable_arcade", maxHp: 24, points: 150, dropType: "small_heal", dropChance: 1, healAmount: 34 },
-    { id: "table_2", textureKey: "prop_crate", x: 1610, y: 216, originX: 0.5, originY: 1, scaleTier: "compact", spriteSpecId: "stage_breakable_arcade", maxHp: 24, points: 150, dropType: "medium_heal", dropChance: 0.95, healAmount: 52 },
-    { id: "table_3", textureKey: "prop_crate", x: 520, y: 216, originX: 0.5, originY: 1, scaleTier: "compact", spriteSpecId: "stage_breakable_arcade", maxHp: 22, points: 130, dropType: "small_heal", dropChance: 0.78, healAmount: 28 },
-    { id: "table_4", textureKey: "prop_crate", x: 1260, y: 216, originX: 0.5, originY: 1, scaleTier: "compact", spriteSpecId: "stage_breakable_arcade", maxHp: 22, points: 130, dropType: "small_heal", dropChance: 0.82, healAmount: 30 },
-  ],
-  collisionFootprints: [
-    { id: "booth_beach_feet", x: 630, y: 216, width: 66, height: 14, color: 0x74dcff },
-    { id: "container_beach_feet", x: 1460, y: 216, width: 96, height: 16, color: 0xff8bb0 },
+    {
+      id: "table_1",
+      visual: {
+        textureKey: "prop_crate",
+        scaleTier: "compact",
+        spriteSpecId: "stage_breakable_arcade",
+      },
+      transform: {
+        x: 870,
+        y: 216,
+        originX: 0.5,
+        originY: 1,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0xffcc66,
+        footprint: {
+          mode: "rule",
+          rule: "sprite_base_band",
+          widthRatio: 0.58,
+          minWidth: 18,
+          maxWidthRatio: 1,
+          height: 14,
+          baselineOffset: 7,
+        },
+      },
+      behavior: {
+        type: "breakable",
+        maxHp: 24,
+        points: 150,
+        drop: {
+          type: "small_heal",
+          chance: 1,
+          healAmount: 34,
+        },
+        hurtbox: {
+          mode: "rule",
+          rule: "sprite_bounds",
+        },
+        intactTint: 0xb8c7d2,
+        hitTint: 0xffd2d2,
+      },
+    },
+    {
+      id: "table_2",
+      visual: {
+        textureKey: "prop_crate",
+        scaleTier: "compact",
+        spriteSpecId: "stage_breakable_arcade",
+      },
+      transform: {
+        x: 1610,
+        y: 216,
+        originX: 0.5,
+        originY: 1,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0xffcc66,
+        footprint: {
+          mode: "rule",
+          rule: "sprite_base_band",
+          widthRatio: 0.58,
+          minWidth: 18,
+          maxWidthRatio: 1,
+          height: 14,
+          baselineOffset: 7,
+        },
+      },
+      behavior: {
+        type: "breakable",
+        maxHp: 24,
+        points: 150,
+        drop: {
+          type: "medium_heal",
+          chance: 0.95,
+          healAmount: 52,
+        },
+        hurtbox: {
+          mode: "rule",
+          rule: "sprite_bounds",
+        },
+        intactTint: 0xb8c7d2,
+        hitTint: 0xffd2d2,
+      },
+    },
+    {
+      id: "table_3",
+      visual: {
+        textureKey: "prop_crate",
+        scaleTier: "compact",
+        spriteSpecId: "stage_breakable_arcade",
+      },
+      transform: {
+        x: 520,
+        y: 216,
+        originX: 0.5,
+        originY: 1,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0xffcc66,
+        footprint: {
+          mode: "rule",
+          rule: "sprite_base_band",
+          widthRatio: 0.58,
+          minWidth: 18,
+          maxWidthRatio: 1,
+          height: 14,
+          baselineOffset: 7,
+        },
+      },
+      behavior: {
+        type: "breakable",
+        maxHp: 22,
+        points: 130,
+        drop: {
+          type: "small_heal",
+          chance: 0.78,
+          healAmount: 28,
+        },
+        hurtbox: {
+          mode: "rule",
+          rule: "sprite_bounds",
+        },
+        intactTint: 0xb8c7d2,
+        hitTint: 0xffd2d2,
+      },
+    },
+    {
+      id: "table_4",
+      visual: {
+        textureKey: "prop_crate",
+        scaleTier: "compact",
+        spriteSpecId: "stage_breakable_arcade",
+      },
+      transform: {
+        x: 1260,
+        y: 216,
+        originX: 0.5,
+        originY: 1,
+      },
+      collision: {
+        blocksMovement: true,
+        color: 0xffcc66,
+        footprint: {
+          mode: "rule",
+          rule: "sprite_base_band",
+          widthRatio: 0.58,
+          minWidth: 18,
+          maxWidthRatio: 1,
+          height: 14,
+          baselineOffset: 7,
+        },
+      },
+      behavior: {
+        type: "breakable",
+        maxHp: 22,
+        points: 130,
+        drop: {
+          type: "small_heal",
+          chance: 0.82,
+          healAmount: 30,
+        },
+        hurtbox: {
+          mode: "rule",
+          rule: "sprite_bounds",
+        },
+        intactTint: 0xb8c7d2,
+        hitTint: 0xffd2d2,
+      },
+    },
   ],
   parallaxBands: [
     { id: "skyline_far", textureKey: "city_far_band", y: 0, height: 86, depth: 2, alpha: 0.62, scrollFactor: 0.05 },
@@ -80,7 +275,7 @@ export const playaNocheLayout: StageLayoutConfig = {
       crateAlpha: 0.84,
     },
   }),
-};
+});
 
 export const playaNocheSpawns: StageSpawnZoneConfig[] = [
   {

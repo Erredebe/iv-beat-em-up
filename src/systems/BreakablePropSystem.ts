@@ -1,11 +1,14 @@
 import Phaser from "phaser";
 import type { BaseFighter } from "../entities/BaseFighter";
-import type { StageBreakablePropConfig } from "../config/levels/stageTypes";
-import { depthPriorities, resolveBreakableDynamicY } from "../config/visual/depthLayers";
-import { resolveScaleReference } from "../config/visual/scaleSystem";
+import {
+  isBreakableStageObject,
+  resolveStageObjectHurtboxRect,
+  type StageBreakableDropType,
+} from "../config/levels/stageTypes";
 import type { DepthSystem } from "./DepthSystem";
 import type { CollisionSystem, GroundObstacle } from "./CollisionSystem";
 import { resolveBreakablePickupDrop, type BreakablePickupSpawn } from "./breakableDropResolver";
+import type { StageObjectRuntime } from "./StageRenderer";
 
 export type { BreakablePickupSpawn } from "./breakableDropResolver";
 
@@ -22,15 +25,16 @@ interface BreakableRuntime {
   id: string;
   sprite: Phaser.GameObjects.Image;
   hp: number;
-  maxHp: number;
   points: number;
   destroyed: boolean;
   hitByAttack: Set<string>;
   hurtbox: Phaser.Geom.Rectangle;
-  obstacle: GroundObstacle;
-  dropType: StageBreakablePropConfig["dropType"];
+  obstacle: GroundObstacle | null;
+  dropType?: StageBreakableDropType;
   dropChance: number;
   healAmount?: number;
+  intactTint: number;
+  hitTint: number;
 }
 
 export interface BreakableHitResult {
@@ -50,7 +54,7 @@ export class BreakablePropSystem {
     scene: Phaser.Scene,
     depthSystem: DepthSystem,
     collisionSystem: CollisionSystem,
-    props: StageBreakablePropConfig[],
+    stageObjects: StageObjectRuntime[],
     randomFn: () => number = Math.random,
   ) {
     this.scene = scene;
@@ -58,52 +62,39 @@ export class BreakablePropSystem {
     this.collisionSystem = collisionSystem;
     this.randomFn = randomFn;
 
-    for (const config of props) {
-      const scale = resolveScaleReference({
-        scaleTier: config.scaleTier,
-        spriteSpecId: config.spriteSpecId,
+    for (const runtime of stageObjects) {
+      if (!isBreakableStageObject(runtime.config)) {
+        continue;
+      }
+      const sprite = runtime.sprite;
+      const hurtbox = resolveStageObjectHurtboxRect(runtime.config, {
+        width: sprite.displayWidth,
+        height: sprite.displayHeight,
       });
-      const sprite = scene.add
-        .image(config.x, config.y, config.textureKey)
-        .setOrigin(config.originX, config.originY)
-        .setScale(scale)
-        .setTint(0xb8c7d2);
-      // Breakables follow their feet y so they cross behind/in front of fighters predictably.
-      depthSystem.register(sprite, {
-        layer: "BREAKABLE",
-        dynamicY: () => resolveBreakableDynamicY(sprite.y),
-        priority: depthPriorities.BREAKABLE,
-      });
+      if (!hurtbox) {
+        continue;
+      }
 
-      const width = sprite.width * scale;
-      const height = sprite.height * scale;
-      const left = config.x - width * config.originX;
-      const top = config.y - height * config.originY;
-      const footprintWidth = Math.max(18, Math.min(width, Math.round(width * 0.58)));
-      const footprintHeight = 14;
-      const footprintY = top + height - footprintHeight * 0.5;
-      const obstacle = this.collisionSystem.registerGroundObstacle({
-        id: `${config.id}_breakable_feet`,
-        x: config.x,
-        y: footprintY,
-        width: footprintWidth,
-        height: footprintHeight,
-        color: 0xffcc66,
-      });
+      const behavior = runtime.config.behavior;
+      const drop = behavior.drop;
+      const intactTint = behavior.intactTint ?? 0xb8c7d2;
+      const hitTint = behavior.hitTint ?? 0xffd2d2;
+      sprite.setTint(intactTint);
 
       this.props.push({
-        id: config.id,
+        id: runtime.config.id,
         sprite,
-        hp: config.maxHp,
-        maxHp: config.maxHp,
-        points: config.points,
+        hp: behavior.maxHp,
+        points: behavior.points,
         destroyed: false,
         hitByAttack: new Set<string>(),
-        hurtbox: new Phaser.Geom.Rectangle(left, top, width, height),
-        obstacle,
-        dropType: config.dropType,
-        dropChance: config.dropChance ?? 1,
-        healAmount: config.healAmount,
+        hurtbox: new Phaser.Geom.Rectangle(hurtbox.x, hurtbox.y, hurtbox.width, hurtbox.height),
+        obstacle: runtime.obstacle,
+        dropType: drop?.type,
+        dropChance: drop?.chance ?? 1,
+        healAmount: drop?.healAmount,
+        intactTint,
+        hitTint,
       });
     }
   }
@@ -136,10 +127,10 @@ export class BreakablePropSystem {
 
         prop.hitByAttack.add(attackToken);
         prop.hp -= 10;
-        prop.sprite.setTint(0xffd2d2);
+        prop.sprite.setTint(prop.hitTint);
         this.scene.time.delayedCall(50, () => {
           if (!prop.destroyed) {
-            prop.sprite.setTint(0xb8c7d2);
+            prop.sprite.setTint(prop.intactTint);
           }
         });
 
@@ -147,7 +138,9 @@ export class BreakablePropSystem {
           prop.destroyed = true;
           brokenCount += 1;
           pointsAwarded += prop.points;
-          this.collisionSystem.setObstacleEnabled(prop.obstacle, false);
+          if (prop.obstacle) {
+            this.collisionSystem.setObstacleEnabled(prop.obstacle, false);
+          }
           this.depthSystem.unregister(prop.sprite);
           this.scene.tweens.add({
             targets: prop.sprite,
@@ -184,7 +177,9 @@ export class BreakablePropSystem {
 
   destroy(): void {
     for (const prop of this.props) {
-      this.collisionSystem.setObstacleEnabled(prop.obstacle, false);
+      if (prop.obstacle) {
+        this.collisionSystem.setObstacleEnabled(prop.obstacle, false);
+      }
       if (!prop.destroyed) {
         this.depthSystem.unregister(prop.sprite);
         prop.sprite.destroy();

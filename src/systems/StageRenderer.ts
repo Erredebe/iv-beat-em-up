@@ -1,9 +1,15 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT } from "../config/constants";
-import type { StageLayoutConfig } from "../config/levels/stageTypes";
-import { depthLayers, depthPriorities, resolveStagePropDynamicY } from "../config/visual/depthLayers";
+import {
+  isBreakableStageObject,
+  resolveStageObjectCollisionFootprint,
+  type StageCollisionFootprint,
+  type StageLayoutConfig,
+  type StageObjectDefinition,
+} from "../config/levels/stageTypes";
+import { depthLayers, depthPriorities, resolveBreakableDynamicY, resolveStagePropDynamicY } from "../config/visual/depthLayers";
 import { resolveScaleReference } from "../config/visual/scaleSystem";
-import type { CollisionSystem } from "./CollisionSystem";
+import type { CollisionSystem, GroundObstacle } from "./CollisionSystem";
 import type { DepthSystem } from "./DepthSystem";
 
 interface RuntimeParallaxBand {
@@ -11,11 +17,18 @@ interface RuntimeParallaxBand {
   factor: number;
 }
 
+export interface StageObjectRuntime {
+  config: StageObjectDefinition;
+  sprite: Phaser.GameObjects.Image;
+  obstacle: GroundObstacle | null;
+  collisionFootprint: StageCollisionFootprint | null;
+}
+
 export interface StageRuntime {
   map: Phaser.Tilemaps.Tilemap;
   tileLayers: Phaser.Tilemaps.TilemapLayer[];
   parallaxBands: Phaser.GameObjects.TileSprite[];
-  props: Phaser.GameObjects.Image[];
+  objects: StageObjectRuntime[];
 }
 
 export class StageRenderer {
@@ -94,39 +107,62 @@ export class StageRenderer {
       tileLayers.push(layer);
     }
 
-    const props = this.layout.props.map((config) => {
+    const objects = this.layout.objects.map((config) => {
       const scale = resolveScaleReference({
-        scaleTier: config.scaleTier,
-        spriteSpecId: config.spriteSpecId,
+        scaleTier: config.visual.scaleTier,
+        spriteSpecId: config.visual.spriteSpecId,
       });
       const image = this.scene.add
-        .image(config.x, config.y, config.textureKey)
-        .setOrigin(config.originX, config.originY)
+        .image(config.transform.x, config.transform.y, config.visual.textureKey)
+        .setOrigin(config.transform.originX, config.transform.originY)
         .setScale(scale);
-      if (config.id.includes("crate") || config.id.includes("barrel") || config.id.includes("table")) {
+
+      if (isBreakableStageObject(config)) {
+        image.setTint(config.behavior.intactTint ?? 0xb8c7d2);
+      } else if (config.id.includes("crate") || config.id.includes("barrel") || config.id.includes("table")) {
         image
           .setTint(this.layout.visualProfile.foregroundAccents.crateTint)
           .setAlpha(this.layout.visualProfile.foregroundAccents.crateAlpha);
       }
-      // Props with depthAnchorY use that anchor as virtual feet; otherwise they follow their own y.
-      depthSystem.register(image, {
-        layer: "STAGE_PROP",
-        dynamicY: () => resolveStagePropDynamicY(image.y, config.depthAnchorY, config.depthOffset),
-        priority: depthPriorities.STAGE_PROP,
-      });
-      return image;
-    });
 
-    for (const obstacle of this.layout.collisionFootprints) {
-      collisionSystem.registerGroundObstacle({
-        id: obstacle.id,
-        x: obstacle.x,
-        y: obstacle.y,
-        width: obstacle.width,
-        height: obstacle.height,
-        color: obstacle.color,
+      if (isBreakableStageObject(config)) {
+        depthSystem.register(image, {
+          layer: "BREAKABLE",
+          dynamicY: () => resolveBreakableDynamicY(image.y),
+          priority: depthPriorities.BREAKABLE,
+        });
+      } else {
+        // Static/decorative props may use virtual feet anchors for deterministic sorting.
+        depthSystem.register(image, {
+          layer: "STAGE_PROP",
+          dynamicY: () =>
+            resolveStagePropDynamicY(image.y, config.transform.depthAnchorY, config.transform.depthOffset ?? 0),
+          priority: depthPriorities.STAGE_PROP,
+        });
+      }
+
+      const collisionFootprint = resolveStageObjectCollisionFootprint(config, {
+        width: image.displayWidth,
+        height: image.displayHeight,
       });
-    }
+      const obstacle = collisionFootprint
+        ? collisionSystem.registerGroundObstacle({
+            id: collisionFootprint.id,
+            x: collisionFootprint.x,
+            y: collisionFootprint.y,
+            width: collisionFootprint.width,
+            height: collisionFootprint.height,
+            color: collisionFootprint.color,
+          })
+        : null;
+
+      return {
+        config,
+        sprite: image,
+        obstacle,
+        collisionFootprint,
+      };
+    });
 
     this.neonTexts = this.layout.neonLabels.map((entry) =>
       this.scene.add
@@ -145,7 +181,7 @@ export class StageRenderer {
       map,
       tileLayers,
       parallaxBands: this.runtimeParallax.map((band) => band.sprite),
-      props,
+      objects,
     };
     return this.runtime;
   }
@@ -162,8 +198,8 @@ export class StageRenderer {
   destroy(): void {
     if (this.runtime) {
       if (this.depthSystem) {
-        for (const prop of this.runtime.props) {
-          this.depthSystem.unregister(prop);
+        for (const object of this.runtime.objects) {
+          this.depthSystem.unregister(object.sprite);
         }
       }
       for (const layer of this.runtime.tileLayers) {
@@ -172,8 +208,8 @@ export class StageRenderer {
       for (const band of this.runtime.parallaxBands) {
         band.destroy();
       }
-      for (const prop of this.runtime.props) {
-        prop.destroy();
+      for (const object of this.runtime.objects) {
+        object.sprite.destroy();
       }
       this.runtime.map.destroy();
       this.runtime = null;
