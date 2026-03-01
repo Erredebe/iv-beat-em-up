@@ -9,7 +9,7 @@
     "damage": 14,
     "knockbackX": 90,
     "causesKnockdown": false,
-    "hitStopMs": 80,
+    "hitStopMs": 34,
     "iFrameMs": 180,
     "hitStunMs": 220,
     "knockdownDurationMs": 900,
@@ -31,7 +31,7 @@
     "damage": 16,
     "knockbackX": 110,
     "causesKnockdown": false,
-    "hitStopMs": 80,
+    "hitStopMs": 36,
     "iFrameMs": 180,
     "hitStunMs": 240,
     "knockdownDurationMs": 900,
@@ -51,7 +51,7 @@
     "damage": 22,
     "knockbackX": 160,
     "causesKnockdown": true,
-    "hitStopMs": 100,
+    "hitStopMs": 78,
     "iFrameMs": 220,
     "hitStunMs": 280,
     "knockdownDurationMs": 980,
@@ -70,7 +70,7 @@
     "damage": 15,
     "knockbackX": 80,
     "causesKnockdown": false,
-    "hitStopMs": 80,
+    "hitStopMs": 32,
     "iFrameMs": 180,
     "hitStunMs": 220,
     "knockdownDurationMs": 900,
@@ -89,7 +89,7 @@
     "damage": 20,
     "knockbackX": 130,
     "causesKnockdown": true,
-    "hitStopMs": 100,
+    "hitStopMs": 72,
     "iFrameMs": 240,
     "hitStunMs": 260,
     "knockdownDurationMs": 960,
@@ -102,4 +102,3 @@
     }
   }
 }
-

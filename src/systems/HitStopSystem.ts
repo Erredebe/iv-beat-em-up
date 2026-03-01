@@ -1,38 +1,31 @@
 import Phaser from "phaser";
 
+const MAX_EFFECTIVE_HIT_STOP_MS = 24;
+
 export class HitStopSystem {
   private readonly scene: Phaser.Scene;
   private stopUntil = 0;
-  private active = false;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
 
   trigger(durationMs: number): void {
-    const nextStopUntil = this.scene.time.now + Math.max(0, durationMs);
-    this.stopUntil = Math.max(this.stopUntil, nextStopUntil);
-
-    if (!this.active) {
-      this.active = true;
-      this.scene.physics.world.pause();
+    const effectiveDuration = Math.min(MAX_EFFECTIVE_HIT_STOP_MS, Math.max(0, durationMs));
+    if (effectiveDuration <= 0) {
+      return;
     }
+    const nextStopUntil = this.scene.time.now + effectiveDuration;
+    this.stopUntil = Math.max(this.stopUntil, nextStopUntil);
   }
 
   update(nowMs: number): void {
-    if (!this.active) {
-      return;
-    }
-
     if (nowMs >= this.stopUntil) {
-      this.active = false;
       this.stopUntil = 0;
-      this.scene.physics.world.resume();
     }
   }
 
   isActive(): boolean {
-    return this.active;
+    return this.stopUntil > this.scene.time.now;
   }
 }
-

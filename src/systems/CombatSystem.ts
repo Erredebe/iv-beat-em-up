@@ -79,7 +79,10 @@ export class CombatSystem {
         }
         attacker.markTargetHit(target.id);
 
-        this.hitStopSystem.trigger(attackData.hitStopMs);
+        const feedbackHitStopMs = attackData.causesKnockdown
+          ? attackData.hitStopMs
+          : Math.max(10, Math.round(attackData.hitStopMs * 0.6));
+        this.hitStopSystem.trigger(feedbackHitStopMs);
         this.eventBus?.emit("combat:hit", {
           attackerId: attacker.id,
           targetId: target.id,

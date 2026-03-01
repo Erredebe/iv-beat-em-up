@@ -42,6 +42,7 @@ export class EnemyAI {
   }
 
   update(enemy: EnemyBasic, player: Player, dtMs: number, nowMs: number): void {
+    void dtMs;
     if (!enemy.isAlive()) {
       this.releaseAttackToken(enemy.id);
       enemy.clearMoveIntent();
@@ -108,7 +109,6 @@ export class EnemyAI {
       }
     }
 
-    const smoothing = Math.min(1, dtMs / 16.667);
-    enemy.setMoveIntent(moveX * smoothing, moveY * smoothing);
+    enemy.setMoveIntent(moveX, moveY);
   }
 }
