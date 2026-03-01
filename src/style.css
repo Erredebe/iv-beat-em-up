@@ -25,7 +25,7 @@ body {
       var(--scanline) 2px 3px
     ),
     radial-gradient(circle at 30% 20%, #311538 0%, #141126 50%, var(--bg-dark) 100%);
-  font-family: "Courier New", monospace;
+  font-family: "Courier New", "Lucida Console", Monaco, monospace;
 }
 
 #game-root {

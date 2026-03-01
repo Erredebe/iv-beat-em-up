@@ -43,7 +43,7 @@ export class IntroScene extends Phaser.Scene {
 
     this.lineText = this.add
       .text(BASE_WIDTH * 0.5, 108, INTRO_LINES[0], {
-        fontFamily: "monospace",
+        fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.body,
         color: theme.palette.textPrimary,
         align: "center",
@@ -53,7 +53,7 @@ export class IntroScene extends Phaser.Scene {
 
     this.add
       .text(BASE_WIDTH * 0.5, 198, "ENTER: continuar  |  SPACE: saltar", {
-        fontFamily: "monospace",
+        fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.caption,
         color: theme.palette.accentGold,
       })

@@ -17,6 +17,11 @@ export interface UIThemeTokens {
     body: string;
     caption: string;
     hero: string;
+    families: {
+      uiTitle: string;
+      uiBody: string;
+      hudText: string;
+    };
   };
   textStroke: {
     heavy: { color: string; thickness: number };
@@ -30,6 +35,14 @@ export interface UIThemeTokens {
     highlightFill: string;
   };
 }
+
+const SYSTEM_PIXEL_STACK = "\"Courier New\", \"Lucida Console\", Monaco, monospace";
+
+const baseFamilies = {
+  uiTitle: SYSTEM_PIXEL_STACK,
+  uiBody: SYSTEM_PIXEL_STACK,
+  hudText: SYSTEM_PIXEL_STACK,
+} as const;
 
 const uiThemeClassic: UIThemeTokens = {
   palette: {
@@ -48,11 +61,12 @@ const uiThemeClassic: UIThemeTokens = {
     body: "12px",
     caption: "10px",
     hero: "34px",
+    families: baseFamilies,
   },
   textStroke: {
-    heavy: { color: "#18040f", thickness: 5 },
-    medium: { color: "#061017", thickness: 2 },
-    light: { color: "#04070b", thickness: 2 },
+    heavy: { color: "#18040f", thickness: 3 },
+    medium: { color: "#061017", thickness: 1 },
+    light: { color: "#04070b", thickness: 1 },
   },
   panel: {
     fillAlpha: 0.92,
@@ -78,12 +92,13 @@ const uiThemeV2Tokens: UIThemeTokens = {
     subtitle: "12px",
     body: "12px",
     caption: "10px",
-    hero: "36px",
+    hero: "34px",
+    families: baseFamilies,
   },
   textStroke: {
-    heavy: { color: "#12030e", thickness: 5 },
-    medium: { color: "#0a1422", thickness: 2 },
-    light: { color: "#060a14", thickness: 2 },
+    heavy: { color: "#12030e", thickness: 3 },
+    medium: { color: "#0a1422", thickness: 1 },
+    light: { color: "#060a14", thickness: 1 },
   },
   panel: {
     fillAlpha: 0.95,

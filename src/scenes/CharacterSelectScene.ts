@@ -45,13 +45,13 @@ export class CharacterSelectScene extends Phaser.Scene {
       const portrait = this.add.image(62, 44, character.portraitKey).setScale(2).setTint(character.tint).setOrigin(0.5);
       const name = this.add
         .text(12, 82, character.displayName, {
-          fontFamily: "monospace",
+          fontFamily: theme.typography.families.uiBody,
           fontSize: theme.typography.body,
           color: theme.palette.textPrimary,
         })
         .setOrigin(0, 0);
       const stats = this.add.text(12, 100, `HP ${character.maxHp}\nSPD ${character.moveSpeed}`, {
-        fontFamily: "monospace",
+        fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.caption,
         color: theme.palette.textSecondary,
       });
@@ -72,7 +72,7 @@ export class CharacterSelectScene extends Phaser.Scene {
 
     this.add
       .text(BASE_WIDTH * 0.5, 205, "NIVEL", {
-        fontFamily: "monospace",
+        fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.caption,
         color: theme.palette.accentGold,
       })
@@ -80,7 +80,7 @@ export class CharacterSelectScene extends Phaser.Scene {
 
     this.selectedStageText = this.add
       .text(BASE_WIDTH * 0.5, 217, "", {
-        fontFamily: "monospace",
+        fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.subtitle,
         color: theme.palette.textPrimary,
       })
@@ -88,7 +88,7 @@ export class CharacterSelectScene extends Phaser.Scene {
 
     this.add
       .text(BASE_WIDTH * 0.5, 232, "LEFT/RIGHT personaje  |  UP/DOWN nivel  |  ENTER confirmar", {
-        fontFamily: "monospace",
+        fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.caption,
         color: theme.palette.textSecondary,
       })
