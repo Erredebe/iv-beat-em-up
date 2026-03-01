@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ENEMY_PROFILES } from "./enemyRoster";
 
 describe("enemy roster", () => {
-  it("defines 6 enemy classes", () => {
+  it("defines 7 enemy classes", () => {
     expect(Object.keys(ENEMY_PROFILES)).toEqual([
       "brawler",
       "rusher",
@@ -10,6 +10,7 @@ describe("enemy roster", () => {
       "agile_f",
       "bat_wielder",
       "mini_boss",
+      "knife_fighter",
     ]);
   });
 

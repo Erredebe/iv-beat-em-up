@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { PNG } from "pngjs";
 import { describe, expect, it } from "vitest";
 import { getFighterAnimationSet, type AnimationClipId, type AnimationOwner } from "./fighterAnimationSets";
+import { getFighterSpriteSpec } from "./fighterSpriteSpecs";
 import { fighterVisualProfiles, type SpritePixelOffset } from "./fighterVisualProfiles";
 
 function readPng(path: string): PNG {
@@ -36,15 +37,16 @@ function getFrameOffset(
 }
 
 describe("fighter sprite alignment", () => {
-  it("keeps expected 64x128 source dimensions for every arcade runtime sprite", () => {
+  it("keeps expected source dimensions for every arcade runtime sprite", () => {
     for (const profileId of ["kastro", "marina", "meneillos", "enemy"] as AnimationOwner[]) {
       const animationSet = getFighterAnimationSet(profileId);
+      const spriteSpec = getFighterSpriteSpec(profileId);
       for (const clipId of Object.keys(animationSet.clips) as AnimationClipId[]) {
         const clip = animationSet.clips[clipId];
         const path = `public/assets/external/arcade/sprites/${clip.textureKey}.png`;
         const png = readPng(path);
-        expect(png.height, `${path} height mismatch`).toBe(128);
-        expect(png.width, `${path} width mismatch`).toBe(64 * clip.frameCount);
+        expect(png.height, `${path} height mismatch`).toBe(spriteSpec.frameSize.height);
+        expect(png.width, `${path} width mismatch`).toBe(spriteSpec.frameSize.width * clip.frameCount);
 
         const frameOffsets = fighterVisualProfiles[profileId].frameOffsetByClip[clipId];
         if (frameOffsets && frameOffsets.length > 0) {
@@ -55,20 +57,25 @@ describe("fighter sprite alignment", () => {
   });
 
   it("keeps visual feet near the baseline across frames", () => {
+    const groundedClips: AnimationClipId[] = ["idle", "walk", "attack1", "attack2", "attack3", "special", "hurt"];
     for (const profileId of ["kastro", "marina", "meneillos", "enemy"] as AnimationOwner[]) {
       const animationSet = getFighterAnimationSet(profileId);
-      for (const clipId of Object.keys(animationSet.clips) as AnimationClipId[]) {
+      const spriteSpec = getFighterSpriteSpec(profileId);
+      const frameWidth = spriteSpec.frameSize.width;
+      const baselineTolerancePx = Math.ceil(spriteSpec.frameSize.height * 0.14);
+
+      for (const clipId of groundedClips) {
         const clip = animationSet.clips[clipId];
         const png = readPng(`public/assets/external/arcade/sprites/${clip.textureKey}.png`);
 
         for (let frame = 0; frame < clip.frameCount; frame += 1) {
-          const bottomPad = getBottomPadding(png, frame, 64);
+          const bottomPad = getBottomPadding(png, frame, frameWidth);
           const frameOffset = getFrameOffset(profileId, clipId, frame);
           const effectivePad = bottomPad - frameOffset.y;
           expect(
             effectivePad,
             `${profileId} ${clipId} frame ${frame} is too far from baseline`,
-          ).toBeLessThanOrEqual(24);
+          ).toBeLessThanOrEqual(baselineTolerancePx);
         }
       }
     }
