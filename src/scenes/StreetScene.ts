@@ -14,6 +14,7 @@ import {
   TARGET_ENEMY_TTL_MS,
 } from "../config/constants";
 import { getNextStageId } from "../config/gameplay/campaign";
+import { getCombatBalancePreset } from "../config/gameplay/combatBalancePresets";
 import { featureFlags } from "../config/features";
 import { getPlayableCharacter } from "../config/gameplay/playableRoster";
 import { getSessionState, resetSessionState, updateSessionState } from "../config/gameplay/sessionState";
@@ -55,6 +56,15 @@ const ENEMY_POINTS_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
   agile_f: 150,
   bat_wielder: 190,
   mini_boss: 350,
+};
+
+const ENEMY_TINT_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
+  brawler: 0xfff4f8,
+  rusher: 0xc7dcff,
+  tank: 0xffd0a1,
+  agile_f: 0xffc2e6,
+  bat_wielder: 0xe4dbff,
+  mini_boss: 0xffb782,
 };
 
 export class StreetScene extends Phaser.Scene {
@@ -406,17 +416,13 @@ export class StreetScene extends Phaser.Scene {
     if (!featureFlags.enemyRoster && archetype !== "brawler" && archetype !== "rusher" && archetype !== "tank") {
       archetype = "brawler";
     }
-    const profile = archetype === "tank"
-      ? { maxHp: ENEMY_MAX_HP + 44, moveSpeed: ENEMY_MOVE_SPEED * 0.74, tint: 0xffd0a1 }
-      : archetype === "rusher"
-        ? { maxHp: ENEMY_MAX_HP - 10, moveSpeed: ENEMY_MOVE_SPEED * 1.24, tint: 0xc7dcff }
-        : archetype === "agile_f"
-          ? { maxHp: ENEMY_MAX_HP - 4, moveSpeed: ENEMY_MOVE_SPEED * 1.18, tint: 0xffc2e6 }
-          : archetype === "bat_wielder"
-            ? { maxHp: ENEMY_MAX_HP + 14, moveSpeed: ENEMY_MOVE_SPEED * 0.96, tint: 0xe4dbff }
-            : archetype === "mini_boss"
-              ? { maxHp: ENEMY_MAX_HP + 110, moveSpeed: ENEMY_MOVE_SPEED * 0.88, tint: 0xffb782 }
-              : { maxHp: ENEMY_MAX_HP, moveSpeed: ENEMY_MOVE_SPEED, tint: 0xfff4f8 };
+    const combatBalance = getCombatBalancePreset();
+    const spawnConfig = combatBalance.enemySpawnByArchetype[archetype];
+    const profile = {
+      maxHp: ENEMY_MAX_HP + spawnConfig.maxHpBonus,
+      moveSpeed: ENEMY_MOVE_SPEED * spawnConfig.moveSpeedMultiplier,
+      tint: ENEMY_TINT_BY_ARCHETYPE[archetype],
+    };
 
     const enemyAttackData = buildEnemyAttackData(this.playerAttackData, archetype);
 

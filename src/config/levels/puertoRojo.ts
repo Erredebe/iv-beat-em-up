@@ -98,7 +98,7 @@ export const puertoRojoSpawns: StageSpawnZoneConfig[] = [
       { x: 1480, y: 198, archetype: "brawler" },
       { x: 1600, y: 208, archetype: "agile_f" },
       { x: 1700, y: 206, archetype: "bat_wielder" },
-      { x: 1780, y: 208, archetype: "tank" },
+      { x: 1780, y: 208, archetype: "brawler" },
       { x: 1840, y: 206, archetype: "mini_boss" },
     ],
   },
