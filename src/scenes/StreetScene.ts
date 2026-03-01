@@ -46,6 +46,7 @@ interface TargetEnemyTracker {
 interface ActiveHealPickup {
   id: string;
   sprite: Phaser.GameObjects.Image;
+  parts: Phaser.GameObjects.Image[];
   healAmount: number;
 }
 
@@ -804,14 +805,34 @@ export class StreetScene extends Phaser.Scene {
 
   private spawnHealPickups(pickups: BreakablePickupSpawn[]): void {
     for (const pickup of pickups) {
+      const isMediumHeal = pickup.dropType === "medium_heal";
+      const outline = this.add
+        .image(pickup.x, pickup.y - 16, "utility-white")
+        .setDisplaySize(22, 22)
+        .setTint(0x102014)
+        .setAlpha(0.95)
+        .setDepth(235);
       const sprite = this.add
         .image(pickup.x, pickup.y - 16, "utility-white")
-        .setDisplaySize(14, 14)
-        .setTint(pickup.dropType === "medium_heal" ? 0x54ff9f : 0xb7ffd7)
-        .setAlpha(0.95)
+        .setDisplaySize(18, 18)
+        .setTint(isMediumHeal ? 0x45f28f : 0x89ffcf)
+        .setAlpha(1)
         .setDepth(236);
+      const crossVertical = this.add
+        .image(pickup.x, pickup.y - 16, "utility-white")
+        .setDisplaySize(6, 14)
+        .setTint(0xffffff)
+        .setAlpha(0.96)
+        .setDepth(237);
+      const crossHorizontal = this.add
+        .image(pickup.x, pickup.y - 16, "utility-white")
+        .setDisplaySize(14, 6)
+        .setTint(0xffffff)
+        .setAlpha(0.96)
+        .setDepth(237);
+      const pickupSpriteParts: Phaser.GameObjects.Image[] = [outline, sprite, crossVertical, crossHorizontal];
       this.tweens.add({
-        targets: sprite,
+        targets: pickupSpriteParts,
         y: sprite.y - 4,
         duration: 340,
         yoyo: true,
@@ -821,6 +842,7 @@ export class StreetScene extends Phaser.Scene {
       this.healPickups.push({
         id: pickup.id,
         sprite,
+        parts: pickupSpriteParts,
         healAmount: pickup.healAmount,
       });
     }
@@ -850,13 +872,20 @@ export class StreetScene extends Phaser.Scene {
       this.audioSystem.playUi();
       this.flashScene();
       this.showHealFloatingText(pickup.sprite.x, pickup.sprite.y - 12, restoredHp);
-      this.tweens.killTweensOf(pickup.sprite);
-      pickup.sprite.destroy();
+      this.destroyHealPickup(pickup);
     }
 
     this.healPickups = remaining;
     if (collectedAny) {
       this.updateHud();
+    }
+  }
+
+
+  private destroyHealPickup(pickup: ActiveHealPickup): void {
+    for (const part of pickup.parts) {
+      this.tweens.killTweensOf(part);
+      part.destroy();
     }
   }
 
@@ -884,8 +913,7 @@ export class StreetScene extends Phaser.Scene {
 
   private destroyHealPickups(): void {
     for (const pickup of this.healPickups) {
-      this.tweens.killTweensOf(pickup.sprite);
-      pickup.sprite.destroy();
+      this.destroyHealPickup(pickup);
     }
     this.healPickups.length = 0;
   }
