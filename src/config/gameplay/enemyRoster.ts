@@ -1,4 +1,4 @@
-export type EnemyArchetype = "brawler" | "rusher" | "tank" | "agile_f" | "bat_wielder" | "mini_boss";
+export type EnemyArchetype = "brawler" | "rusher" | "tank" | "agile_f" | "bat_wielder" | "mini_boss" | "knife_fighter";
 
 export interface EnemyCombatProfile {
   archetype: EnemyArchetype;
@@ -78,5 +78,16 @@ export const ENEMY_PROFILES: Record<EnemyArchetype, EnemyCombatProfile> = {
     moveSpeedMultiplier: 0.86,
     railSwitchAggressiveness: 0.78,
     railSnapTolerance: 10,
+  },
+  knife_fighter: {
+    archetype: "knife_fighter",
+    attackRangeX: 70,
+    attackRangeY: 26,
+    attackCooldownMs: 900,
+    tokenTimeoutMs: 800,
+    damageMultiplier: 0.88,
+    moveSpeedMultiplier: 1.4,
+    railSwitchAggressiveness: 1.3,
+    railSnapTolerance: 6,
   },
 };

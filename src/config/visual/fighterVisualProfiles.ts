@@ -7,7 +7,7 @@ export interface SpritePixelOffset {
 }
 
 export interface FighterVisualProfile {
-  scale: 1 | 2 | 3;
+  scale: number;
   shadowWidth: number;
   shadowHeight: number;
   spriteAnchorOffsetY: number;
@@ -78,7 +78,7 @@ function createVisualProfile(
   },
 ): FighterVisualProfile {
   return {
-    scale: 1,
+    scale: 0.5,
     shadowWidth: options.shadowWidth,
     shadowHeight: options.shadowHeight,
     spriteAnchorOffsetY: 8,

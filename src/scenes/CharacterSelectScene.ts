@@ -47,7 +47,7 @@ export class CharacterSelectScene extends Phaser.Scene {
 
       const frameOuter = this.add.rectangle(62, 42, 100, 54, 0x0f1e2f, 0.95).setStrokeStyle(2, 0x3f6aa1, 0.9).setOrigin(0.5);
       const frameInner = this.add.rectangle(62, 42, 92, 46, 0x08101a, 0.95).setStrokeStyle(1, 0x75a6d4, 0.8).setOrigin(0.5);
-      const portrait = this.add.image(62, 42, character.portraitKey).setScale(2).setTint(character.tint).setOrigin(0.5);
+      const portrait = this.add.image(62, 42, character.portraitKey).setScale(0.5).setTint(character.tint).setOrigin(0.5);
       const dividerTop = this.add.rectangle(62, 70, 104, 2, 0x2d4f74, 1).setOrigin(0.5);
       const name = this.add
         .text(12, 76, character.displayName, {

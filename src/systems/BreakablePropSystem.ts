@@ -60,12 +60,12 @@ export class BreakablePropSystem {
       const sprite = scene.add
         .image(config.x, config.y, config.textureKey)
         .setOrigin(config.originX, config.originY)
-        .setScale(config.scale)
+        .setScale(config.scale * 0.5)
         .setTint(0xb8c7d2);
       depthSystem.register(sprite, 0, undefined, 6);
 
-      const width = sprite.width * config.scale;
-      const height = sprite.height * config.scale;
+      const width = sprite.width * config.scale * 0.5;
+      const height = sprite.height * config.scale * 0.5;
       const left = config.x - width * config.originX;
       const top = config.y - height * config.originY;
       const footprintWidth = Math.max(18, Math.min(width, Math.round(width * 0.58)));

@@ -4,10 +4,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { PNG } = require("pngjs");
 
-const FRAME_WIDTH = 64;
-const FRAME_HEIGHT = 128;
+const FRAME_WIDTH = 128;
+const FRAME_HEIGHT = 256;
+const BASE_FRAME_WIDTH = 64;
+const BASE_FRAME_HEIGHT = 128;
 const FRAME_COUNT = 10;
-const PORTRAIT_SIZE = 48;
+const PORTRAIT_SIZE = 96;
 const CLIPS = [
   "idle",
   "walk",
@@ -45,8 +47,8 @@ const OWNER_PROFILES = {
     tint: { r: 1.0, g: 1.0, b: 1.0 },
     attackScale: 1.03,
     attackMinHeightRatio: 0.98,
-    scaleX: 1.1,
-    scaleY: 1.04,
+    scaleX: 2.2,
+    scaleY: 2.08,
     xShift: 0,
     yShift: 0,
     rowWarp: [],
@@ -80,8 +82,8 @@ const OWNER_PROFILES = {
     tint: { r: 1.0, g: 1.0, b: 1.0 },
     attackScale: 1,
     attackMinHeightRatio: 0.96,
-    scaleX: 0.9,
-    scaleY: 1.02,
+    scaleX: 1.8,
+    scaleY: 2.04,
     xShift: 0,
     yShift: -1,
     rowWarp: [],
@@ -116,8 +118,8 @@ const OWNER_PROFILES = {
     tint: { r: 1.0, g: 1.0, b: 1.0 },
     attackScale: 1.02,
     attackMinHeightRatio: 0.97,
-    scaleX: 1.02,
-    scaleY: 1.08,
+    scaleX: 2.04,
+    scaleY: 2.16,
     xShift: 0,
     yShift: 0,
     rowWarp: [],
@@ -152,8 +154,8 @@ const OWNER_PROFILES = {
     tint: { r: 1.0, g: 1.0, b: 1.0 },
     attackScale: 1,
     attackMinHeightRatio: 0.95,
-    scaleX: 1,
-    scaleY: 1,
+    scaleX: 2,
+    scaleY: 2,
     xShift: 0,
     yShift: 0,
   },
@@ -196,15 +198,20 @@ function frameOffset(x, y) {
 
 function extractFrame(png, frameIndex) {
   const out = createEmptyFrame();
-  const sourceStartX = frameIndex * FRAME_WIDTH;
-  for (let y = 0; y < FRAME_HEIGHT; y += 1) {
-    for (let x = 0; x < FRAME_WIDTH; x += 1) {
+  const sourceStartX = frameIndex * BASE_FRAME_WIDTH;
+  // 2x Nearest Neighbor upscaling during extraction
+  for (let y = 0; y < BASE_FRAME_HEIGHT; y += 1) {
+    for (let x = 0; x < BASE_FRAME_WIDTH; x += 1) {
       const srcIndex = ((y * png.width) + sourceStartX + x) * 4;
-      const dstIndex = frameOffset(x, y);
-      out[dstIndex] = png.data[srcIndex];
-      out[dstIndex + 1] = png.data[srcIndex + 1];
-      out[dstIndex + 2] = png.data[srcIndex + 2];
-      out[dstIndex + 3] = png.data[srcIndex + 3];
+      for(let dy=0; dy<2; dy++) {
+        for(let dx=0; dx<2; dx++) {
+           const dstIndex = frameOffset(x*2 + dx, y*2 + dy);
+           out[dstIndex] = png.data[srcIndex];
+           out[dstIndex + 1] = png.data[srcIndex + 1];
+           out[dstIndex + 2] = png.data[srcIndex + 2];
+           out[dstIndex + 3] = png.data[srcIndex + 3];
+        }
+      }
     }
   }
   return out;
@@ -561,14 +568,14 @@ function stabilizeClipFrames(frames, clipName) {
 }
 
 function isStaticSheet(png) {
-  if (png.width !== FRAME_WIDTH * FRAME_COUNT || png.height !== FRAME_HEIGHT) {
+  if (png.width !== BASE_FRAME_WIDTH * FRAME_COUNT || png.height !== BASE_FRAME_HEIGHT) {
     return false;
   }
   for (let frame = 1; frame < FRAME_COUNT; frame += 1) {
-    for (let y = 0; y < FRAME_HEIGHT; y += 1) {
-      for (let x = 0; x < FRAME_WIDTH; x += 1) {
-        const base = frameIndexToSheetOffset(0, x, y);
-        const curr = frameIndexToSheetOffset(frame, x, y);
+    for (let y = 0; y < BASE_FRAME_HEIGHT; y += 1) {
+      for (let x = 0; x < BASE_FRAME_WIDTH; x += 1) {
+        const base = ((y * BASE_FRAME_WIDTH * FRAME_COUNT) + 0 * BASE_FRAME_WIDTH + x) * 4;
+        const curr = ((y * BASE_FRAME_WIDTH * FRAME_COUNT) + frame * BASE_FRAME_WIDTH + x) * 4;
         if (
           png.data[base] !== png.data[curr]
           || png.data[base + 1] !== png.data[curr + 1]
@@ -594,53 +601,53 @@ function getCurveValue(curve, frameIndex, defaultValue = 0) {
 function getClipMotion(clipName, frameIndex) {
   const motionByClip = {
     attack1: {
-      globalX: [-3, -2, -1, 0, 1, 2, 1, 0, -1, -2],
-      globalY: [0, -1, -1, 0, 0, 0, 0, 0, 0, 0],
+      globalX: [-6, -4, -2, 0, 2, 4, 2, 0, -2, -4],
+      globalY: [0, -2, -2, 0, 0, 0, 0, 0, 0, 0],
       scaleX: [1.0, 1.0, 1.0, 1.01, 1.02, 1.02, 1.01, 1.0, 1.0, 1.0],
       scaleY: [1.0, 1.0, 1.0, 1.01, 1.01, 1.01, 1.0, 1.0, 1.0, 1.0],
     },
     attack2: {
-      globalX: [-2, -1, 0, 1, 2, 3, 2, 1, 0, -1],
-      globalY: [0, 0, -1, -1, -1, 0, 0, 0, 0, 0],
+      globalX: [-4, -2, 0, 2, 4, 6, 4, 2, 0, -2],
+      globalY: [0, 0, -2, -2, -2, 0, 0, 0, 0, 0],
       scaleX: [1.0, 1.0, 1.01, 1.02, 1.02, 1.02, 1.01, 1.0, 1.0, 1.0],
       scaleY: [1.0, 1.0, 1.0, 1.01, 1.01, 1.01, 1.0, 1.0, 1.0, 1.0],
     },
     attack3: {
-      globalX: [-2, -1, 0, 1, 2, 3, 2, 1, 0, -1],
-      globalY: [0, 0, -1, -1, -1, 0, 0, 0, 0, 0],
+      globalX: [-4, -2, 0, 2, 4, 6, 4, 2, 0, -2],
+      globalY: [0, 0, -2, -2, -2, 0, 0, 0, 0, 0],
       scaleX: [1.0, 1.01, 1.02, 1.04, 1.06, 1.06, 1.04, 1.02, 1.01, 1.0],
       scaleY: [1.0, 1.0, 1.0, 1.01, 1.02, 1.02, 1.01, 1.0, 1.0, 1.0],
     },
     air_attack: {
-      globalY: [-2, -4, -6, -8, -8, -6, -4, -2, 0, 0],
+      globalY: [-4, -8, -12, -16, -16, -12, -8, -4, 0, 0],
       scaleX: [1.0, 1.0, 1.01, 1.01, 1.01, 1.01, 1.0, 1.0, 1.0, 1.0],
       scaleY: [1.0, 1.0, 1.01, 1.01, 1.01, 1.01, 1.0, 1.0, 1.0, 1.0],
     },
     special: {
-      globalX: [-2, -1, 0, 2, 3, 3, 2, 1, 0, -1],
-      globalY: [0, 0, -1, -1, -1, -1, 0, 0, 0, 0],
+      globalX: [-4, -2, 0, 4, 6, 6, 4, 2, 0, -2],
+      globalY: [0, 0, -2, -2, -2, -2, 0, 0, 0, 0],
       scaleX: [1.0, 1.01, 1.02, 1.04, 1.06, 1.06, 1.04, 1.02, 1.01, 1.0],
       scaleY: [1.0, 1.0, 1.01, 1.02, 1.03, 1.03, 1.02, 1.01, 1.0, 1.0],
     },
     hurt: {
-      globalX: [0, -1, -2, -1, 0, 1, 0, 0, 0, 0],
-      torsoX: [0, -1, -1, -1, 0, 0, 0, 0, 0, 0],
-      headY: [0, 1, 1, 0, -1, 0, 0, 0, 0, 0],
-      frontArmX: [0, -1, -1, 0, 0, 0, 0, 0, 0, 0],
-      backArmX: [0, -1, 0, 0, 0, 0, 0, 0, 0, 0],
+      globalX: [0, -2, -4, -2, 0, 2, 0, 0, 0, 0],
+      torsoX: [0, -2, -2, -2, 0, 0, 0, 0, 0, 0],
+      headY: [0, 2, 2, 0, -2, 0, 0, 0, 0, 0],
+      frontArmX: [0, -2, -2, 0, 0, 0, 0, 0, 0, 0],
+      backArmX: [0, -2, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     knockdown: {
-      globalX: [0, 1, 2, 2, 2, 2, 2, 1, 1, 1],
-      globalY: [0, 1, 2, 3, 3, 3, 2, 2, 2, 2],
-      torsoY: [0, 1, 1, 2, 2, 2, 2, 1, 1, 1],
-      headX: [0, 1, 2, 2, 2, 2, 2, 1, 1, 1],
+      globalX: [0, 2, 4, 4, 4, 4, 4, 2, 2, 2],
+      globalY: [0, 2, 4, 6, 6, 6, 4, 4, 4, 4],
+      torsoY: [0, 2, 2, 4, 4, 4, 4, 2, 2, 2],
+      headX: [0, 2, 4, 4, 4, 4, 4, 2, 2, 2],
       scaleX: [1.0, 1.02, 1.04, 1.06, 1.08, 1.08, 1.08, 1.06, 1.04, 1.04],
       scaleY: [1.0, 0.96, 0.92, 0.9, 0.88, 0.88, 0.9, 0.92, 0.94, 0.94],
     },
     getup: {
-      globalY: [3, 3, 3, 2, 2, 1, 1, 0, 0, 0],
-      torsoY: [2, 2, 2, 1, 1, 1, 0, 0, 0, 0],
-      headX: [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+      globalY: [6, 6, 6, 4, 4, 2, 2, 0, 0, 0],
+      torsoY: [4, 4, 4, 2, 2, 2, 0, 0, 0, 0],
+      headX: [2, 2, 2, 2, 0, 0, 0, 0, 0, 0],
       scaleX: [1.06, 1.06, 1.04, 1.04, 1.02, 1.02, 1.0, 1.0, 1.0, 1.0],
       scaleY: [0.9, 0.9, 0.92, 0.94, 0.96, 0.98, 1.0, 1.0, 1.0, 1.0],
     },
@@ -848,11 +855,11 @@ function renderBustFromIdleFrame(frameData, ownerProfile) {
   }
 
   const midX = Math.floor((box.minX + box.maxX) * 0.5);
-  const srcSize = 20;
+  const srcSize = 40;
   const srcX = clamp(midX - Math.floor(srcSize / 2), 0, FRAME_WIDTH - srcSize);
   const srcY = clamp(box.minY, 0, FRAME_HEIGHT - srcSize);
-  const dstStartX = 4;
-  const dstStartY = 5;
+  const dstStartX = 8;
+  const dstStartY = 10;
   const scale = 2;
 
   for (let sy = 0; sy < srcSize; sy += 1) {

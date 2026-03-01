@@ -22,6 +22,7 @@ const COMBAT_BALANCE_PRESETS: Record<CombatBalancePresetId, CombatBalancePreset>
       bat_wielder: { maxHpBonus: 14, moveSpeedMultiplier: 0.96 },
       tank: { maxHpBonus: 26, moveSpeedMultiplier: 0.74 },
       mini_boss: { maxHpBonus: 70, moveSpeedMultiplier: 0.88 },
+      knife_fighter: { maxHpBonus: -15, moveSpeedMultiplier: 1.3 },
     },
   },
 };

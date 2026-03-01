@@ -57,6 +57,7 @@ const ENEMY_POINTS_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
   agile_f: 150,
   bat_wielder: 190,
   mini_boss: 350,
+  knife_fighter: 135,
 };
 
 const ENEMY_TINT_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
@@ -66,6 +67,7 @@ const ENEMY_TINT_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
   agile_f: 0xffc2e6,
   bat_wielder: 0xe4dbff,
   mini_boss: 0xffb782,
+  knife_fighter: 0xffea00,
 };
 
 export class StreetScene extends Phaser.Scene {
@@ -414,7 +416,7 @@ export class StreetScene extends Phaser.Scene {
   }
 
   private spawnEnemy(x: number, y: number, archetype: EnemyArchetype = "brawler"): EnemyBasic {
-    if (!featureFlags.enemyRoster && archetype !== "brawler" && archetype !== "rusher" && archetype !== "tank") {
+    if (!featureFlags.enemyRoster && archetype !== "brawler" && archetype !== "rusher" && archetype !== "tank" && archetype !== "knife_fighter") {
       archetype = "brawler";
     }
     const combatBalance = getCombatBalancePreset();
@@ -919,11 +921,11 @@ export class StreetScene extends Phaser.Scene {
   }
 
   private createHitSpark(x: number, y: number): void {
-    const spark = this.add.image(x, y, "hit_spark").setScale(2.5).setTint(0xfff9c2).setDepth(5000);
+    const spark = this.add.image(x, y, "hit_spark").setScale(0.6).setTint(0xfff9c2).setDepth(5000);
     this.tweens.add({
       targets: spark,
       alpha: { from: 0.95, to: 0 },
-      scale: { from: 2.5, to: 3.6 },
+      scale: { from: 0.6, to: 0.9 },
       duration: 110,
       onComplete: () => spark.destroy(),
     });

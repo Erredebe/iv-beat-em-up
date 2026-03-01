@@ -35,8 +35,8 @@ function createArcadeCharacterSet(owner: ManifestAnimationOwner): AssetManifestE
     packId,
     tags: ["fighter", "arcade", owner, clip],
     frameConfig: {
-      frameWidth: 64,
-      frameHeight: 128,
+      frameWidth: 128,
+      frameHeight: 256,
     },
   }));
 }
@@ -166,7 +166,7 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
     license: "CC0",
     url: "https://iv-beat.netlify.app/",
     paletteProfile: "arcade-cps-inspired",
-    scaleProfile: "portrait-48",
+    scaleProfile: "portrait-96",
     packId: "arcade_90",
     tags: ["ui", "portrait", "arcade"],
   },
@@ -182,7 +182,7 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
     license: "CC0",
     url: "https://iv-beat.netlify.app/",
     paletteProfile: "arcade-cps-inspired",
-    scaleProfile: "portrait-48",
+    scaleProfile: "portrait-96",
     packId: "arcade_90",
     tags: ["ui", "portrait", "arcade"],
   },
@@ -198,7 +198,7 @@ const ARCADE_COMMON: AssetManifestEntry[] = [
     license: "CC0",
     url: "https://iv-beat.netlify.app/",
     paletteProfile: "arcade-cps-inspired",
-    scaleProfile: "portrait-48",
+    scaleProfile: "portrait-96",
     packId: "arcade_90",
     tags: ["ui", "portrait", "arcade"],
   },

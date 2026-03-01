@@ -45,6 +45,7 @@ export class StageRenderer {
         .setOrigin(0, 0)
         .setDepth(band.depth)
         .setAlpha(band.alpha);
+      sprite.setTileScale(0.5, 0.5);
       if (band.id === "skyline_far") {
         sprite.setTint(this.layout.visualProfile.foregroundAccents.skylineFar);
       } else if (band.id === "skyline_mid") {
@@ -59,13 +60,13 @@ export class StageRenderer {
     });
 
     const map = this.scene.make.tilemap({
-      tileWidth: this.layout.tileSize,
-      tileHeight: this.layout.tileSize,
+      tileWidth: this.layout.tileSize * 2,
+      tileHeight: this.layout.tileSize * 2,
       width: this.layout.mapWidthTiles,
       height: this.layout.mapHeightTiles,
     });
 
-    const tileset = map.addTilesetImage(this.layout.tilesetKey, this.layout.tilesetKey, this.layout.tileSize, this.layout.tileSize, 0, 0);
+    const tileset = map.addTilesetImage(this.layout.tilesetKey, this.layout.tilesetKey, this.layout.tileSize * 2, this.layout.tileSize * 2, 0, 0);
     if (!tileset) {
       throw new Error(`Missing tileset texture for ${this.layout.tilesetKey}`);
     }
@@ -78,6 +79,7 @@ export class StageRenderer {
       }
       layer.putTilesAt(this.buildLayerData(layerConfig.targetRows, layerConfig.sourceRows), 0, 0);
       layer.setDepth(layerConfig.depth);
+      layer.setScale(0.5);
       if (layerConfig.alpha !== undefined) {
         layer.setAlpha(layerConfig.alpha);
       }
@@ -94,7 +96,7 @@ export class StageRenderer {
       const image = this.scene.add
         .image(config.x, config.y, config.textureKey)
         .setOrigin(config.originX, config.originY)
-        .setScale(config.scale);
+        .setScale(config.scale * 0.5);
       if (config.id.includes("crate") || config.id.includes("barrel") || config.id.includes("table")) {
         image
           .setTint(this.layout.visualProfile.foregroundAccents.crateTint)
@@ -125,6 +127,8 @@ export class StageRenderer {
           fontFamily: "monospace",
           fontSize: entry.fontSize,
           color: entry.color,
+          stroke: "#000000",
+          strokeThickness: 2,
         })
         .setDepth(58)
         .setAlpha(Phaser.Math.Clamp(this.layout.visualProfile.neonIntensity, 0.55, 1)),
@@ -218,13 +222,13 @@ export class StageRenderer {
       gradeConfig.color,
       Phaser.Math.Clamp(gradeConfig.alpha, 0.03, 0.13),
     );
-    grade.setDepth(70);
+    grade.setDepth(4500);
     grade.setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.gradeOverlay = grade;
 
     const rainIntensity = Phaser.Math.Clamp(this.layout.visualProfile.rainIntensity, 0, 1);
     if (rainIntensity > 0.01) {
-      const rain = this.scene.add.graphics().setDepth(76);
+      const rain = this.scene.add.graphics().setDepth(4501);
       rain.lineStyle(1, 0xcce8ff, 0.04 + rainIntensity * 0.09);
       for (let x = 0; x < worldWidth; x += 24) {
         for (let y = -24; y < BASE_HEIGHT; y += 30) {

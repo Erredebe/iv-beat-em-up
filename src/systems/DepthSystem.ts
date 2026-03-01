@@ -27,7 +27,7 @@ export class DepthSystem {
   update(): void {
     for (const entry of this.entries) {
       const y = entry.yResolver ? entry.yResolver() : entry.object.y;
-      entry.object.depth = y + entry.offset + entry.priority * 0.001;
+      entry.object.depth = 1000 + y + entry.offset + entry.priority * 0.001;
     }
   }
 

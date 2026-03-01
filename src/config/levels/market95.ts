@@ -17,10 +17,10 @@ export const market95Layout: StageLayoutConfig = {
     { id: "rail_east", xStart: 1640, xEnd: 2560, topY: 178, bottomY: 224, preferredY: 201 },
   ],
   layers: [
-    { id: "facade", depth: 80, alpha: 1, targetRows: [1, 2, 3], sourceRows: [0, 1, 2] },
-    { id: "sidewalk", depth: 92, alpha: 1, targetRows: [4], sourceRows: [10] },
-    { id: "road", depth: 104, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
-    { id: "foreground_deco", depth: 236, alpha: 0.94, targetRows: [7], sourceRows: [9] },
+    { id: "facade", depth: 10, alpha: 1, targetRows: [1, 2, 3], sourceRows: [0, 1, 2] },
+    { id: "sidewalk", depth: 11, alpha: 1, targetRows: [4], sourceRows: [10] },
+    { id: "road", depth: 12, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
+    { id: "foreground_deco", depth: 500, alpha: 0.94, targetRows: [7], sourceRows: [9] },
   ],
   props: [
     {
@@ -80,7 +80,7 @@ export const market95Spawns: StageSpawnZoneConfig[] = [
     rightBarrierX: 880,
     spawns: [
       { x: 620, y: 204, archetype: "brawler" },
-      { x: 792, y: 198, archetype: "rusher" },
+      { x: 792, y: 198, archetype: "knife_fighter" },
     ],
   },
   {
@@ -95,7 +95,7 @@ export const market95Spawns: StageSpawnZoneConfig[] = [
     spawns: [
       { x: 1310, y: 208, archetype: "brawler" },
       { x: 1450, y: 194, archetype: "rusher" },
-      { x: 1600, y: 210, archetype: "rusher" },
+      { x: 1600, y: 210, archetype: "knife_fighter" },
     ],
   },
 ];
