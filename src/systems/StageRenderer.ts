@@ -46,11 +46,11 @@ export class StageRenderer {
         .setDepth(band.depth)
         .setAlpha(band.alpha);
       if (band.id === "skyline_far") {
-        sprite.setTint(0x7a89a8);
+        sprite.setTint(this.layout.visualProfile.foregroundAccents.skylineFar);
       } else if (band.id === "skyline_mid") {
-        sprite.setTint(0x7f8ea8);
+        sprite.setTint(this.layout.visualProfile.foregroundAccents.skylineMid);
       } else {
-        sprite.setTint(0x9f8f94);
+        sprite.setTint(this.layout.visualProfile.foregroundAccents.skylineClose);
       }
       return {
         sprite,
@@ -82,10 +82,10 @@ export class StageRenderer {
         layer.setAlpha(layerConfig.alpha);
       }
       if (layerConfig.id === "facade") {
-        layer.setTint(0xc2b8b2);
+        layer.setTint(this.layout.visualProfile.foregroundAccents.facade);
       }
       if (layerConfig.id === "foreground_deco") {
-        layer.setTint(0x8b8d96);
+        layer.setTint(this.layout.visualProfile.foregroundAccents.foregroundDeco);
       }
       tileLayers.push(layer);
     }
@@ -95,8 +95,10 @@ export class StageRenderer {
         .image(config.x, config.y, config.textureKey)
         .setOrigin(config.originX, config.originY)
         .setScale(config.scale);
-      if (config.id.includes("crate")) {
-        image.setTint(0x6f8f68).setAlpha(0.9);
+      if (config.id.includes("crate") || config.id.includes("barrel") || config.id.includes("table")) {
+        image
+          .setTint(this.layout.visualProfile.foregroundAccents.crateTint)
+          .setAlpha(this.layout.visualProfile.foregroundAccents.crateAlpha);
       }
       if (config.depthAnchorY !== undefined) {
         depthSystem.register(image, config.depthOffset, () => config.depthAnchorY!, 5);
@@ -124,7 +126,8 @@ export class StageRenderer {
           fontSize: entry.fontSize,
           color: entry.color,
         })
-        .setDepth(58),
+        .setDepth(58)
+        .setAlpha(Phaser.Math.Clamp(this.layout.visualProfile.neonIntensity, 0.55, 1)),
     );
 
     this.runtime = {
@@ -200,21 +203,29 @@ export class StageRenderer {
 
   private buildBackground(worldWidth: number): void {
     const gradient = this.scene.add.graphics();
-    gradient.fillGradientStyle(0x12031d, 0x12031d, 0x061123, 0x061123, 1);
+    const baseGradient = this.layout.visualProfile.baseGradient;
+    gradient.fillGradientStyle(baseGradient.topColor, baseGradient.topColor, baseGradient.bottomColor, baseGradient.bottomColor, 1);
     gradient.fillRect(0, 0, worldWidth, BASE_HEIGHT);
     gradient.setDepth(0);
     this.backgroundGradient = gradient;
 
-    const gradeAlpha = Phaser.Math.Clamp((this.layout.ambientFx.fogAlpha ?? 0.2) * 0.72, 0.04, 0.14);
-    const gradeColor = this.layout.ambientFx.colorGrade ?? 0x1a1130;
-    const grade = this.scene.add.rectangle(worldWidth * 0.5, BASE_HEIGHT * 0.5, worldWidth, BASE_HEIGHT, gradeColor, gradeAlpha);
-    grade.setDepth(3200);
+    const gradeConfig = this.layout.visualProfile.colorGrade;
+    const grade = this.scene.add.rectangle(
+      worldWidth * 0.5,
+      BASE_HEIGHT * 0.5,
+      worldWidth,
+      BASE_HEIGHT,
+      gradeConfig.color,
+      Phaser.Math.Clamp(gradeConfig.alpha, 0.03, 0.13),
+    );
+    grade.setDepth(70);
     grade.setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.gradeOverlay = grade;
 
-    if (this.layout.ambientFx.rain) {
-      const rain = this.scene.add.graphics().setDepth(3210);
-      rain.lineStyle(1, 0xcce8ff, 0.11);
+    const rainIntensity = Phaser.Math.Clamp(this.layout.visualProfile.rainIntensity, 0, 1);
+    if (rainIntensity > 0.01) {
+      const rain = this.scene.add.graphics().setDepth(76);
+      rain.lineStyle(1, 0xcce8ff, 0.04 + rainIntensity * 0.09);
       for (let x = 0; x < worldWidth; x += 24) {
         for (let y = -24; y < BASE_HEIGHT; y += 30) {
           rain.lineBetween(x, y, x + 6, y + 12);

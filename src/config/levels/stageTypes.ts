@@ -77,10 +77,32 @@ export interface StageWalkRailConfig {
   preferredY?: number;
 }
 
-export interface StageAmbientFxConfig {
-  rain?: boolean;
-  fogAlpha?: number;
-  colorGrade?: number;
+export interface StageBaseGradientConfig {
+  topColor: number;
+  bottomColor: number;
+}
+
+export interface StageColorGradeConfig {
+  color: number;
+  alpha: number;
+}
+
+export interface StageForegroundAccentsConfig {
+  skylineFar: number;
+  skylineMid: number;
+  skylineClose: number;
+  facade: number;
+  foregroundDeco: number;
+  crateTint: number;
+  crateAlpha: number;
+}
+
+export interface StageVisualProfile {
+  baseGradient: StageBaseGradientConfig;
+  colorGrade: StageColorGradeConfig;
+  rainIntensity: number;
+  neonIntensity: number;
+  foregroundAccents: StageForegroundAccentsConfig;
 }
 
 export interface StageLayoutConfig {
@@ -100,7 +122,7 @@ export interface StageLayoutConfig {
   collisionFootprints: StageCollisionFootprint[];
   parallaxBands: StageParallaxBand[];
   neonLabels: StageNeonLabel[];
-  ambientFx: StageAmbientFxConfig;
+  visualProfile: StageVisualProfile;
 }
 
 export function cloneStageLayoutConfig(layout: StageLayoutConfig): StageLayoutConfig {
@@ -184,10 +206,26 @@ export function cloneStageLayoutConfig(layout: StageLayoutConfig): StageLayoutCo
       color: label.color,
       fontSize: label.fontSize,
     })),
-    ambientFx: {
-      rain: Boolean(layout.ambientFx.rain),
-      fogAlpha: layout.ambientFx.fogAlpha,
-      colorGrade: layout.ambientFx.colorGrade,
+    visualProfile: {
+      baseGradient: {
+        topColor: layout.visualProfile.baseGradient.topColor,
+        bottomColor: layout.visualProfile.baseGradient.bottomColor,
+      },
+      colorGrade: {
+        color: layout.visualProfile.colorGrade.color,
+        alpha: layout.visualProfile.colorGrade.alpha,
+      },
+      rainIntensity: layout.visualProfile.rainIntensity,
+      neonIntensity: layout.visualProfile.neonIntensity,
+      foregroundAccents: {
+        skylineFar: layout.visualProfile.foregroundAccents.skylineFar,
+        skylineMid: layout.visualProfile.foregroundAccents.skylineMid,
+        skylineClose: layout.visualProfile.foregroundAccents.skylineClose,
+        facade: layout.visualProfile.foregroundAccents.facade,
+        foregroundDeco: layout.visualProfile.foregroundAccents.foregroundDeco,
+        crateTint: layout.visualProfile.foregroundAccents.crateTint,
+        crateAlpha: layout.visualProfile.foregroundAccents.crateAlpha,
+      },
     },
   };
 }

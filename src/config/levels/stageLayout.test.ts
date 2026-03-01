@@ -49,6 +49,20 @@ describe("stage layout calibration", () => {
       validatePropFootprints(bundle.layout);
     }
   });
+
+  it("keeps visual profiles calibrated for readability", () => {
+    for (const bundle of Object.values(stageCatalog)) {
+      const profile = bundle.layout.visualProfile;
+      expect(profile.baseGradient.topColor, `${bundle.id} gradient top missing`).toBeGreaterThan(0);
+      expect(profile.baseGradient.bottomColor, `${bundle.id} gradient bottom missing`).toBeGreaterThan(0);
+      expect(profile.colorGrade.alpha, `${bundle.id} color grade too weak`).toBeGreaterThanOrEqual(0.03);
+      expect(profile.colorGrade.alpha, `${bundle.id} color grade too strong`).toBeLessThanOrEqual(0.13);
+      expect(profile.rainIntensity, `${bundle.id} rain intensity out of range`).toBeGreaterThanOrEqual(0);
+      expect(profile.rainIntensity, `${bundle.id} rain intensity out of range`).toBeLessThanOrEqual(1);
+      expect(profile.neonIntensity, `${bundle.id} neon intensity out of range`).toBeGreaterThanOrEqual(0.55);
+      expect(profile.neonIntensity, `${bundle.id} neon intensity out of range`).toBeLessThanOrEqual(1);
+    }
+  });
 });
 
 function validatePropFootprints(layout: StageLayoutConfig): void {

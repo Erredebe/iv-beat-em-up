@@ -1,5 +1,6 @@
 import type { StageLayoutConfig } from "./stageTypes";
 import type { StageSpawnZoneConfig } from "./stageSpawnTypes";
+import { createStageVisualProfile } from "./stageVisualPresets";
 
 export const market95Layout: StageLayoutConfig = {
   stageId: "market_95",
@@ -63,11 +64,9 @@ export const market95Layout: StageLayoutConfig = {
     { x: 822, y: 76, text: "FRUTA 24H", color: "#5cc9ff", fontSize: "10px" },
     { x: 1390, y: 80, text: "BAR NAVAJA", color: "#ffe273", fontSize: "10px" },
   ],
-  ambientFx: {
-    rain: false,
-    fogAlpha: 0.08,
-    colorGrade: 0x1a1130,
-  },
+  visualProfile: createStageVisualProfile("industrialWarm", {
+    neonIntensity: 0.82,
+  }),
 };
 
 export const market95Spawns: StageSpawnZoneConfig[] = [

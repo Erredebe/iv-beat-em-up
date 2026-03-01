@@ -115,3 +115,11 @@ La base tecnica usa un pipeline visual runtime unico (sin rama legacy). Si vas a
 - `src/config/visual/fighterAnimationSets.ts`
 - `src/config/levels/stageCatalog.ts`
 - `src/scenes/StreetScene.ts`
+
+## Guia rapida: calibracion visual de stages
+
+- Perfil por stage en `src/config/levels/*` usando `visualProfile` (baseGradient, colorGrade, rainIntensity, neonIntensity y foregroundAccents).
+- Reutiliza moods desde `src/config/levels/stageVisualPresets.ts` y aplica overrides minimos por escenario.
+- Mantener overlays legibles: `colorGrade.alpha` recomendado `0.03-0.13`; evitar valores altos que apaguen sprites o hit sparks.
+- Ajusta `neonIntensity` entre `0.55-1` para que carteles destaquen sin competir con VFX de combate.
+- Usa `rainIntensity` `0-1` y valida en gameplay real (multienemigo + efectos de golpe) antes de cerrar cambios.
