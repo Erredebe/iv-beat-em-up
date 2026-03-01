@@ -11,12 +11,13 @@ interface RuntimeRadioMessage {
 export class NarrativeDirector {
   private readonly stageBundle: StageBundle;
   private readonly characterId: CharacterId;
-  private readonly beat = this.resolveBeat();
+  private readonly beat: (typeof storyBeatCatalog)[keyof typeof storyBeatCatalog] | null;
   private readonly queue: RuntimeRadioMessage[] = [];
 
   constructor(stageBundle: StageBundle, characterId: CharacterId) {
     this.stageBundle = stageBundle;
     this.characterId = characterId;
+    this.beat = this.resolveBeat();
   }
 
   onStageStart(nowMs: number): void {

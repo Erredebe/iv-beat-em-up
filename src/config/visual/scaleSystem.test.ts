@@ -23,9 +23,17 @@ describe("scale system contracts", () => {
   });
 
   it("keeps stage objects using valid specs with expected effective scales", () => {
+    const expectedScaleByTier = {
+      tiny: 0.2,
+      compact: 0.5,
+      standard: 1,
+      large: 1.5,
+      hero: 2,
+    } as const;
+
     for (const bundle of Object.values(stageCatalog)) {
       for (const object of bundle.layout.objects) {
-        const expectedScale = object.behavior.type === "breakable" ? 0.5 : 1;
+        const expectedScale = expectedScaleByTier[object.visual.scaleTier];
         expect(
           getSpriteSpec(object.visual.spriteSpecId).id,
           `${bundle.id}:${object.id} sprite spec is invalid`,

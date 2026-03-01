@@ -17,7 +17,8 @@ function applyIntegerScale(): void {
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
-  const scale = Math.max(1, Math.floor(Math.min(viewportWidth / BASE_WIDTH, viewportHeight / BASE_HEIGHT)));
+  const viewportScale = Math.min(viewportWidth / BASE_WIDTH, viewportHeight / BASE_HEIGHT);
+  const scale = viewportScale >= 1 ? Math.floor(viewportScale) : viewportScale;
   const displayWidth = BASE_WIDTH * scale;
   const displayHeight = BASE_HEIGHT * scale;
 
