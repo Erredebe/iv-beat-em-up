@@ -1,7 +1,6 @@
 import Phaser from "phaser";
 import {
   ATTACK_FRAME_MS,
-  CHARACTER_SCALE,
   FOOT_COLLIDER_HEIGHT,
   FOOT_COLLIDER_WIDTH,
   JUMP_GRAVITY,
@@ -15,6 +14,7 @@ import {
   type FighterAnimationSet,
 } from "../config/visual/fighterAnimationSets";
 import type { FighterVisualProfile, SpritePixelOffset } from "../config/visual/fighterVisualProfiles";
+import { FIGHTER_SCALE_REFERENCE, resolveScaleReference } from "../config/visual/scaleSystem";
 import { isFrameActive, isFrameInComboWindow } from "../systems/combatMath";
 import type { AttackFrameData, AttackId, DamageEvent, FighterState, Rect, Team } from "../types/combat";
 import type { NavigationSystem, NavigationZoneState } from "../systems/NavigationSystem";
@@ -509,8 +509,12 @@ export class BaseFighter {
       stateOffsetByState[state] = { x: 0, y: 0 };
       baselineOffsetByState[state] = 0;
     }
+    const scaleTier = FIGHTER_SCALE_REFERENCE.scaleTier;
+    const spriteSpecId = FIGHTER_SCALE_REFERENCE.spriteSpecId;
     return {
-      scale: CHARACTER_SCALE as 1 | 2 | 3,
+      scaleTier,
+      spriteSpecId,
+      scale: resolveScaleReference({ scaleTier, spriteSpecId }),
       shadowWidth: 22,
       shadowHeight: 8,
       spriteAnchorOffsetY: 8,

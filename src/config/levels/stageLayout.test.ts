@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { derivedTextureCrops } from "../assets/derivedTextureCrops";
+import { resolveScaleReference } from "../visual/scaleSystem";
 import { stageCatalog } from "./stageCatalog";
 import { getStageWalkRails, type StageLayoutConfig } from "./stageTypes";
 
@@ -74,8 +75,9 @@ function validatePropFootprints(layout: StageLayoutConfig): void {
     }
 
     const sourceSize = getPropSourceSize(prop.textureKey);
-    const renderedWidth = sourceSize.width * prop.scale;
-    const renderedHeight = sourceSize.height * prop.scale;
+    const scale = resolveScaleReference({ scaleTier: prop.scaleTier, spriteSpecId: prop.spriteSpecId });
+    const renderedWidth = sourceSize.width * scale;
+    const renderedHeight = sourceSize.height * scale;
     const lowerBandTopY = prop.y - renderedHeight * 0.25;
 
     const footprintTop = footprint.y - footprint.height * 0.5;

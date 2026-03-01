@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type { BaseFighter } from "../entities/BaseFighter";
 import type { StageBreakablePropConfig } from "../config/levels/stageTypes";
+import { resolveScaleReference } from "../config/visual/scaleSystem";
 import type { DepthSystem } from "./DepthSystem";
 import type { CollisionSystem, GroundObstacle } from "./CollisionSystem";
 import { resolveBreakablePickupDrop, type BreakablePickupSpawn } from "./breakableDropResolver";
@@ -57,15 +58,19 @@ export class BreakablePropSystem {
     this.randomFn = randomFn;
 
     for (const config of props) {
+      const scale = resolveScaleReference({
+        scaleTier: config.scaleTier,
+        spriteSpecId: config.spriteSpecId,
+      });
       const sprite = scene.add
         .image(config.x, config.y, config.textureKey)
         .setOrigin(config.originX, config.originY)
-        .setScale(config.scale * 0.5)
+        .setScale(scale)
         .setTint(0xb8c7d2);
       depthSystem.register(sprite, 0, undefined, 6);
 
-      const width = sprite.width * config.scale * 0.5;
-      const height = sprite.height * config.scale * 0.5;
+      const width = sprite.width * scale;
+      const height = sprite.height * scale;
       const left = config.x - width * config.originX;
       const top = config.y - height * config.originY;
       const footprintWidth = Math.max(18, Math.min(width, Math.round(width * 0.58)));

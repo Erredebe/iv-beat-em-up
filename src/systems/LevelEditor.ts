@@ -7,6 +7,12 @@ import {
   type StagePropConfig,
 } from "../config/levels/street95Zone1";
 import { cloneSpawnZones, type StageSpawnZoneConfig } from "../config/levels/street95Zone1Spawns";
+import {
+  SCALE_TIER_ORDER,
+  STAGE_PROP_SCALE_REFERENCE,
+  resolveScaleReference,
+  type ScaleTier,
+} from "../config/visual/scaleSystem";
 
 type EditorTool = "prop" | "collision" | "spawn" | "zone" | "lane";
 type ZoneAnchor = "triggerX" | "leftBarrierX" | "rightBarrierX";
@@ -14,7 +20,7 @@ type LaneAnchor = "topY" | "bottomY" | "playerSpawnY";
 
 const EDITOR_TOOLS: EditorTool[] = ["prop", "collision", "spawn", "zone", "lane"];
 const PROP_TEXTURE_OPTIONS = ["prop_booth_front", "prop_container", "prop_crate"] as const;
-const SCALE_OPTIONS: Array<1 | 2 | 3 | 4> = [1, 2, 3, 4];
+const SCALE_OPTIONS: ScaleTier[] = SCALE_TIER_ORDER;
 
 interface EditorKeyMap {
   toggle: Phaser.Input.Keyboard.Key;
@@ -299,13 +305,13 @@ export class LevelEditor {
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.increase)) {
-      const currentIndex = SCALE_OPTIONS.indexOf(selected.scale);
-      selected.scale = SCALE_OPTIONS[Math.min(SCALE_OPTIONS.length - 1, currentIndex + 1)]!;
+      const currentIndex = SCALE_OPTIONS.indexOf(selected.scaleTier);
+      selected.scaleTier = SCALE_OPTIONS[Math.min(SCALE_OPTIONS.length - 1, currentIndex + 1)]!;
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.decrease)) {
-      const currentIndex = SCALE_OPTIONS.indexOf(selected.scale);
-      selected.scale = SCALE_OPTIONS[Math.max(0, currentIndex - 1)]!;
+      const currentIndex = SCALE_OPTIONS.indexOf(selected.scaleTier);
+      selected.scaleTier = SCALE_OPTIONS[Math.max(0, currentIndex - 1)]!;
     }
   }
 
@@ -453,7 +459,8 @@ export class LevelEditor {
           y: this.pointerWorldY,
           originX: 0.5,
           originY: 1,
-          scale: 2,
+          scaleTier: STAGE_PROP_SCALE_REFERENCE.scaleTier,
+          spriteSpecId: STAGE_PROP_SCALE_REFERENCE.spriteSpecId,
           depthOffset: 0,
         };
         this.layout.props.push(prop);
@@ -744,7 +751,8 @@ export class LevelEditor {
     if (this.currentTool() === "prop") {
       const prop = this.layout.props[this.selectedPropIndex];
       if (prop) {
-        detailLines.push(`Q/E textura | R/F escala | SEL ${prop.id} ${prop.textureKey} x${prop.scale}`);
+        const scale = resolveScaleReference({ scaleTier: prop.scaleTier, spriteSpecId: prop.spriteSpecId });
+        detailLines.push(`Q/E textura | R/F escala | SEL ${prop.id} ${prop.textureKey} ${prop.scaleTier} (${scale}x)`);
         detailLines.push(`Pos ${Math.round(prop.x)},${Math.round(prop.y)} Origin ${prop.originX},${prop.originY}`);
       }
     } else if (this.currentTool() === "collision") {
@@ -873,8 +881,9 @@ export class LevelEditor {
   private getPropSize(prop: StagePropConfig): { width: number; height: number } {
     const texture = this.scene.textures.get(prop.textureKey);
     const source = texture?.getSourceImage() as { width?: number; height?: number } | undefined;
-    const width = (source?.width ?? 32) * prop.scale;
-    const height = (source?.height ?? 48) * prop.scale;
+    const scale = resolveScaleReference({ scaleTier: prop.scaleTier, spriteSpecId: prop.spriteSpecId });
+    const width = (source?.width ?? 32) * scale;
+    const height = (source?.height ?? 48) * scale;
     return { width, height };
   }
 

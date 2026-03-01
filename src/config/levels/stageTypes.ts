@@ -1,4 +1,5 @@
 import type { StageId } from "../gameplay/campaign";
+import type { ScaleTier, SpriteSpecId } from "../visual/scaleSystem";
 
 export interface StageLayerConfig {
   id: "facade" | "sidewalk" | "road" | "foreground_deco";
@@ -15,7 +16,8 @@ export interface StagePropConfig {
   y: number;
   originX: number;
   originY: number;
-  scale: 1 | 2 | 3 | 4;
+  scaleTier: ScaleTier;
+  spriteSpecId: SpriteSpecId;
   depthAnchorY?: number;
   depthOffset: number;
 }
@@ -36,7 +38,8 @@ export interface StageBreakablePropConfig {
   y: number;
   originX: number;
   originY: number;
-  scale: 1 | 2 | 3 | 4;
+  scaleTier: ScaleTier;
+  spriteSpecId: SpriteSpecId;
   maxHp: number;
   points: number;
   dropType?: "none" | "small_heal" | "medium_heal";
@@ -164,7 +167,8 @@ export function cloneStageLayoutConfig(layout: StageLayoutConfig): StageLayoutCo
       y: prop.y,
       originX: prop.originX,
       originY: prop.originY,
-      scale: prop.scale,
+      scaleTier: prop.scaleTier,
+      spriteSpecId: prop.spriteSpecId,
       depthAnchorY: prop.depthAnchorY,
       depthOffset: prop.depthOffset,
     })),
@@ -175,7 +179,8 @@ export function cloneStageLayoutConfig(layout: StageLayoutConfig): StageLayoutCo
       y: prop.y,
       originX: prop.originX,
       originY: prop.originY,
-      scale: prop.scale,
+      scaleTier: prop.scaleTier,
+      spriteSpecId: prop.spriteSpecId,
       maxHp: prop.maxHp,
       points: prop.points,
       dropType: prop.dropType,

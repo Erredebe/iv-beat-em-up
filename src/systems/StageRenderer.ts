@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT } from "../config/constants";
 import type { StageLayoutConfig } from "../config/levels/stageTypes";
+import { resolveScaleReference } from "../config/visual/scaleSystem";
 import type { CollisionSystem } from "./CollisionSystem";
 import type { DepthSystem } from "./DepthSystem";
 
@@ -93,10 +94,14 @@ export class StageRenderer {
     }
 
     const props = this.layout.props.map((config) => {
+      const scale = resolveScaleReference({
+        scaleTier: config.scaleTier,
+        spriteSpecId: config.spriteSpecId,
+      });
       const image = this.scene.add
         .image(config.x, config.y, config.textureKey)
         .setOrigin(config.originX, config.originY)
-        .setScale(config.scale * 0.5);
+        .setScale(scale);
       if (config.id.includes("crate") || config.id.includes("barrel") || config.id.includes("table")) {
         image
           .setTint(this.layout.visualProfile.foregroundAccents.crateTint)

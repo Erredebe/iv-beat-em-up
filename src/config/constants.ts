@@ -18,7 +18,6 @@ export const ENEMY_MOVE_SPEED = 96;
 export const FOOT_COLLIDER_WIDTH = 14;
 export const FOOT_COLLIDER_HEIGHT = 8;
 export const VISUAL_FEET_OFFSET = 2;
-export const CHARACTER_SCALE = 3;
 
 export const JUMP_INITIAL_VELOCITY = 360;
 export const JUMP_GRAVITY = 860;

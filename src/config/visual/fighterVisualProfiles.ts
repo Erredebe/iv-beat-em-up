@@ -1,5 +1,11 @@
 import type { FighterState } from "../../types/combat";
 import type { AnimationClipId, AnimationOwner } from "./fighterAnimationSets";
+import {
+  FIGHTER_SCALE_REFERENCE,
+  resolveScaleReference,
+  type ScaleTier,
+  type SpriteSpecId,
+} from "./scaleSystem";
 
 export interface SpritePixelOffset {
   x: number;
@@ -7,6 +13,8 @@ export interface SpritePixelOffset {
 }
 
 export interface FighterVisualProfile {
+  scaleTier: ScaleTier;
+  spriteSpecId: SpriteSpecId;
   scale: number;
   shadowWidth: number;
   shadowHeight: number;
@@ -77,8 +85,12 @@ function createVisualProfile(
     clipScaleByClip?: Partial<Record<AnimationClipId, number>>;
   },
 ): FighterVisualProfile {
+  const scaleTier = FIGHTER_SCALE_REFERENCE.scaleTier;
+  const spriteSpecId = FIGHTER_SCALE_REFERENCE.spriteSpecId;
   return {
-    scale: 0.5,
+    scaleTier,
+    spriteSpecId,
+    scale: resolveScaleReference({ scaleTier, spriteSpecId }),
     shadowWidth: options.shadowWidth,
     shadowHeight: options.shadowHeight,
     spriteAnchorOffsetY: 8,
