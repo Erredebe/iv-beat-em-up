@@ -24,7 +24,7 @@ Politica aplicada:
 `theme_a, theme_b, sfx_hit, sfx_hit_alt, sfx_jump, sfx_special_kastro, sfx_special_marina, sfx_special_meneillos, sfx_knockdown, sfx_break, sfx_ui`
 
 ### Derivaciones runtime
-`street_clean_tileset, prop_booth_front, prop_container, prop_window_panel, prop_crate, city_far_band, city_mid_band, city_close_band, hud_frame, ui_btn, hit_spark`
+`street_clean_tileset, prop_booth_front, prop_container, prop_container_green, prop_window_panel, prop_crate, city_far_band, city_mid_band, city_close_band, hud_frame, ui_btn, hit_spark`
 
 ## Fuentes y licencia
 

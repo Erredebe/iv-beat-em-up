@@ -17,7 +17,7 @@ export const market95Layout: StageLayoutConfig = defineStageLayout({
     { id: "rail_east", xStart: 1640, xEnd: 2560, topY: 178, bottomY: 224, preferredY: 201 },
   ],
   layers: [
-    { id: "facade", depth: 10, alpha: 1, targetRows: [1, 2, 3], sourceRows: [0, 1, 2] },
+    { id: "facade", depth: 10, alpha: 1, targetRows: [1, 2, 3], sourceRows: [0, 1, 1] },
     { id: "sidewalk", depth: 11, alpha: 1, targetRows: [4], sourceRows: [10] },
     { id: "road", depth: 12, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
     { id: "foreground_deco", depth: 500, alpha: 0.94, targetRows: [7], sourceRows: [9] },
@@ -27,7 +27,7 @@ export const market95Layout: StageLayoutConfig = defineStageLayout({
       id: "booth_a",
       visual: {
         textureKey: "prop_booth_front",
-        scaleTier: "standard",
+        scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
       },
       transform: {
@@ -43,9 +43,9 @@ export const market95Layout: StageLayoutConfig = defineStageLayout({
         color: 0x00c5ff,
         footprint: {
           mode: "explicit",
-          width: 66,
-          height: 14,
-          offsetY: -2,
+          width: 48,
+          height: 12,
+          offsetY: -1,
         },
       },
       behavior: {
@@ -55,8 +55,8 @@ export const market95Layout: StageLayoutConfig = defineStageLayout({
     {
       id: "container_a",
       visual: {
-        textureKey: "prop_container",
-        scaleTier: "standard",
+        textureKey: "prop_container_green",
+        scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
       },
       transform: {
@@ -72,8 +72,8 @@ export const market95Layout: StageLayoutConfig = defineStageLayout({
         color: 0xff5f7c,
         footprint: {
           mode: "explicit",
-          width: 96,
-          height: 16,
+          width: 36,
+          height: 10,
         },
       },
       behavior: {
@@ -84,7 +84,7 @@ export const market95Layout: StageLayoutConfig = defineStageLayout({
       id: "crate_1",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
@@ -127,7 +127,7 @@ export const market95Layout: StageLayoutConfig = defineStageLayout({
       id: "crate_2",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
@@ -170,7 +170,7 @@ export const market95Layout: StageLayoutConfig = defineStageLayout({
       id: "crate_3",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
@@ -213,7 +213,7 @@ export const market95Layout: StageLayoutConfig = defineStageLayout({
       id: "crate_4",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {

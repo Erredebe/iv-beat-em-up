@@ -314,7 +314,17 @@ export class StreetScene extends Phaser.Scene {
       return;
     }
 
-    if (this.controlsHintVisible && (time >= this.controlsHintUntil || this.inputManager.consumeBuffered("ui_confirm"))) {
+    if (
+      this.controlsHintVisible
+      && (
+        time >= this.controlsHintUntil
+        || this.inputManager.consumeBuffered("ui_confirm")
+        || this.inputManager.getMoveVector().lengthSq() > 0
+        || this.inputManager.isDown("attack")
+        || this.inputManager.isDown("jump")
+        || this.inputManager.isDown("special")
+      )
+    ) {
       this.controlsHintVisible = false;
     }
 
