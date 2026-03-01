@@ -56,10 +56,17 @@ describe("stage layout calibration", () => {
       expect(profile.baseGradient.bottomColor, `${bundle.id} gradient bottom missing`).toBeGreaterThan(0);
       expect(profile.colorGrade.alpha, `${bundle.id} color grade too weak`).toBeGreaterThanOrEqual(0.03);
       expect(profile.colorGrade.alpha, `${bundle.id} color grade too strong`).toBeLessThanOrEqual(0.13);
+      expect(["multiply", "screen", "overlay"], `${bundle.id} invalid blend mode`).toContain(profile.gradeBlendMode);
       expect(profile.rainIntensity, `${bundle.id} rain intensity out of range`).toBeGreaterThanOrEqual(0);
       expect(profile.rainIntensity, `${bundle.id} rain intensity out of range`).toBeLessThanOrEqual(1);
+      expect(profile.rainDriftSpeed, `${bundle.id} rain drift out of range`).toBeGreaterThanOrEqual(0);
+      expect(profile.rainDriftSpeed, `${bundle.id} rain drift out of range`).toBeLessThanOrEqual(1.2);
+      expect(profile.fogAlpha, `${bundle.id} fog alpha out of range`).toBeGreaterThanOrEqual(0);
+      expect(profile.fogAlpha, `${bundle.id} fog alpha out of range`).toBeLessThanOrEqual(0.22);
       expect(profile.neonIntensity, `${bundle.id} neon intensity out of range`).toBeGreaterThanOrEqual(0.55);
       expect(profile.neonIntensity, `${bundle.id} neon intensity out of range`).toBeLessThanOrEqual(1);
+      expect(profile.neonPulseHz, `${bundle.id} neon pulse out of range`).toBeGreaterThanOrEqual(0.2);
+      expect(profile.neonPulseHz, `${bundle.id} neon pulse out of range`).toBeLessThanOrEqual(3);
     }
   });
 });

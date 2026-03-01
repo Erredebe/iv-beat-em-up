@@ -264,7 +264,10 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
     { x: 1520, y: 76, text: "RUTA NORTE", color: "#ffe773", fontSize: "10px" },
   ],
   visualProfile: createStageVisualProfile("neonCoast", {
+    rainIntensity: 0,
+    fogAlpha: 0.03,
     neonIntensity: 1,
+    neonPulseHz: 2.2,
     foregroundAccents: {
       skylineFar: 0x5f89c4,
       skylineMid: 0x6fa0cc,
@@ -282,6 +285,10 @@ export const playaNocheSpawns: StageSpawnZoneConfig[] = [
     id: "playa_zone_1",
     triggerX: 360,
     lockType: "full_lock",
+    objective: {
+      type: "clear_all",
+    },
+    reinforcementPolicy: "burst",
     barrier: {
       topGap: 54,
       bottomGap: 126,
@@ -299,6 +306,11 @@ export const playaNocheSpawns: StageSpawnZoneConfig[] = [
     id: "playa_zone_2",
     triggerX: 1160,
     lockType: "soft_lock",
+    objective: {
+      type: "hold_line",
+      holdDurationSec: 24,
+    },
+    reinforcementPolicy: "staggered",
     leftBarrierX: 1120,
     rightBarrierX: 1840,
     spawns: [

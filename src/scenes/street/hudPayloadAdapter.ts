@@ -1,5 +1,12 @@
 import type { PlayableCharacterProfile } from "../../config/gameplay/playableRoster";
-import type { HudBindingHints, HudPayload, HudTargetEnemyPayload, HudVisibleEnemyPayload } from "../../config/ui/hudPayload";
+import type {
+  HudBindingHints,
+  HudObjectiveProgressPayload,
+  HudPayload,
+  HudTargetEnemyPayload,
+  HudThreatLevel,
+  HudVisibleEnemyPayload,
+} from "../../config/ui/hudPayload";
 import type { EnemyBasic } from "../../entities/EnemyBasic";
 import type { Player } from "../../entities/Player";
 
@@ -26,6 +33,9 @@ export interface StreetHudPayloadInput {
   isGameOver: boolean;
   zoneMessage: string | null;
   objectiveText: string;
+  objectiveProgress: HudObjectiveProgressPayload | null;
+  threatLevel: HudThreatLevel;
+  radioMessage: string | null;
   bindingHints: HudBindingHints;
 }
 
@@ -62,6 +72,9 @@ export function buildStreetHudPayload(input: StreetHudPayloadInput): HudPayload 
     isGameOver: input.isGameOver,
     zoneMessage: input.zoneMessage,
     objectiveText: input.objectiveText,
+    objectiveProgress: input.objectiveProgress,
+    threatLevel: input.threatLevel,
+    radioMessage: input.radioMessage,
     bindingHints: input.bindingHints,
   };
 }

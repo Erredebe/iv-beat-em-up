@@ -25,4 +25,12 @@ describe("enemy roster", () => {
     expect(ENEMY_PROFILES.rusher.railSwitchAggressiveness).toBeGreaterThan(ENEMY_PROFILES.tank.railSwitchAggressiveness);
     expect(ENEMY_PROFILES.mini_boss.railSnapTolerance).toBeGreaterThan(ENEMY_PROFILES.agile_f.railSnapTolerance);
   });
+
+  it("defines pressure and flank tuning per archetype", () => {
+    for (const profile of Object.values(ENEMY_PROFILES)) {
+      expect(profile.pressureBias).toBeGreaterThan(0);
+      expect(profile.flankBias).toBeGreaterThanOrEqual(0);
+      expect(profile.flankBias).toBeLessThanOrEqual(1);
+    }
+  });
 });

@@ -3,6 +3,7 @@ export type Team = "player" | "enemy";
 export type FighterState =
   | "IDLE"
   | "WALK"
+  | "BACKSTEP"
   | "ATTACK_1"
   | "ATTACK_2"
   | "ATTACK_3"
@@ -18,9 +19,19 @@ export type AttackId =
   | "ATTACK_1"
   | "ATTACK_2"
   | "ATTACK_3"
+  | "FINISHER_FORWARD"
+  | "FINISHER_BACK"
   | "AIR_ATTACK"
   | "SPECIAL"
   | "ENEMY_ATTACK";
+
+export type ComboBranchInput = "neutral" | "forward" | "back";
+
+export interface ComboBranchByInput {
+  neutral?: AttackId;
+  forward?: AttackId;
+  back?: AttackId;
+}
 
 export type AttackVisualClipId =
   | "attack1"
@@ -58,6 +69,7 @@ export interface AttackFrameData {
   hitStunMs: number;
   knockdownDurationMs: number;
   nextAttack?: AttackId;
+  branchByInput?: ComboBranchByInput;
   hitbox: HitboxShape;
   grantsInvulnMs?: number;
   visualClipId?: AttackVisualClipId;

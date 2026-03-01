@@ -1,4 +1,4 @@
-import type Phaser from "phaser";
+import Phaser from "phaser";
 import type { AttackFrameData, AttackId, AttackVisualClipId } from "../types/combat";
 import { BaseFighter } from "./BaseFighter";
 import {
@@ -12,6 +12,8 @@ export { ENEMY_PROFILES };
 
 export class EnemyBasic extends BaseFighter {
   private nextAttackAt = 0;
+  private attackWindupUntil = 0;
+  private attackWindupDurationMs = 0;
   readonly combatProfile: EnemyCombatProfile;
 
   constructor(scene: Phaser.Scene, config: ConstructorParameters<typeof BaseFighter>[1], archetype: EnemyArchetype = "brawler") {
@@ -23,8 +25,54 @@ export class EnemyBasic extends BaseFighter {
     return nowMs >= this.nextAttackAt && this.canAcceptCommands();
   }
 
+  startAttackWindup(nowMs: number, durationMs: number): boolean {
+    if (this.attackWindupUntil > 0 || !this.canAcceptCommands()) {
+      return false;
+    }
+    this.attackWindupDurationMs = Math.max(1, durationMs);
+    this.attackWindupUntil = nowMs + this.attackWindupDurationMs;
+    return true;
+  }
+
+  isAttackWindupActive(nowMs: number): boolean {
+    return this.attackWindupUntil > 0 && nowMs < this.attackWindupUntil;
+  }
+
+  isAttackWindupReady(nowMs: number): boolean {
+    return this.attackWindupUntil > 0 && nowMs >= this.attackWindupUntil;
+  }
+
+  getAttackWindupRatio(nowMs: number): number {
+    if (this.attackWindupUntil <= 0 || this.attackWindupDurationMs <= 0) {
+      return 0;
+    }
+    const elapsed = this.attackWindupDurationMs - Math.max(0, this.attackWindupUntil - nowMs);
+    return Math.min(1, elapsed / this.attackWindupDurationMs);
+  }
+
+  clearAttackWindup(): void {
+    this.attackWindupUntil = 0;
+    this.attackWindupDurationMs = 0;
+  }
+
   markAttackUsed(nowMs: number, cooldownMs = this.combatProfile.attackCooldownMs): void {
+    this.clearAttackWindup();
     this.nextAttackAt = nowMs + cooldownMs;
+  }
+
+  update(deltaMs: number, nowMs: number): void {
+    super.update(deltaMs, nowMs);
+    this.applyAttackTelegraphVisual(nowMs);
+  }
+
+  private applyAttackTelegraphVisual(nowMs: number): void {
+    if (!this.isAttackWindupActive(nowMs)) {
+      return;
+    }
+    const ratio = this.getAttackWindupRatio(nowMs);
+    const pulse = 0.35 + 0.65 * Math.sin((ratio * Math.PI) * 2.4);
+    this.sprite.setTint(0xff8a8a);
+    this.sprite.setAlpha(Phaser.Math.Clamp(0.82 + pulse * 0.18, 0.8, 1));
   }
 }
 
@@ -60,6 +108,8 @@ export function buildEnemyAttackData(
     ATTACK_1: { ...source.ATTACK_1, visualClipId: "attack1", hitboxMode: "forward", maxHitsPerTarget: 1 },
     ATTACK_2: { ...source.ATTACK_2, visualClipId: "attack2", hitboxMode: "forward", maxHitsPerTarget: 1 },
     ATTACK_3: { ...source.ATTACK_3, visualClipId: "attack3", hitboxMode: "forward", maxHitsPerTarget: 1 },
+    FINISHER_FORWARD: { ...source.ATTACK_3, visualClipId: "attack3", hitboxMode: "forward", maxHitsPerTarget: 1 },
+    FINISHER_BACK: { ...source.ATTACK_2, visualClipId: "attack2", hitboxMode: "forward", maxHitsPerTarget: 1 },
     AIR_ATTACK: { ...source.AIR_ATTACK, visualClipId: "airAttack", hitboxMode: "forward", maxHitsPerTarget: 1 },
     SPECIAL: { ...source.SPECIAL, visualClipId: "special", hitboxMode: "forward", maxHitsPerTarget: 1 },
     ENEMY_ATTACK: enemyBase,

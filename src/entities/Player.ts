@@ -1,6 +1,7 @@
 import { SPECIAL_COOLDOWN_MS, SPECIAL_HP_COST_RATIO } from "../config/constants";
+import { featureFlags } from "../config/features";
 import type { PlayableCharacterProfile, SpecialProfileId } from "../config/gameplay/playableRoster";
-import type { AttackFrameData, AttackId } from "../types/combat";
+import type { AttackFrameData, AttackId, ComboBranchInput } from "../types/combat";
 import { BaseFighter } from "./BaseFighter";
 import type { InputManager } from "../systems/InputManager";
 
@@ -8,6 +9,7 @@ export interface PlayerUpdateEvents {
   attackStarted: boolean;
   jumpStarted: boolean;
   specialStarted: boolean;
+  backstepStarted: boolean;
 }
 
 export class Player extends BaseFighter {
@@ -18,6 +20,7 @@ export class Player extends BaseFighter {
       attackStarted: false,
       jumpStarted: false,
       specialStarted: false,
+      backstepStarted: false,
     };
 
     const move = input.getMoveVector();
@@ -43,6 +46,9 @@ export class Player extends BaseFighter {
         }
       } else if (input.consumeBuffered("jump") && !this.isAirborne()) {
         events.jumpStarted = this.startJump();
+      } else if (featureFlags.combatDepthV2 && input.consumeBufferedBackstep(this.facing)) {
+        const direction: -1 | 1 = this.facing === 1 ? -1 : 1;
+        events.backstepStarted = this.startBackstep(nowMs, direction);
       } else if (input.consumeBuffered("attack")) {
         events.attackStarted = this.tryStartAttack("ATTACK_1");
       }
@@ -73,7 +79,10 @@ export class Player extends BaseFighter {
 
     if ((currentAttack === "ATTACK_1" || currentAttack === "ATTACK_2") && this.isInComboWindow()) {
       if (input.consumeBuffered("attack")) {
-        const nextAttack = currentData.nextAttack;
+        const branchInput = this.resolveComboBranchInput(input);
+        const nextAttack = featureFlags.combatDepthV2
+          ? currentData.branchByInput?.[branchInput] ?? currentData.nextAttack
+          : currentData.nextAttack;
         if (nextAttack) {
           this.queueNextAttack(nextAttack);
         }
@@ -91,6 +100,15 @@ export class Player extends BaseFighter {
     if (chordPressed || singleAttack) {
       events.attackStarted = this.tryStartAttack("AIR_ATTACK");
     }
+  }
+
+  private resolveComboBranchInput(input: InputManager): ComboBranchInput {
+    const moveX = input.getMoveVector().x;
+    if (Math.abs(moveX) <= 0.35) {
+      return "neutral";
+    }
+    const movingForward = this.facing === 1 ? moveX > 0 : moveX < 0;
+    return movingForward ? "forward" : "back";
   }
 }
 
@@ -179,6 +197,34 @@ function buildSpecialByProfile(base: AttackFrameData, profileId: SpecialProfileI
   });
 }
 
+function buildDirectionalFinisher(base: AttackFrameData, type: "forward" | "back"): AttackFrameData {
+  if (type === "forward") {
+    return applyCommonAttackDefaults({
+      ...base,
+      damage: Math.max(base.damage, 28),
+      knockbackX: Math.max(base.knockbackX, 172),
+      causesKnockdown: true,
+      hitStopMs: Math.max(base.hitStopMs, 84),
+      hitStunMs: Math.max(base.hitStunMs, 292),
+      selfMoveXPerFrame: 1.4,
+      selfMoveActiveStart: Math.max(1, base.activeStart - 1),
+      selfMoveActiveEnd: base.activeEnd + 1,
+    });
+  }
+
+  return applyCommonAttackDefaults({
+    ...base,
+    damage: Math.max(18, Math.round(base.damage * 0.82)),
+    knockbackX: Math.max(96, Math.round(base.knockbackX * 0.68)),
+    causesKnockdown: false,
+    hitStopMs: Math.max(base.hitStopMs, 62),
+    hitStunMs: Math.max(base.hitStunMs, 220),
+    selfMoveXPerFrame: -0.52,
+    selfMoveActiveStart: base.activeStart,
+    selfMoveActiveEnd: base.activeEnd,
+  });
+}
+
 export function buildPlayerAttackData(
   raw: Record<string, AttackFrameData>,
   profile: PlayableCharacterProfile,
@@ -187,6 +233,8 @@ export function buildPlayerAttackData(
     ATTACK_1: { ...raw.ATTACK_1, visualClipId: "attack1" as const },
     ATTACK_2: { ...raw.ATTACK_2, visualClipId: "attack2" as const },
     ATTACK_3: { ...raw.ATTACK_3, visualClipId: "attack3" as const },
+    FINISHER_FORWARD: { ...(raw.FINISHER_FORWARD ?? raw.ATTACK_3), visualClipId: "attack3" as const },
+    FINISHER_BACK: { ...(raw.FINISHER_BACK ?? raw.ATTACK_3), visualClipId: "attack2" as const },
     AIR_ATTACK: { ...raw.AIR_ATTACK, visualClipId: "airAttack" as const },
     SPECIAL: { ...raw.SPECIAL, visualClipId: "special" as const },
     ENEMY_ATTACK: { ...raw.ATTACK_1, visualClipId: "attack1" as const },
@@ -195,14 +243,25 @@ export function buildPlayerAttackData(
   const scaledAttack1 = applyCommonAttackDefaults(scaleFrameData(withClips.ATTACK_1, profile));
   const scaledAttack2 = applyCommonAttackDefaults(scaleFrameData(withClips.ATTACK_2, profile));
   const scaledAttack3 = applyCommonAttackDefaults(scaleFrameData(withClips.ATTACK_3, profile));
+  const scaledFinisherForward = buildDirectionalFinisher(scaleFrameData(withClips.FINISHER_FORWARD, profile), "forward");
+  const scaledFinisherBack = buildDirectionalFinisher(scaleFrameData(withClips.FINISHER_BACK, profile), "back");
   const scaledAirAttack = applyCommonAttackDefaults(scaleFrameData(withClips.AIR_ATTACK, profile));
   const scaledSpecialBase = scaleFrameData(withClips.SPECIAL, profile);
   const scaledSpecial = buildSpecialByProfile(scaledSpecialBase, profile.specialProfileId);
 
   return {
     ATTACK_1: scaledAttack1,
-    ATTACK_2: scaledAttack2,
+    ATTACK_2: {
+      ...scaledAttack2,
+      branchByInput: scaledAttack2.branchByInput ?? {
+        neutral: "ATTACK_3",
+        forward: "FINISHER_FORWARD",
+        back: "FINISHER_BACK",
+      },
+    },
     ATTACK_3: scaledAttack3,
+    FINISHER_FORWARD: scaledFinisherForward,
+    FINISHER_BACK: scaledFinisherBack,
     AIR_ATTACK: scaledAirAttack,
     SPECIAL: scaledSpecial,
     ENEMY_ATTACK: scaledAttack1,

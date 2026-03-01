@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 import {
   ATTACK_FRAME_MS,
+  BACKSTEP_DURATION_MS,
+  BACKSTEP_SPEED,
   FOOT_COLLIDER_HEIGHT,
   FOOT_COLLIDER_WIDTH,
   JUMP_GRAVITY,
@@ -47,6 +49,7 @@ const ZERO_OFFSET: SpritePixelOffset = { x: 0, y: 0 };
 const FIGHTER_STATES: FighterState[] = [
   "IDLE",
   "WALK",
+  "BACKSTEP",
   "ATTACK_1",
   "ATTACK_2",
   "ATTACK_3",
@@ -97,6 +100,8 @@ export class BaseFighter {
   private hitUntil = 0;
   private knockdownUntil = 0;
   private getupUntil = 0;
+  private backstepUntil = 0;
+  private backstepDirection: -1 | 1 = -1;
   private jumpHeight = 0;
   private jumpVelocity = 0;
   private airborne = false;
@@ -210,6 +215,9 @@ export class BaseFighter {
       return false;
     }
     if (this.state === "HIT" || this.state === "KNOCKDOWN" || this.state === "GETUP") {
+      return false;
+    }
+    if (this.state === "BACKSTEP") {
       return false;
     }
     return this.attackRuntime === null;
@@ -427,6 +435,7 @@ export class BaseFighter {
     this.externalVelocity.y = 0;
 
     this.attackRuntime = null;
+    this.backstepUntil = 0;
 
     if (this.hp <= 0) {
       this.state = "DEAD";
@@ -460,6 +469,18 @@ export class BaseFighter {
     this.jumpHeight = 1;
     this.jumpVelocity = JUMP_INITIAL_VELOCITY;
     this.state = "JUMP";
+    this.forceClipRestart = true;
+    return true;
+  }
+
+  startBackstep(nowMs: number, direction: -1 | 1): boolean {
+    if (this.airborne || !this.canAcceptCommands()) {
+      return false;
+    }
+    this.state = "BACKSTEP";
+    this.backstepDirection = direction;
+    this.backstepUntil = nowMs + BACKSTEP_DURATION_MS;
+    this.grantInvulnerability(Math.round(BACKSTEP_DURATION_MS * 0.66), nowMs);
     this.forceClipRestart = true;
     return true;
   }
@@ -547,6 +568,12 @@ export class BaseFighter {
 
     if (this.state === "GETUP" && nowMs >= this.getupUntil) {
       this.state = "IDLE";
+      this.forceClipRestart = true;
+    }
+
+    if (this.state === "BACKSTEP" && nowMs >= this.backstepUntil) {
+      this.state = "IDLE";
+      this.backstepUntil = 0;
       this.forceClipRestart = true;
     }
   }
@@ -638,7 +665,7 @@ export class BaseFighter {
     }
 
     const lockedMove =
-      this.state === "HIT" || this.state === "KNOCKDOWN" || this.state === "GETUP" || this.isPerformingAttack();
+      this.state === "HIT" || this.state === "KNOCKDOWN" || this.state === "GETUP" || this.isPerformingAttack() || this.state === "BACKSTEP";
     const moveX = lockedMove ? 0 : this.moveIntent.x;
     const moveY = lockedMove ? 0 : this.moveIntent.y;
 
@@ -649,7 +676,8 @@ export class BaseFighter {
     }
 
     const speed = this.airborne ? this.moveSpeed * 0.84 : this.moveSpeed;
-    const velocityX = moveX * speed + this.externalVelocity.x;
+    const backstepVelocityX = this.state === "BACKSTEP" ? this.backstepDirection * BACKSTEP_SPEED : 0;
+    const velocityX = moveX * speed + backstepVelocityX + this.externalVelocity.x;
     const velocityY = moveY * speed + this.externalVelocity.y;
     body.setVelocity(velocityX, velocityY);
 
@@ -782,6 +810,9 @@ export class BaseFighter {
     if (state === "WALK") {
       return "walk";
     }
+    if (state === "BACKSTEP") {
+      return "walk";
+    }
     if (state === "IDLE" || state === "JUMP") {
       return "idle";
     }
@@ -842,6 +873,14 @@ export class BaseFighter {
     }
     if (attackId === "ATTACK_3") {
       this.state = "ATTACK_3";
+      return;
+    }
+    if (attackId === "FINISHER_FORWARD") {
+      this.state = "ATTACK_3";
+      return;
+    }
+    if (attackId === "FINISHER_BACK") {
+      this.state = "ATTACK_2";
       return;
     }
     if (attackId === "AIR_ATTACK") {

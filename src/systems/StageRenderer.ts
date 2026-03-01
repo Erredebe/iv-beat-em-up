@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT } from "../config/constants";
+import { featureFlags } from "../config/features";
 import {
   isBreakableStageObject,
   resolveStageObjectCollisionFootprint,
@@ -39,8 +40,10 @@ export class StageRenderer {
   private runtimeParallax: RuntimeParallaxBand[] = [];
   private backgroundGradient: Phaser.GameObjects.Graphics | null = null;
   private gradeOverlay: Phaser.GameObjects.Rectangle | null = null;
+  private fogOverlay: Phaser.GameObjects.Rectangle | null = null;
   private neonTexts: Phaser.GameObjects.Text[] = [];
   private rainOverlay: Phaser.GameObjects.Graphics | null = null;
+  private rainDrift = 0;
 
   constructor(scene: Phaser.Scene, layout: StageLayoutConfig) {
     this.scene = scene;
@@ -193,6 +196,23 @@ export class StageRenderer {
     for (const band of this.runtimeParallax) {
       band.sprite.tilePositionX = Math.floor(scrollX * band.factor);
     }
+
+    if (featureFlags.visualPolishV3) {
+      const pulseHz = Math.max(0.2, this.layout.visualProfile.neonPulseHz);
+      const pulseAlpha = Phaser.Math.Clamp(
+        this.layout.visualProfile.neonIntensity * (0.82 + 0.18 * Math.sin((this.scene.time.now / 1000) * Math.PI * pulseHz)),
+        0.45,
+        1,
+      );
+      for (const neonText of this.neonTexts) {
+        neonText.setAlpha(pulseAlpha);
+      }
+    }
+
+    if (this.rainOverlay && this.layout.visualProfile.rainIntensity > 0.01) {
+      this.rainDrift += this.layout.visualProfile.rainDriftSpeed;
+      this.rainOverlay.setX(-((this.rainDrift * 0.6) % 24));
+    }
   }
 
   destroy(): void {
@@ -225,8 +245,11 @@ export class StageRenderer {
     this.backgroundGradient = null;
     this.gradeOverlay?.destroy();
     this.gradeOverlay = null;
+    this.fogOverlay?.destroy();
+    this.fogOverlay = null;
     this.rainOverlay?.destroy();
     this.rainOverlay = null;
+    this.rainDrift = 0;
     this.depthSystem = null;
   }
 
@@ -266,8 +289,22 @@ export class StageRenderer {
       Phaser.Math.Clamp(gradeConfig.alpha, 0.03, 0.13),
     );
     grade.setDepth(depthLayers.STAGE_COLOR_GRADE);
-    grade.setBlendMode(Phaser.BlendModes.MULTIPLY);
+    grade.setBlendMode(this.resolveBlendMode(this.layout.visualProfile.gradeBlendMode));
     this.gradeOverlay = grade;
+
+    if (featureFlags.visualPolishV3) {
+      const fog = this.scene.add.rectangle(
+        worldWidth * 0.5,
+        BASE_HEIGHT * 0.5,
+        worldWidth,
+        BASE_HEIGHT,
+        0xc8d9ff,
+        Phaser.Math.Clamp(this.layout.visualProfile.fogAlpha, 0, 0.22),
+      );
+      fog.setDepth(depthLayers.STAGE_COLOR_GRADE + 0.4);
+      fog.setBlendMode(Phaser.BlendModes.SCREEN);
+      this.fogOverlay = fog;
+    }
 
     const rainIntensity = Phaser.Math.Clamp(this.layout.visualProfile.rainIntensity, 0, 1);
     if (rainIntensity > 0.01) {
@@ -280,5 +317,15 @@ export class StageRenderer {
       }
       this.rainOverlay = rain;
     }
+  }
+
+  private resolveBlendMode(mode: "multiply" | "screen" | "overlay"): Phaser.BlendModes {
+    if (mode === "screen") {
+      return Phaser.BlendModes.SCREEN;
+    }
+    if (mode === "overlay") {
+      return Phaser.BlendModes.OVERLAY;
+    }
+    return Phaser.BlendModes.MULTIPLY;
   }
 }

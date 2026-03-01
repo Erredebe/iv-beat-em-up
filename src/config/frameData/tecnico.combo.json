@@ -65,6 +65,46 @@
       "height": 24
     }
   },
+  "FINISHER_FORWARD": {
+    "totalFrames": 34,
+    "activeStart": 11,
+    "activeEnd": 17,
+    "recoveryStart": 18,
+    "damage": 30,
+    "knockbackX": 166,
+    "causesKnockdown": true,
+    "hitStopMs": 88,
+    "iFrameMs": 210,
+    "hitStunMs": 298,
+    "knockdownDurationMs": 1020,
+    "visualClipId": "attack3",
+    "hitbox": {
+      "offsetX": 32,
+      "offsetY": -66,
+      "width": 40,
+      "height": 25
+    }
+  },
+  "FINISHER_BACK": {
+    "totalFrames": 27,
+    "activeStart": 9,
+    "activeEnd": 13,
+    "recoveryStart": 14,
+    "damage": 22,
+    "knockbackX": 98,
+    "causesKnockdown": false,
+    "hitStopMs": 64,
+    "iFrameMs": 190,
+    "hitStunMs": 232,
+    "knockdownDurationMs": 940,
+    "visualClipId": "attack2",
+    "hitbox": {
+      "offsetX": 24,
+      "offsetY": -64,
+      "width": 34,
+      "height": 23
+    }
+  },
   "AIR_ATTACK": {
     "totalFrames": 22,
     "activeStart": 8,

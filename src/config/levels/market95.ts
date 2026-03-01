@@ -264,7 +264,10 @@ export const market95Layout: StageLayoutConfig = defineStageLayout({
     { x: 1390, y: 80, text: "BAR NAVAJA", color: "#ffe273", fontSize: "10px" },
   ],
   visualProfile: createStageVisualProfile("industrialWarm", {
+    rainIntensity: 0.12,
+    fogAlpha: 0.05,
     neonIntensity: 0.82,
+    neonPulseHz: 1.1,
   }),
 });
 
@@ -273,6 +276,10 @@ export const market95Spawns: StageSpawnZoneConfig[] = [
     id: "market_zone_1",
     triggerX: 340,
     lockType: "full_lock",
+    objective: {
+      type: "clear_all",
+    },
+    reinforcementPolicy: "none",
     leftBarrierX: 92,
     rightBarrierX: 880,
     spawns: [
@@ -284,6 +291,11 @@ export const market95Spawns: StageSpawnZoneConfig[] = [
     id: "market_zone_2",
     triggerX: 1060,
     lockType: "partial_lock",
+    objective: {
+      type: "break_cache",
+      cacheObjectIds: ["crate_2", "crate_4"],
+    },
+    reinforcementPolicy: "staggered",
     barrier: {
       openRailIds: ["rail_mid"],
     },

@@ -18,6 +18,15 @@ export interface HudVisibleEnemyPayload {
   y: number;
 }
 
+export interface HudObjectiveProgressPayload {
+  label: string;
+  current: number;
+  target: number;
+  completed: boolean;
+}
+
+export type HudThreatLevel = "low" | "medium" | "high";
+
 export interface HudPayload {
   playerHp: number;
   playerMaxHp: number;
@@ -36,4 +45,7 @@ export interface HudPayload {
   zoneMessage: string | null;
   bindingHints: HudBindingHints;
   objectiveText: string;
+  objectiveProgress: HudObjectiveProgressPayload | null;
+  threatLevel: HudThreatLevel;
+  radioMessage: string | null;
 }

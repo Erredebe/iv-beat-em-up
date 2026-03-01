@@ -196,6 +196,8 @@ export interface StageColorGradeConfig {
   alpha: number;
 }
 
+export type StageGradeBlendMode = "multiply" | "screen" | "overlay";
+
 export interface StageForegroundAccentsConfig {
   skylineFar: number;
   skylineMid: number;
@@ -209,8 +211,12 @@ export interface StageForegroundAccentsConfig {
 export interface StageVisualProfile {
   baseGradient: StageBaseGradientConfig;
   colorGrade: StageColorGradeConfig;
+  gradeBlendMode: StageGradeBlendMode;
   rainIntensity: number;
+  rainDriftSpeed: number;
+  fogAlpha: number;
   neonIntensity: number;
+  neonPulseHz: number;
   foregroundAccents: StageForegroundAccentsConfig;
 }
 
@@ -407,8 +413,12 @@ function cloneStageLayoutDefinition(layout: StageLayoutDefinition): StageLayoutD
         color: layout.visualProfile.colorGrade.color,
         alpha: layout.visualProfile.colorGrade.alpha,
       },
+      gradeBlendMode: layout.visualProfile.gradeBlendMode,
       rainIntensity: layout.visualProfile.rainIntensity,
+      rainDriftSpeed: layout.visualProfile.rainDriftSpeed,
+      fogAlpha: layout.visualProfile.fogAlpha,
       neonIntensity: layout.visualProfile.neonIntensity,
+      neonPulseHz: layout.visualProfile.neonPulseHz,
       foregroundAccents: {
         skylineFar: layout.visualProfile.foregroundAccents.skylineFar,
         skylineMid: layout.visualProfile.foregroundAccents.skylineMid,
@@ -654,8 +664,12 @@ export function cloneStageLayoutConfig(layout: StageLayoutConfig): StageLayoutCo
         color: layout.visualProfile.colorGrade.color,
         alpha: layout.visualProfile.colorGrade.alpha,
       },
+      gradeBlendMode: layout.visualProfile.gradeBlendMode,
       rainIntensity: layout.visualProfile.rainIntensity,
+      rainDriftSpeed: layout.visualProfile.rainDriftSpeed,
+      fogAlpha: layout.visualProfile.fogAlpha,
       neonIntensity: layout.visualProfile.neonIntensity,
+      neonPulseHz: layout.visualProfile.neonPulseHz,
       foregroundAccents: {
         skylineFar: layout.visualProfile.foregroundAccents.skylineFar,
         skylineMid: layout.visualProfile.foregroundAccents.skylineMid,

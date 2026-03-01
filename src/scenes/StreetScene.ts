@@ -29,6 +29,7 @@ import { HitStopSystem } from "../systems/HitStopSystem";
 import { InputManager } from "../systems/InputManager";
 import { LevelEditor } from "../systems/LevelEditor";
 import { NavigationSystem } from "../systems/NavigationSystem";
+import { NarrativeDirector } from "../systems/NarrativeDirector";
 import { SpawnManager } from "../systems/SpawnManager";
 import { StageRenderer } from "../systems/StageRenderer";
 import type { AttackFrameData, AttackId } from "../types/combat";
@@ -42,6 +43,8 @@ interface ActiveHealPickup {
   parts: Phaser.GameObjects.Image[];
   healAmount: number;
 }
+
+type HitSparkTier = "light" | "heavy" | "special";
 
 const ENEMY_POINTS_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
   brawler: 120,
@@ -90,6 +93,8 @@ export class StreetScene extends Phaser.Scene {
   private score = 0;
   private stageEntryState = getSessionState();
   private selectedCharacter = getPlayableCharacter(this.stageEntryState.selectedCharacter);
+  private narrativeDirector!: NarrativeDirector;
+  private lastActiveZoneId: string | null = null;
   private playerAttackData!: Record<AttackId, AttackFrameData>;
   private readonly comboByCharacter = {
     kastro: boxeadorComboRaw,
@@ -111,6 +116,7 @@ export class StreetScene extends Phaser.Scene {
     this.zoneMessage = null;
     this.zoneMessageUntil = 0;
     this.announcedZoneId = null;
+    this.lastActiveZoneId = null;
     this.stageTransitionQueued = false;
     this.healPickups = [];
 
@@ -142,6 +148,7 @@ export class StreetScene extends Phaser.Scene {
 
     const character = getPlayableCharacter(this.stageEntryState.selectedCharacter);
     this.selectedCharacter = character;
+    this.narrativeDirector = new NarrativeDirector(this.stageBundle, character.id);
     const comboRaw = (
       featureFlags.combatRework
         ? this.comboByCharacter[character.id]
@@ -169,7 +176,7 @@ export class StreetScene extends Phaser.Scene {
       scene: this,
       getPlayerId: () => this.player.id,
       onCombatHitFeedback: ({ attackId, targetX, targetY, targetTeam }) => {
-        this.createHitSpark(targetX, targetY - 38);
+        this.createHitSpark(targetX, targetY - 38, this.resolveSparkTier(attackId));
         if (attackId === "SPECIAL") {
           this.flashScene();
         }
@@ -251,6 +258,9 @@ export class StreetScene extends Phaser.Scene {
     this.controlsHintUntil = this.time.now + CONTROLS_HINT_DURATION_MS;
     this.audioSystem.ensureStarted();
     this.audioSystem.switchTheme(this.stageBundle.theme);
+    if (featureFlags.loreCampaignV1) {
+      this.narrativeDirector.onStageStart(this.time.now);
+    }
     this.updateHud();
   }
 
@@ -318,7 +328,7 @@ export class StreetScene extends Phaser.Scene {
     }
 
     const playerEvents = this.player.updateFromInput(this.inputManager, delta, time);
-    if (playerEvents.attackStarted || playerEvents.jumpStarted || playerEvents.specialStarted) {
+    if (playerEvents.attackStarted || playerEvents.jumpStarted || playerEvents.specialStarted || playerEvents.backstepStarted) {
       this.controlsHintVisible = false;
     }
     if (playerEvents.jumpStarted) {
@@ -327,6 +337,9 @@ export class StreetScene extends Phaser.Scene {
     if (playerEvents.specialStarted) {
       this.audioSystem.playSpecial(this.selectedCharacter.specialSfxKey);
       this.flashScene();
+      if (featureFlags.loreCampaignV1) {
+        this.narrativeDirector.onSpecialUsed(time);
+      }
     }
 
     for (const enemy of this.enemies) {
@@ -334,7 +347,7 @@ export class StreetScene extends Phaser.Scene {
       enemy.update(delta, time);
     }
 
-    const spawnedEnemies = this.spawnManager.update(this.player.x);
+    const spawnedEnemies = this.spawnManager.update(this.player.x, time);
     if (spawnedEnemies.length > 0) {
       this.enemies.push(...spawnedEnemies);
     }
@@ -345,6 +358,12 @@ export class StreetScene extends Phaser.Scene {
     } else if (!activeZoneId) {
       this.announcedZoneId = null;
     }
+    if (this.lastActiveZoneId && !activeZoneId) {
+      if (featureFlags.loreCampaignV1) {
+        this.narrativeDirector.onZoneCleared(time);
+      }
+    }
+    this.lastActiveZoneId = activeZoneId;
 
     this.combatSystem.resolveHits([this.player, ...this.enemies], time);
     if (this.breakablePropSystem) {
@@ -354,7 +373,10 @@ export class StreetScene extends Phaser.Scene {
       }
       if (breakResult.brokenCount > 0) {
         this.audioSystem.playBreakableBreak();
-        this.createHitSpark(this.player.x + this.player.facing * 24, this.player.y - 24);
+        this.createHitSpark(this.player.x + this.player.facing * 24, this.player.y - 24, "heavy");
+        for (const brokenObjectId of breakResult.brokenPropIds) {
+          this.spawnManager.reportCacheObjectDestroyed(brokenObjectId);
+        }
       }
       if (breakResult.spawnedPickups.length > 0) {
         this.spawnHealPickups(breakResult.spawnedPickups);
@@ -413,6 +435,7 @@ export class StreetScene extends Phaser.Scene {
 
   private updateHud(): void {
     const nowMs = this.time.now;
+    const objectiveProgress = featureFlags.encounterObjectivesV1 ? this.spawnManager.getObjectiveProgress(nowMs) : null;
     const payload = buildStreetHudPayload({
       nowMs,
       camera: this.cameras.main,
@@ -430,6 +453,9 @@ export class StreetScene extends Phaser.Scene {
       isGameOver: !this.player.isAlive(),
       zoneMessage: this.zoneMessage,
       objectiveText: this.getObjectiveText(),
+      objectiveProgress,
+      threatLevel: this.resolveThreatLevel(),
+      radioMessage: featureFlags.loreCampaignV1 ? this.narrativeDirector.getActiveRadioMessage(nowMs) : null,
       bindingHints: this.inputManager.getBindingHints(),
     });
     this.game.events.emit("hud:update", payload);
@@ -441,6 +467,10 @@ export class StreetScene extends Phaser.Scene {
     }
 
     if (this.spawnManager.getActiveZoneId()) {
+      const objectiveProgress = this.spawnManager.getObjectiveProgress(this.time.now);
+      if (objectiveProgress) {
+        return `${objectiveProgress.label} (${objectiveProgress.current}/${objectiveProgress.target})`;
+      }
       const remaining = this.enemies.filter((enemy) => enemy.isAlive()).length;
       return `Derrota a los enemigos (${remaining} restantes)`;
     }
@@ -456,6 +486,17 @@ export class StreetScene extends Phaser.Scene {
     return "Zona despejada";
   }
 
+  private resolveThreatLevel(): "low" | "medium" | "high" {
+    const aliveEnemies = this.enemies.filter((enemy) => enemy.isAlive()).length;
+    if (aliveEnemies >= 7) {
+      return "high";
+    }
+    if (aliveEnemies >= 4) {
+      return "medium";
+    }
+    return "low";
+  }
+
   private announceZoneLock(zoneId: string, now: number): void {
     this.announcedZoneId = zoneId;
     const lockType = this.spawnManager.getZoneLockType(zoneId);
@@ -467,6 +508,9 @@ export class StreetScene extends Phaser.Scene {
     this.zoneMessageUntil = now + 3200;
     this.playBarrierLockFx(zoneId, lockType);
     this.audioSystem.playZoneLock();
+    if (featureFlags.loreCampaignV1) {
+      this.narrativeDirector.onZoneLock(now);
+    }
   }
 
   private playBarrierLockFx(zoneId: string, lockType: "full_lock" | "partial_lock" | "soft_lock" | null): void {
@@ -533,14 +577,32 @@ export class StreetScene extends Phaser.Scene {
     this.stageTransitionQueued = true;
     const nextStageId = getNextStageId(this.stageBundle.id);
     const elapsed = this.time.now - this.stageStartedAt;
+    const unlockedStoryFlag = this.stageBundle.storyBeatIds[0] ? `beat:${this.stageBundle.storyBeatIds[0]}` : `stage:${this.stageBundle.id}`;
+    const nextDistrictControl = {
+      ...this.stageEntryState.districtControl,
+      [this.stageBundle.districtId]: "allied" as const,
+    };
+    const nextStoryFlags = {
+      ...this.stageEntryState.storyFlags,
+      [unlockedStoryFlag]: true,
+    };
+    const nextDossiers = Array.from(new Set([...this.stageEntryState.unlockedDossiers, this.stageBundle.districtId]));
     updateSessionState({
       score: this.score,
       elapsedMs: this.stageEntryState.elapsedMs + elapsed,
       currentStageId: nextStageId ?? this.stageBundle.id,
+      districtControl: featureFlags.loreCampaignV1 ? nextDistrictControl : this.stageEntryState.districtControl,
+      storyFlags: featureFlags.loreCampaignV1 ? nextStoryFlags : this.stageEntryState.storyFlags,
+      unlockedDossiers: featureFlags.loreCampaignV1 ? nextDossiers : this.stageEntryState.unlockedDossiers,
     });
+    if (featureFlags.loreCampaignV1) {
+      this.narrativeDirector.onStageCleared(nowMs);
+    }
 
     if (nextStageId) {
-      this.zoneMessage = `Siguiente zona: ${getStageBundle(nextStageId).displayName}`;
+      this.zoneMessage = featureFlags.loreCampaignV1
+        ? this.narrativeDirector.getDebriefLine() ?? `Siguiente zona: ${getStageBundle(nextStageId).displayName}`
+        : `Siguiente zona: ${getStageBundle(nextStageId).displayName}`;
       this.zoneMessageUntil = nowMs + 1500;
       this.time.delayedCall(900, () => {
         this.scene.restart();
@@ -548,7 +610,9 @@ export class StreetScene extends Phaser.Scene {
       return;
     }
 
-    this.zoneMessage = "BARRIO RECUPERADO";
+    this.zoneMessage = featureFlags.loreCampaignV1
+      ? this.narrativeDirector.getDebriefLine() ?? "BARRIO RECUPERADO"
+      : "BARRIO RECUPERADO";
     this.zoneMessageUntil = nowMs + 3200;
     this.time.delayedCall(1700, () => {
       resetSessionState();
@@ -811,13 +875,27 @@ export class StreetScene extends Phaser.Scene {
     this.healPickups.length = 0;
   }
 
-  private createHitSpark(x: number, y: number): void {
-    const spark = this.add.image(x, y, "hit_spark").setScale(0.6).setTint(0xfff9c2).setDepth(depthLayers.FX_HIT);
+  private resolveSparkTier(attackId: AttackId): HitSparkTier {
+    if (attackId === "SPECIAL") {
+      return "special";
+    }
+    if (attackId === "ATTACK_3" || attackId === "FINISHER_FORWARD") {
+      return "heavy";
+    }
+    return "light";
+  }
+
+  private createHitSpark(x: number, y: number, tier: HitSparkTier = "light"): void {
+    const tint = tier === "special" ? 0x8ce8ff : tier === "heavy" ? 0xffd57a : 0xfff9c2;
+    const baseScale = tier === "special" ? 0.72 : tier === "heavy" ? 0.66 : 0.58;
+    const endScale = tier === "special" ? 1.08 : tier === "heavy" ? 0.98 : 0.88;
+    const duration = tier === "special" ? 130 : tier === "heavy" ? 118 : 104;
+    const spark = this.add.image(x, y, "hit_spark").setScale(baseScale).setTint(tint).setDepth(depthLayers.FX_HIT);
     this.tweens.add({
       targets: spark,
       alpha: { from: 0.95, to: 0 },
-      scale: { from: 0.6, to: 0.9 },
-      duration: 110,
+      scale: { from: baseScale, to: endScale },
+      duration,
       onComplete: () => spark.destroy(),
     });
   }

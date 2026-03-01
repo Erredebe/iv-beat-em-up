@@ -132,7 +132,7 @@ export function createActorRuntime(input: StreetActorRuntimeInput): StreetActorR
   let initialZoneId: string | null = null;
   if (input.stageBundle.spawns.length > 0) {
     initialZoneId = input.stageBundle.spawns[0].id;
-    enemies.push(...spawnManager.startWave(initialZoneId));
+    enemies.push(...spawnManager.startWave(initialZoneId, input.scene.time.now));
   }
 
   return {

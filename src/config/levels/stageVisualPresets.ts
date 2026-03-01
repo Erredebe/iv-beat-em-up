@@ -10,8 +10,12 @@ export const stageVisualPresets = {
       color: 0x161f31,
       alpha: 0.1,
     },
+    gradeBlendMode: "multiply",
     rainIntensity: 0.8,
+    rainDriftSpeed: 0.74,
+    fogAlpha: 0.08,
     neonIntensity: 0.92,
+    neonPulseHz: 1.8,
     foregroundAccents: {
       skylineFar: 0x7186aa,
       skylineMid: 0x7f8ea8,
@@ -31,8 +35,12 @@ export const stageVisualPresets = {
       color: 0x2f1c1a,
       alpha: 0.08,
     },
+    gradeBlendMode: "multiply",
     rainIntensity: 0.1,
+    rainDriftSpeed: 0.42,
+    fogAlpha: 0.05,
     neonIntensity: 0.78,
+    neonPulseHz: 1.2,
     foregroundAccents: {
       skylineFar: 0x8e7f71,
       skylineMid: 0x9d8b79,
@@ -52,8 +60,12 @@ export const stageVisualPresets = {
       color: 0x10283f,
       alpha: 0.11,
     },
+    gradeBlendMode: "screen",
     rainIntensity: 0,
+    rainDriftSpeed: 0,
+    fogAlpha: 0.04,
     neonIntensity: 1,
+    neonPulseHz: 2.1,
     foregroundAccents: {
       skylineFar: 0x6085b8,
       skylineMid: 0x6f93c3,
@@ -73,8 +85,12 @@ export const stageVisualPresets = {
       color: 0x2a1829,
       alpha: 0.12,
     },
+    gradeBlendMode: "overlay",
     rainIntensity: 0.64,
+    rainDriftSpeed: 0.68,
+    fogAlpha: 0.06,
     neonIntensity: 0.84,
+    neonPulseHz: 1.5,
     foregroundAccents: {
       skylineFar: 0x8d7390,
       skylineMid: 0x9d7f95,
@@ -92,8 +108,12 @@ export type StageVisualPresetId = keyof typeof stageVisualPresets;
 export interface StageVisualProfileOverrides {
   baseGradient?: Partial<StageVisualProfile["baseGradient"]>;
   colorGrade?: Partial<StageVisualProfile["colorGrade"]>;
+  gradeBlendMode?: StageVisualProfile["gradeBlendMode"];
   rainIntensity?: number;
+  rainDriftSpeed?: number;
+  fogAlpha?: number;
   neonIntensity?: number;
+  neonPulseHz?: number;
   foregroundAccents?: Partial<StageVisualProfile["foregroundAccents"]>;
 }
 
@@ -108,8 +128,12 @@ export function createStageVisualProfile(presetId: StageVisualPresetId, override
       color: overrides?.colorGrade?.color ?? preset.colorGrade.color,
       alpha: overrides?.colorGrade?.alpha ?? preset.colorGrade.alpha,
     },
+    gradeBlendMode: overrides?.gradeBlendMode ?? preset.gradeBlendMode,
     rainIntensity: overrides?.rainIntensity ?? preset.rainIntensity,
+    rainDriftSpeed: overrides?.rainDriftSpeed ?? preset.rainDriftSpeed,
+    fogAlpha: overrides?.fogAlpha ?? preset.fogAlpha,
     neonIntensity: overrides?.neonIntensity ?? preset.neonIntensity,
+    neonPulseHz: overrides?.neonPulseHz ?? preset.neonPulseHz,
     foregroundAccents: {
       skylineFar: overrides?.foregroundAccents?.skylineFar ?? preset.foregroundAccents.skylineFar,
       skylineMid: overrides?.foregroundAccents?.skylineMid ?? preset.foregroundAccents.skylineMid,

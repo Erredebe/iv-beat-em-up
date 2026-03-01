@@ -9,6 +9,10 @@ export interface FeatureFlags {
   enhancedSfx: boolean;
   uiThemeV2: boolean;
   hudMinimalPreset: boolean;
+  visualPolishV3: boolean;
+  combatDepthV2: boolean;
+  encounterObjectivesV1: boolean;
+  loreCampaignV1: boolean;
 }
 
 const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
@@ -20,8 +24,12 @@ const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   storyIntro: true,
   breakableProps: true,
   enhancedSfx: true,
-  uiThemeV2: false,
+  uiThemeV2: true,
   hudMinimalPreset: false,
+  visualPolishV3: true,
+  combatDepthV2: true,
+  encounterObjectivesV1: true,
+  loreCampaignV1: true,
 };
 
 const STORAGE_KEY = "spain90.featureFlags";

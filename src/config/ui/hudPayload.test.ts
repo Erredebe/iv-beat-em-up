@@ -21,6 +21,9 @@ describe("hud payload contract", () => {
       zoneMessage: null,
       bindingHints: { keyboard: [], gamepad: [] },
       objectiveText: "",
+      objectiveProgress: null,
+      threatLevel: "low",
+      radioMessage: null,
     };
 
     expect(payload.playerName.length).toBeGreaterThan(0);

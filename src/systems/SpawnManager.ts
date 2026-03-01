@@ -1,5 +1,11 @@
 import type { EnemyBasic } from "../entities/EnemyBasic";
-import { cloneSpawnZones, type StageSpawnPointConfig, type StageSpawnZoneConfig } from "../config/levels/stageSpawnTypes";
+import { featureFlags } from "../config/features";
+import {
+  cloneSpawnZones,
+  type StageSpawnPointConfig,
+  type StageSpawnZoneConfig,
+  type StageZoneObjectiveConfig,
+} from "../config/levels/stageSpawnTypes";
 import type { GroundObstacle, CollisionSystem } from "./CollisionSystem";
 import type { NavigationBlocker, NavigationZoneState } from "./NavigationSystem";
 
@@ -14,15 +20,27 @@ interface ZoneRuntime {
   id: string;
   triggerX: number;
   lockType: StageSpawnZoneConfig["lockType"];
+  objective: StageZoneObjectiveConfig;
+  reinforcementPolicy: StageSpawnZoneConfig["reinforcementPolicy"];
   spawns: StageSpawnPointConfig[];
   leftBarriers: GroundObstacle[];
   rightBarriers: GroundObstacle[];
   leftBarrierSegments: ZoneBarrierSegment[];
   rightBarrierSegments: ZoneBarrierSegment[];
+  holdStartedAt: number;
+  spawnedEnemyCount: number;
+  cacheDestroyedIds: Set<string>;
   started: boolean;
   active: boolean;
   cleared: boolean;
   enemies: EnemyBasic[];
+}
+
+export interface ZoneObjectiveProgress {
+  label: string;
+  current: number;
+  target: number;
+  completed: boolean;
 }
 
 export class SpawnManager {
@@ -54,11 +72,16 @@ export class SpawnManager {
         id: config.id,
         triggerX: config.triggerX,
         lockType: config.lockType,
+        objective: config.objective ?? { type: "clear_all" },
+        reinforcementPolicy: config.reinforcementPolicy ?? "none",
         spawns: config.spawns,
         leftBarriers,
         rightBarriers,
         leftBarrierSegments,
         rightBarrierSegments,
+        holdStartedAt: 0,
+        spawnedEnemyCount: 0,
+        cacheDestroyedIds: new Set<string>(),
         started: false,
         active: false,
         cleared: false,
@@ -67,12 +90,12 @@ export class SpawnManager {
     });
   }
 
-  update(playerX: number): EnemyBasic[] {
+  update(playerX: number, nowMs = 0): EnemyBasic[] {
     const spawned: EnemyBasic[] = [];
 
     for (const zone of this.zones) {
       if (!zone.started && playerX >= zone.triggerX) {
-        spawned.push(...this.startWave(zone.id));
+        spawned.push(...this.startWave(zone.id, nowMs));
       }
 
       if (!zone.active) {
@@ -81,7 +104,7 @@ export class SpawnManager {
 
       const alive = zone.enemies.filter((enemy) => enemy.isAlive());
       zone.enemies = alive;
-      if (alive.length === 0) {
+      if (this.isZoneObjectiveCompleted(zone, alive.length, nowMs)) {
         zone.active = false;
         zone.cleared = true;
         this.activeZoneId = null;
@@ -93,7 +116,7 @@ export class SpawnManager {
     return spawned;
   }
 
-  startWave(zoneId: string): EnemyBasic[] {
+  startWave(zoneId: string, nowMs = 0): EnemyBasic[] {
     const zone = this.zones.find((entry) => entry.id === zoneId);
     if (!zone || zone.started) {
       return [];
@@ -102,6 +125,9 @@ export class SpawnManager {
     zone.started = true;
     zone.active = true;
     zone.cleared = false;
+    zone.holdStartedAt = nowMs;
+    zone.spawnedEnemyCount = zone.spawns.length;
+    zone.cacheDestroyedIds.clear();
     this.activeZoneId = zone.id;
 
     if (zone.lockType !== "soft_lock") {
@@ -111,6 +137,20 @@ export class SpawnManager {
 
     zone.enemies = zone.spawns.map((spawn) => this.createEnemy(spawn));
     return zone.enemies;
+  }
+
+  reportCacheObjectDestroyed(objectId: string): void {
+    if (!this.activeZoneId) {
+      return;
+    }
+    const zone = this.zones.find((entry) => entry.id === this.activeZoneId);
+    if (!zone || zone.objective.type !== "break_cache") {
+      return;
+    }
+    if (!zone.objective.cacheObjectIds?.includes(objectId)) {
+      return;
+    }
+    zone.cacheDestroyedIds.add(objectId);
   }
 
   isWaveCleared(zoneId: string): boolean {
@@ -136,6 +176,51 @@ export class SpawnManager {
 
   getRemainingEnemies(): number {
     return this.zones.reduce((count, zone) => count + zone.enemies.filter((enemy) => enemy.isAlive()).length, 0);
+  }
+
+  getObjectiveProgress(nowMs: number): ZoneObjectiveProgress | null {
+    if (!featureFlags.encounterObjectivesV1) {
+      return null;
+    }
+    if (!this.activeZoneId) {
+      return null;
+    }
+    const zone = this.zones.find((entry) => entry.id === this.activeZoneId);
+    if (!zone) {
+      return null;
+    }
+
+    const aliveCount = zone.enemies.filter((enemy) => enemy.isAlive()).length;
+    if (zone.objective.type === "hold_line") {
+      const target = Math.max(1, Math.round((zone.objective.holdDurationSec ?? 18)));
+      const elapsed = Math.max(0, Math.floor((nowMs - zone.holdStartedAt) / 1000));
+      return {
+        label: "Sostener linea",
+        current: Math.min(target, elapsed),
+        target,
+        completed: elapsed >= target,
+      };
+    }
+
+    if (zone.objective.type === "break_cache") {
+      const target = Math.max(1, zone.objective.cacheObjectIds?.length ?? 1);
+      const current = Math.min(target, zone.cacheDestroyedIds.size);
+      return {
+        label: "Romper cache",
+        current,
+        target,
+        completed: current >= target && aliveCount === 0,
+      };
+    }
+
+    const target = Math.max(1, zone.spawnedEnemyCount);
+    const current = Math.max(0, target - aliveCount);
+    return {
+      label: "Limpiar zona",
+      current,
+      target,
+      completed: aliveCount === 0,
+    };
   }
 
   getNavigationState(): NavigationZoneState {
@@ -234,5 +319,20 @@ export class SpawnManager {
     }
 
     return segments;
+  }
+
+  private isZoneObjectiveCompleted(zone: ZoneRuntime, aliveCount: number, nowMs: number): boolean {
+    if (!featureFlags.encounterObjectivesV1) {
+      return aliveCount === 0;
+    }
+    if (zone.objective.type === "hold_line") {
+      const holdDurationSec = Math.max(1, zone.objective.holdDurationSec ?? 18);
+      return nowMs - zone.holdStartedAt >= holdDurationSec * 1000 && aliveCount === 0;
+    }
+    if (zone.objective.type === "break_cache") {
+      const target = Math.max(1, zone.objective.cacheObjectIds?.length ?? 1);
+      return aliveCount === 0 && zone.cacheDestroyedIds.size >= target;
+    }
+    return aliveCount === 0;
   }
 }

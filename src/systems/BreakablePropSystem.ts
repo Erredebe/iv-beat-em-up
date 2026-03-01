@@ -40,6 +40,7 @@ interface BreakableRuntime {
 export interface BreakableHitResult {
   pointsAwarded: number;
   brokenCount: number;
+  brokenPropIds: string[];
   spawnedPickups: BreakablePickupSpawn[];
 }
 
@@ -102,6 +103,7 @@ export class BreakablePropSystem {
   resolveHits(fighters: BaseFighter[]): BreakableHitResult {
     let pointsAwarded = 0;
     let brokenCount = 0;
+    const brokenPropIds: string[] = [];
     const spawnedPickups: BreakablePickupSpawn[] = [];
 
     for (const fighter of fighters) {
@@ -137,6 +139,7 @@ export class BreakablePropSystem {
         if (prop.hp <= 0) {
           prop.destroyed = true;
           brokenCount += 1;
+          brokenPropIds.push(prop.id);
           pointsAwarded += prop.points;
           if (prop.obstacle) {
             this.collisionSystem.setObstacleEnabled(prop.obstacle, false);
@@ -168,7 +171,7 @@ export class BreakablePropSystem {
       }
     }
 
-    return { pointsAwarded, brokenCount, spawnedPickups };
+    return { pointsAwarded, brokenCount, brokenPropIds, spawnedPickups };
   }
 
   getRemainingCount(): number {

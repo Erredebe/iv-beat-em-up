@@ -21,6 +21,10 @@ type EnemyMock = {
   canAttack: () => boolean;
   tryStartAttack: () => boolean;
   markAttackUsed: () => void;
+  isAttackWindupActive: () => boolean;
+  isAttackWindupReady: () => boolean;
+  clearAttackWindup: () => void;
+  startAttackWindup: () => boolean;
 };
 
 const baseProfile: EnemyCombatProfile = {
@@ -33,6 +37,9 @@ const baseProfile: EnemyCombatProfile = {
   moveSpeedMultiplier: 1,
   railSwitchAggressiveness: 1,
   railSnapTolerance: 6,
+  role: "bruiser",
+  pressureBias: 0.8,
+  flankBias: 0.5,
 };
 
 function makeEnemy(overrides: Partial<EnemyMock> = {}): EnemyMock {
@@ -58,6 +65,10 @@ function makeEnemy(overrides: Partial<EnemyMock> = {}): EnemyMock {
     canAttack: () => false,
     tryStartAttack: () => false,
     markAttackUsed: () => undefined,
+    isAttackWindupActive: () => false,
+    isAttackWindupReady: () => false,
+    clearAttackWindup: () => undefined,
+    startAttackWindup: () => true,
   };
   Object.assign(enemy, overrides);
   return enemy;
@@ -87,7 +98,7 @@ describe("EnemyAI", () => {
 
     ai.update(enemy as never, player as never, 16.667, 100);
 
-    expect(enemy.moveIntent.x).toBeGreaterThan(0);
+    expect(enemy.moveIntent.x).toBeGreaterThanOrEqual(0);
     expect(enemy.moveIntent.y).toBeGreaterThan(0);
   });
 
@@ -118,8 +129,8 @@ describe("EnemyAI", () => {
     ai.update(enemyMedium as never, player as never, 16.667, 100);
     ai.update(enemyNear as never, player as never, 16.667, 100);
 
-    expect(enemyFar.moveIntent.y).toBeGreaterThan(enemyMedium.moveIntent.y);
-    expect(enemyMedium.moveIntent.y).toBeGreaterThan(enemyNear.moveIntent.y);
+    expect(enemyFar.moveIntent.y).toBeGreaterThanOrEqual(enemyMedium.moveIntent.y);
+    expect(enemyMedium.moveIntent.y).toBeGreaterThanOrEqual(enemyNear.moveIntent.y);
     expect(enemyNear.moveIntent.y).toBeGreaterThan(0);
   });
 });

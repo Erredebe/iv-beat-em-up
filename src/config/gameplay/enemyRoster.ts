@@ -1,4 +1,5 @@
 export type EnemyArchetype = "brawler" | "rusher" | "tank" | "agile_f" | "bat_wielder" | "mini_boss" | "knife_fighter";
+export type EnemyRole = "bruiser" | "striker" | "controller" | "boss";
 
 export interface EnemyCombatProfile {
   archetype: EnemyArchetype;
@@ -10,6 +11,9 @@ export interface EnemyCombatProfile {
   moveSpeedMultiplier: number;
   railSwitchAggressiveness: number;
   railSnapTolerance: number;
+  role: EnemyRole;
+  pressureBias: number;
+  flankBias: number;
 }
 
 export const ENEMY_PROFILES: Record<EnemyArchetype, EnemyCombatProfile> = {
@@ -23,6 +27,9 @@ export const ENEMY_PROFILES: Record<EnemyArchetype, EnemyCombatProfile> = {
     moveSpeedMultiplier: 1,
     railSwitchAggressiveness: 0.95,
     railSnapTolerance: 7,
+    role: "bruiser",
+    pressureBias: 0.8,
+    flankBias: 0.45,
   },
   rusher: {
     archetype: "rusher",
@@ -34,6 +41,9 @@ export const ENEMY_PROFILES: Record<EnemyArchetype, EnemyCombatProfile> = {
     moveSpeedMultiplier: 1.24,
     railSwitchAggressiveness: 1.2,
     railSnapTolerance: 6,
+    role: "striker",
+    pressureBias: 0.6,
+    flankBias: 0.78,
   },
   tank: {
     archetype: "tank",
@@ -45,6 +55,9 @@ export const ENEMY_PROFILES: Record<EnemyArchetype, EnemyCombatProfile> = {
     moveSpeedMultiplier: 0.76,
     railSwitchAggressiveness: 0.82,
     railSnapTolerance: 9,
+    role: "controller",
+    pressureBias: 1.2,
+    flankBias: 0.3,
   },
   agile_f: {
     archetype: "agile_f",
@@ -56,6 +69,9 @@ export const ENEMY_PROFILES: Record<EnemyArchetype, EnemyCombatProfile> = {
     moveSpeedMultiplier: 1.2,
     railSwitchAggressiveness: 1.28,
     railSnapTolerance: 5,
+    role: "striker",
+    pressureBias: 0.58,
+    flankBias: 0.84,
   },
   bat_wielder: {
     archetype: "bat_wielder",
@@ -67,6 +83,9 @@ export const ENEMY_PROFILES: Record<EnemyArchetype, EnemyCombatProfile> = {
     moveSpeedMultiplier: 0.94,
     railSwitchAggressiveness: 0.92,
     railSnapTolerance: 8,
+    role: "controller",
+    pressureBias: 0.95,
+    flankBias: 0.48,
   },
   mini_boss: {
     archetype: "mini_boss",
@@ -78,6 +97,9 @@ export const ENEMY_PROFILES: Record<EnemyArchetype, EnemyCombatProfile> = {
     moveSpeedMultiplier: 0.86,
     railSwitchAggressiveness: 0.78,
     railSnapTolerance: 10,
+    role: "boss",
+    pressureBias: 1.55,
+    flankBias: 0.15,
   },
   knife_fighter: {
     archetype: "knife_fighter",
@@ -89,5 +111,8 @@ export const ENEMY_PROFILES: Record<EnemyArchetype, EnemyCombatProfile> = {
     moveSpeedMultiplier: 1.4,
     railSwitchAggressiveness: 1.3,
     railSnapTolerance: 6,
+    role: "striker",
+    pressureBias: 0.55,
+    flankBias: 0.9,
   },
 };

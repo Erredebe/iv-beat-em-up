@@ -1,5 +1,10 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
+import { featureFlags } from "../config/features";
+import { getPlayableCharacter } from "../config/gameplay/playableRoster";
+import { getSessionState } from "../config/gameplay/sessionState";
+import { getStageBundle } from "../config/levels/stageCatalog";
+import { storyBeatCatalog } from "../config/lore/storyBeats";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
 import { createPanel, createSceneTitle } from "../ui/sceneChrome";
 import { resolveNextSceneFromIntro } from "./sceneFlow";
@@ -64,6 +69,7 @@ const TYPE_SPEED_MS = 28;
 const CARD_TRANSITION_MS = 220;
 
 export class IntroScene extends Phaser.Scene {
+  private introCards: IntroCard[] = INTRO_CARDS;
   private cardIndex = 0;
   private isRevealing = false;
   private isTransitioning = false;
@@ -85,6 +91,7 @@ export class IntroScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.introCards = featureFlags.loreCampaignV1 ? this.buildDynamicCards() : INTRO_CARDS;
     const theme = getUiThemeTokens();
     this.cameras.main.setBackgroundColor(theme.palette.bgPrimary);
 
@@ -156,7 +163,7 @@ export class IntroScene extends Phaser.Scene {
 
   private applyCard(index: number): void {
     this.cardIndex = index;
-    const card = INTRO_CARDS[index];
+    const card = this.introCards[index];
     this.backgroundRect.setFillStyle(card.style.backgroundColor, 1);
     this.overlayRect.setFillStyle(card.style.overlayColor, 0.28);
     this.lineText.setColor(card.style.textColor);
@@ -216,7 +223,7 @@ export class IntroScene extends Phaser.Scene {
     this.autoAdvanceEvent?.remove(false);
     this.autoAdvanceEvent = undefined;
 
-    if (this.cardIndex >= INTRO_CARDS.length - 1) {
+    if (this.cardIndex >= this.introCards.length - 1) {
       this.startGame();
       return;
     }
@@ -250,5 +257,36 @@ export class IntroScene extends Phaser.Scene {
   private startGame(): void {
     this.cleanupEvents();
     this.scene.start(resolveNextSceneFromIntro());
+  }
+
+  private buildDynamicCards(): IntroCard[] {
+    const session = getSessionState();
+    const stage = getStageBundle(session.currentStageId);
+    const character = getPlayableCharacter(session.selectedCharacter);
+    const beat = stage.storyBeatIds.length > 0 ? storyBeatCatalog[stage.storyBeatIds[0]] : null;
+    const districtName = stage.displayName.toUpperCase();
+
+    return [
+      {
+        text: `ESPANA, 1995.\n${character.displayName} VUELVE A ${districtName}.`,
+        duration: 2200,
+        style: INTRO_CARDS[0].style,
+      },
+      {
+        text: beat?.introLine?.toUpperCase() ?? "LAS CALLES ARDEN BAJO NEON Y MIEDO.",
+        duration: 2400,
+        style: INTRO_CARDS[1].style,
+      },
+      {
+        text: beat?.radioBriefing?.toUpperCase() ?? "BARRIOS ENTEROS CAYERON EN MANOS DE REDES CORRUPTAS.",
+        duration: 2500,
+        style: INTRO_CARDS[2].style,
+      },
+      {
+        text: `OBJETIVO: RECUPERAR ${districtName}.\nNINGUNA FAMILIA MAS BAJO EXTORSION.`,
+        duration: 3000,
+        style: INTRO_CARDS[3].style,
+      },
+    ];
   }
 }

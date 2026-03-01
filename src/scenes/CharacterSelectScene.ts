@@ -62,7 +62,7 @@ export class CharacterSelectScene extends Phaser.Scene {
 
       const selectionGlow = this.add.rectangle(62, 75, 116, 138, 0xf2cd64, 0.08).setOrigin(0.5).setVisible(false);
       selectionGlow.setStrokeStyle(2, 0xf2cd64, 0.95);
-      const selectionCursor = this.add.text(10, 8, "▶", {
+      const selectionCursor = this.add.text(10, 8, ">", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.subtitle,
         color: theme.palette.accentGold,
@@ -277,13 +277,13 @@ export class CharacterSelectScene extends Phaser.Scene {
 
     switch (stageId) {
       case "market_95":
-        return { ...base, icon: "🛒", bannerColor: 0x365a3e };
+        return { ...base, icon: "[MK]", bannerColor: 0x365a3e };
       case "metro_sur":
-        return { ...base, icon: "🚇", bannerColor: 0x2d4468 };
+        return { ...base, icon: "[MT]", bannerColor: 0x2d4468 };
       case "playa_noche":
-        return { ...base, icon: "🌙", bannerColor: 0x4a3568 };
+        return { ...base, icon: "[PL]", bannerColor: 0x4a3568 };
       case "puerto_rojo":
-        return { ...base, icon: "⚓", bannerColor: 0x684040 };
+        return { ...base, icon: "[PR]", bannerColor: 0x684040 };
       default:
         return base;
     }

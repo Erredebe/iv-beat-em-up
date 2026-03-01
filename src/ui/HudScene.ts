@@ -7,9 +7,9 @@ import { depthLayers } from "../config/visual/depthLayers";
 
 export class HudScene extends Phaser.Scene {
   private static readonly ENEMY_HINT_FADE_THRESHOLD = 5;
-  private static readonly ENEMY_BARS_LIMIT_THRESHOLD = 7;
-  private static readonly ENEMY_BARS_TARGET_ONLY_THRESHOLD = 11;
-  private static readonly ENEMY_BARS_MAX_NEARBY = 4;
+  private static readonly ENEMY_BARS_LIMIT_THRESHOLD = 6;
+  private static readonly ENEMY_BARS_TARGET_ONLY_THRESHOLD = 9;
+  private static readonly ENEMY_BARS_MAX_NEARBY = 3;
   private static readonly ENEMY_BAR_NEARBY_DISTANCE = 84;
 
   private hpLabel!: Phaser.GameObjects.Text;
@@ -575,10 +575,43 @@ export class HudScene extends Phaser.Scene {
     }
 
     const zoneLine = this.currentPayload.zoneId ? this.formatZoneLabel(this.currentPayload.zoneId) : null;
-    const statusLine = this.currentPayload.zoneMessage?.trim() || this.currentPayload.objectiveText.trim() || zoneLine || "SIGUE ADELANTE";
+    const objectiveLine = this.formatObjectiveProgress();
+    const tacticalLine = this.currentPayload.zoneMessage?.trim() || objectiveLine || this.currentPayload.objectiveText.trim();
+    const radioLine = this.currentPayload.radioMessage?.trim();
+    const threatPrefix = this.formatThreatPrefix(this.currentPayload.threatLevel);
+    const statusLine = radioLine || `${threatPrefix} ${tacticalLine || zoneLine || "SIGUE ADELANTE"}`.trim();
 
     this.statusText.setText(this.isHudMinimalPreset ? this.compactStatusText(statusLine) : statusLine);
+    this.statusText.setColor(this.resolveStatusColor(this.currentPayload.threatLevel));
     this.statusPanel.setAlpha(this.isHudMinimalPreset ? 0.82 : 1);
+  }
+
+  private formatObjectiveProgress(): string {
+    if (!this.currentPayload?.objectiveProgress) {
+      return "";
+    }
+    const progress = this.currentPayload.objectiveProgress;
+    return `${progress.label} ${progress.current}/${progress.target}`;
+  }
+
+  private formatThreatPrefix(level: "low" | "medium" | "high"): string {
+    if (level === "high") {
+      return "[PELIGRO ALTO]";
+    }
+    if (level === "medium") {
+      return "[PRESION MEDIA]";
+    }
+    return "[CONTROL]";
+  }
+
+  private resolveStatusColor(level: "low" | "medium" | "high"): string {
+    if (level === "high") {
+      return "#ffd0d6";
+    }
+    if (level === "medium") {
+      return "#ffe7bf";
+    }
+    return "#d7f8ff";
   }
 
   private compactStatusText(text: string): string {

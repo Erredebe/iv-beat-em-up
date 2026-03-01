@@ -29,6 +29,8 @@ export const SPECIAL_HP_COST_RATIO = 0.1;
 export const SPECIAL_COOLDOWN_MS = 900;
 export const TARGET_ENEMY_TTL_MS = 2500;
 export const CONTROLS_HINT_DURATION_MS = 4500;
+export const BACKSTEP_DURATION_MS = 170;
+export const BACKSTEP_SPEED = 205;
 
 export const DEBUG_TOGGLE_KEY = "F1";
 
@@ -77,6 +79,18 @@ export const ENEMY_ATTACK_DATA: Record<AttackId, AttackFrameData> = {
   ATTACK_1: DEFAULT_ATTACK_DATA,
   ATTACK_2: DEFAULT_ATTACK_DATA,
   ATTACK_3: DEFAULT_ATTACK_DATA,
+  FINISHER_FORWARD: {
+    ...DEFAULT_ATTACK_DATA,
+    damage: 18,
+    knockbackX: 140,
+    causesKnockdown: true,
+  },
+  FINISHER_BACK: {
+    ...DEFAULT_ATTACK_DATA,
+    damage: 16,
+    knockbackX: 96,
+    causesKnockdown: false,
+  },
   AIR_ATTACK: DEFAULT_ATTACK_DATA,
   SPECIAL: DEFAULT_ATTACK_DATA,
 };

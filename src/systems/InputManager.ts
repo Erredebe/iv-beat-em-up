@@ -14,12 +14,20 @@ export type InputAction =
   | "ui_confirm";
 
 const GAMEPAD_AXES_DEADZONE = 0.24;
+const BACKSTEP_DOUBLE_TAP_MS = 220;
+
+type DirectionTap = "left" | "right";
 
 export class InputManager {
   private readonly scene: Phaser.Scene;
   private readonly keys: Record<InputAction, Phaser.Input.Keyboard.Key>;
   private readonly bufferedAt = new Map<InputAction, number>();
   private readonly previousGamepadButtons = new Map<number, boolean[]>();
+  private readonly directionalTapAt: Record<DirectionTap, number> = {
+    left: Number.NEGATIVE_INFINITY,
+    right: Number.NEGATIVE_INFINITY,
+  };
+  private bufferedBackstep: { at: number; direction: -1 | 1 } | null = null;
   private nowMs = 0;
 
   constructor(scene: Phaser.Scene) {
@@ -86,6 +94,24 @@ export class InputManager {
     return this.consumeBufferedChord(actions, windowMs);
   }
 
+  consumeBufferedBackstep(facing: 1 | -1, windowMs = INPUT_BUFFER_MS): boolean {
+    if (!this.bufferedBackstep) {
+      return false;
+    }
+    if (this.nowMs - this.bufferedBackstep.at > windowMs) {
+      this.bufferedBackstep = null;
+      return false;
+    }
+
+    const requiredDirection: -1 | 1 = facing === 1 ? -1 : 1;
+    if (this.bufferedBackstep.direction !== requiredDirection) {
+      return false;
+    }
+
+    this.bufferedBackstep = null;
+    return true;
+  }
+
   getMoveVector(): Phaser.Math.Vector2 {
     let x = 0;
     let y = 0;
@@ -149,6 +175,11 @@ export class InputManager {
     for (const action of Object.keys(this.keys) as InputAction[]) {
       if (Phaser.Input.Keyboard.JustDown(this.keys[action])) {
         this.bufferedAt.set(action, this.nowMs);
+        if (action === "left") {
+          this.registerDirectionTap("left");
+        } else if (action === "right") {
+          this.registerDirectionTap("right");
+        }
       }
     }
   }
@@ -224,5 +255,17 @@ export class InputManager {
     }
 
     return false;
+  }
+
+  private registerDirectionTap(direction: DirectionTap): void {
+    const previous = this.directionalTapAt[direction];
+    this.directionalTapAt[direction] = this.nowMs;
+    if (this.nowMs - previous > BACKSTEP_DOUBLE_TAP_MS) {
+      return;
+    }
+    this.bufferedBackstep = {
+      at: this.nowMs,
+      direction: direction === "left" ? -1 : 1,
+    };
   }
 }

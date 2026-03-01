@@ -17,6 +17,8 @@ describe("street scene roster regression", () => {
       expect(combo.ATTACK_1, `${characterId} missing ATTACK_1`).toBeDefined();
       expect(combo.ATTACK_2, `${characterId} missing ATTACK_2`).toBeDefined();
       expect(combo.ATTACK_3, `${characterId} missing ATTACK_3`).toBeDefined();
+      expect(combo.FINISHER_FORWARD, `${characterId} missing FINISHER_FORWARD`).toBeDefined();
+      expect(combo.FINISHER_BACK, `${characterId} missing FINISHER_BACK`).toBeDefined();
       expect(combo.AIR_ATTACK, `${characterId} missing AIR_ATTACK`).toBeDefined();
       expect(combo.SPECIAL, `${characterId} missing SPECIAL`).toBeDefined();
     }

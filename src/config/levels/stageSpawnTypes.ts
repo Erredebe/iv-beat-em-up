@@ -6,6 +6,15 @@ export interface StageSpawnPointConfig {
   archetype?: EnemyArchetype;
 }
 
+export type StageZoneObjectiveType = "clear_all" | "hold_line" | "break_cache";
+export type StageZoneReinforcementPolicy = "none" | "staggered" | "burst";
+
+export interface StageZoneObjectiveConfig {
+  type: StageZoneObjectiveType;
+  holdDurationSec?: number;
+  cacheObjectIds?: string[];
+}
+
 export interface StageSpawnZoneConfig {
   id: string;
   triggerX: number;
@@ -17,6 +26,8 @@ export interface StageSpawnZoneConfig {
     bottomGap?: number;
     openRailIds?: string[];
   };
+  objective?: StageZoneObjectiveConfig;
+  reinforcementPolicy?: StageZoneReinforcementPolicy;
   spawns: StageSpawnPointConfig[];
 }
 
@@ -34,6 +45,14 @@ export function cloneSpawnZones(config: StageSpawnZoneConfig[]): StageSpawnZoneC
           openRailIds: zone.barrier.openRailIds ? [...zone.barrier.openRailIds] : undefined,
         }
       : undefined,
+    objective: zone.objective
+      ? {
+          type: zone.objective.type,
+          holdDurationSec: zone.objective.holdDurationSec,
+          cacheObjectIds: zone.objective.cacheObjectIds ? [...zone.objective.cacheObjectIds] : undefined,
+        }
+      : undefined,
+    reinforcementPolicy: zone.reinforcementPolicy ?? "none",
     spawns: zone.spawns.map((spawn) => ({
       x: spawn.x,
       y: spawn.y,

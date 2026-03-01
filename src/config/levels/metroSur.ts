@@ -265,6 +265,9 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
   ],
   visualProfile: createStageVisualProfile("wetNight", {
     rainIntensity: 0.86,
+    rainDriftSpeed: 0.9,
+    fogAlpha: 0.1,
+    neonPulseHz: 1.9,
     colorGrade: { color: 0x121a2c, alpha: 0.1 },
   }),
 });
@@ -274,6 +277,11 @@ export const metroSurSpawns: StageSpawnZoneConfig[] = [
     id: "metro_zone_1",
     triggerX: 360,
     lockType: "full_lock",
+    objective: {
+      type: "hold_line",
+      holdDurationSec: 20,
+    },
+    reinforcementPolicy: "staggered",
     leftBarrierX: 108,
     rightBarrierX: 920,
     spawns: [
@@ -286,6 +294,10 @@ export const metroSurSpawns: StageSpawnZoneConfig[] = [
     id: "metro_zone_2",
     triggerX: 1180,
     lockType: "partial_lock",
+    objective: {
+      type: "clear_all",
+    },
+    reinforcementPolicy: "burst",
     barrier: {
       openRailIds: ["rail_west"],
     },

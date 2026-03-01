@@ -20,6 +20,7 @@ export type AnimationClipId = (typeof ANIMATION_CLIP_IDS)[number];
 export const FIGHTER_STATES: FighterState[] = [
   "IDLE",
   "WALK",
+  "BACKSTEP",
   "ATTACK_1",
   "ATTACK_2",
   "ATTACK_3",

@@ -265,6 +265,9 @@ export const puertoRojoLayout: StageLayoutConfig = defineStageLayout({
   ],
   visualProfile: createStageVisualProfile("crimsonHarbor", {
     rainIntensity: 0.7,
+    rainDriftSpeed: 0.7,
+    fogAlpha: 0.05,
+    neonPulseHz: 1.4,
     colorGrade: { color: 0x201220, alpha: 0.12 },
   }),
 });
@@ -274,6 +277,11 @@ export const puertoRojoSpawns: StageSpawnZoneConfig[] = [
     id: "puerto_zone_1",
     triggerX: 360,
     lockType: "full_lock",
+    objective: {
+      type: "break_cache",
+      cacheObjectIds: ["crate_final_1", "crate_final_3"],
+    },
+    reinforcementPolicy: "staggered",
     leftBarrierX: 108,
     rightBarrierX: 920,
     spawns: [
@@ -287,6 +295,10 @@ export const puertoRojoSpawns: StageSpawnZoneConfig[] = [
     id: "puerto_zone_2",
     triggerX: 1180,
     lockType: "partial_lock",
+    objective: {
+      type: "clear_all",
+    },
+    reinforcementPolicy: "burst",
     barrier: {
       openRailIds: ["rail_east"],
     },
