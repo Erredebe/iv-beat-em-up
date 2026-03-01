@@ -27,7 +27,7 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
       id: "booth_beach",
       visual: {
         textureKey: "prop_booth_front",
-        scaleTier: "standard",
+        scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
       },
       transform: {
@@ -43,9 +43,9 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
         color: 0x74dcff,
         footprint: {
           mode: "explicit",
-          width: 66,
-          height: 14,
-          offsetY: -2,
+          width: 48,
+          height: 12,
+          offsetY: -1,
         },
       },
       behavior: {
@@ -55,8 +55,8 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
     {
       id: "container_beach",
       visual: {
-        textureKey: "prop_container",
-        scaleTier: "standard",
+        textureKey: "prop_container_green",
+        scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
       },
       transform: {
@@ -72,8 +72,8 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
         color: 0xff8bb0,
         footprint: {
           mode: "explicit",
-          width: 96,
-          height: 16,
+          width: 36,
+          height: 10,
         },
       },
       behavior: {
@@ -84,7 +84,7 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
       id: "table_1",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
@@ -127,7 +127,7 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
       id: "table_2",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
@@ -170,7 +170,7 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
       id: "table_3",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
@@ -213,7 +213,7 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
       id: "table_4",
       visual: {
         textureKey: "prop_crate",
-        scaleTier: "compact",
+        scaleTier: "tiny",
         spriteSpecId: "stage_breakable_arcade",
       },
       transform: {
