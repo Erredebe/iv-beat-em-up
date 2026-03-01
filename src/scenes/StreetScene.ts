@@ -8,22 +8,16 @@ import {
   BASE_WIDTH,
   CONTROLS_HINT_DURATION_MS,
   DEBUG_TOGGLE_KEY,
-  ENEMY_MAX_HP,
-  ENEMY_MOVE_SPEED,
   PLAYER_SPAWN_X,
-  TARGET_ENEMY_TTL_MS,
 } from "../config/constants";
 import { getNextStageId } from "../config/gameplay/campaign";
-import { getCombatBalancePreset } from "../config/gameplay/combatBalancePresets";
 import { featureFlags } from "../config/features";
 import { getPlayableCharacter } from "../config/gameplay/playableRoster";
 import { getSessionState, resetSessionState, updateSessionState } from "../config/gameplay/sessionState";
 import { getStageBundle, type StageBundle } from "../config/levels/stageCatalog";
-import { getStageWalkRails } from "../config/levels/stageTypes";
-import { depthLayers, depthPriorities } from "../config/visual/depthLayers";
-import { fighterVisualProfiles } from "../config/visual/fighterVisualProfiles";
+import { depthLayers } from "../config/visual/depthLayers";
 import { ensureFighterAnimations } from "../config/visual/fighterAnimationSets";
-import { EnemyBasic, buildEnemyAttackData, type EnemyArchetype } from "../entities/EnemyBasic";
+import { EnemyBasic, type EnemyArchetype } from "../entities/EnemyBasic";
 import { Player, buildPlayerAttackData } from "../entities/Player";
 import { AudioSystem } from "../systems/AudioSystem";
 import { BreakablePropSystem, type BreakablePickupSpawn } from "../systems/BreakablePropSystem";
@@ -38,11 +32,9 @@ import { NavigationSystem } from "../systems/NavigationSystem";
 import { SpawnManager } from "../systems/SpawnManager";
 import { StageRenderer } from "../systems/StageRenderer";
 import type { AttackFrameData, AttackId } from "../types/combat";
-
-interface TargetEnemyTracker {
-  id: string;
-  expiresAt: number;
-}
+import { createActorRuntime, createCombatRuntime, createStageRuntime } from "./street";
+import { buildStreetHudPayload } from "./street/hudPayloadAdapter";
+import type { StreetCombatTargetingRuntime } from "./street";
 
 interface ActiveHealPickup {
   id: string;
@@ -59,16 +51,6 @@ const ENEMY_POINTS_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
   bat_wielder: 190,
   mini_boss: 350,
   knife_fighter: 135,
-};
-
-const ENEMY_TINT_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
-  brawler: 0xfff4f8,
-  rusher: 0xc7dcff,
-  tank: 0xffd0a1,
-  agile_f: 0xffc2e6,
-  bat_wielder: 0xe4dbff,
-  mini_boss: 0xffb782,
-  knife_fighter: 0xffea00,
 };
 
 export class StreetScene extends Phaser.Scene {
@@ -96,7 +78,7 @@ export class StreetScene extends Phaser.Scene {
   private isPausedByPlayer = false;
   private controlsHintVisible = true;
   private controlsHintUntil = 0;
-  private targetEnemy: TargetEnemyTracker | null = null;
+  private combatTargeting!: StreetCombatTargetingRuntime;
   private zoneMessage: string | null = null;
   private zoneMessageUntil = 0;
   private announcedZoneId: string | null = null;
@@ -126,7 +108,6 @@ export class StreetScene extends Phaser.Scene {
 
   create(): void {
     this.enemies = [];
-    this.targetEnemy = null;
     this.zoneMessage = null;
     this.zoneMessageUntil = 0;
     this.announcedZoneId = null;
@@ -148,20 +129,16 @@ export class StreetScene extends Phaser.Scene {
 
     this.inputManager = new InputManager(this);
 
-    const walkRails = getStageWalkRails(this.stageBundle.layout);
-
-    this.navigationSystem = new NavigationSystem(walkRails, this.stageWorldWidth);
-    this.collisionSystem = new CollisionSystem(this, walkRails, this.stageWorldWidth);
-    const spawnRail = this.collisionSystem.getRailAtX(PLAYER_SPAWN_X);
-    const fallbackSpawnY = (spawnRail.topY + spawnRail.bottomY) * 0.5;
-    const playerSpawnY = spawnRail.preferredY ?? this.stageBundle.layout.walkLane?.playerSpawnY ?? fallbackSpawnY;
-    this.depthSystem = new DepthSystem();
-    this.hitStopSystem = new HitStopSystem(this);
-    this.enemyAI = new EnemyAI(this.navigationSystem, () => this.spawnManager.getNavigationState());
-    this.audioSystem = new AudioSystem(this);
-
-    this.stageRenderer = new StageRenderer(this, this.stageBundle.layout);
-    const stageRuntime = this.stageRenderer.build(this.collisionSystem, this.depthSystem);
+    const stageRuntime = createStageRuntime({
+      scene: this,
+      stageBundle: this.stageBundle,
+      playerSpawnX: PLAYER_SPAWN_X,
+    });
+    this.stageWorldWidth = stageRuntime.stageWorldWidth;
+    this.navigationSystem = stageRuntime.navigationSystem;
+    this.collisionSystem = stageRuntime.collisionSystem;
+    this.depthSystem = stageRuntime.depthSystem;
+    this.stageRenderer = stageRuntime.stageRenderer;
 
     const character = getPlayableCharacter(this.stageEntryState.selectedCharacter);
     this.selectedCharacter = character;
@@ -172,76 +149,55 @@ export class StreetScene extends Phaser.Scene {
     ) as Record<string, AttackFrameData>;
     this.playerAttackData = buildPlayerAttackData(comboRaw, character);
 
-    this.player = new Player(this, {
-      id: "P1",
-      team: "player",
-      x: PLAYER_SPAWN_X,
-      y: playerSpawnY,
-      animationOwner: character.animationOwner,
-      maxHp: character.maxHp,
-      moveSpeed: character.moveSpeed,
-      attackData: this.playerAttackData,
-      visualProfile: fighterVisualProfiles[character.animationOwner],
-      clampPosition: (x, y) => this.collisionSystem.clampPositionToRail(x, y),
+    const actorRuntime = createActorRuntime({
+      scene: this,
+      stageBundle: this.stageBundle,
+      selectedCharacter: character,
+      playerAttackData: this.playerAttackData,
+      playerSpawnX: PLAYER_SPAWN_X,
+      playerSpawnY: stageRuntime.playerSpawnY,
+      collisionSystem: this.collisionSystem,
       navigationSystem: this.navigationSystem,
-      getNavigationZoneState: () => this.spawnManager.getNavigationState(),
+      depthSystem: this.depthSystem,
     });
-    this.player.sprite.setTint(character.tint);
-    this.collisionSystem.attachFootCollider(this.player);
-    this.collisionSystem.applyWorldBounds(this.player);
+    this.player = actorRuntime.player;
+    this.enemyAI = actorRuntime.enemyAI;
+    this.spawnManager = actorRuntime.spawnManager;
+    this.enemies = actorRuntime.enemies;
 
-    this.depthSystem.register(this.player.shadow, {
-      layer: "FIGHTER_SHADOW",
-      dynamicY: () => this.player.y,
-      priority: depthPriorities.FIGHTER_SHADOW,
-    });
-    this.depthSystem.register(this.player.spriteOutline, {
-      layer: "FIGHTER_OUTLINE",
-      dynamicY: () => this.player.y,
-      priority: depthPriorities.FIGHTER_OUTLINE,
-    });
-    this.depthSystem.register(this.player.sprite, {
-      layer: "FIGHTER",
-      dynamicY: () => this.player.y,
-      priority: depthPriorities.FIGHTER,
-    });
-
-    this.combatSystem = new CombatSystem({
-      hitStopSystem: this.hitStopSystem,
-      eventBus: this.game.events,
-      onHit: ({ attackId, target }) => {
-        this.createHitSpark(target.x, target.y - 38);
-        this.audioSystem.playHit();
+    const combatRuntime = createCombatRuntime({
+      scene: this,
+      getPlayerId: () => this.player.id,
+      onCombatHitFeedback: ({ attackId, targetX, targetY, targetTeam }) => {
+        this.createHitSpark(targetX, targetY - 38);
         if (attackId === "SPECIAL") {
           this.flashScene();
         }
-        if (target.state === "KNOCKDOWN") {
-          this.audioSystem.playKnockdown();
-        }
         this.cameras.main.shake(42, 0.0022);
-        if (target.team === "player") {
+        if (targetTeam === "player") {
           this.flashDamage();
         }
       },
     });
+    this.combatSystem = combatRuntime.combatSystem;
+    this.hitStopSystem = combatRuntime.hitStopSystem;
+    this.audioSystem = combatRuntime.audioSystem;
+    this.combatTargeting = combatRuntime.targeting;
 
-    this.game.events.on("combat:hit", this.onCombatHit, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.game.events.off("combat:hit", this.onCombatHit, this);
+      combatRuntime.dispose();
       this.stageRenderer.destroy();
       this.levelEditor.destroy();
       this.breakablePropSystem?.destroy();
       this.destroyHealPickups();
     });
 
-    this.spawnManager = new SpawnManager(this.collisionSystem, (spawn) => this.spawnEnemy(spawn.x, spawn.y, spawn.archetype), this.stageBundle.spawns);
-    if (this.stageBundle.spawns.length > 0) {
-      this.enemies.push(...this.spawnManager.startWave(this.stageBundle.spawns[0].id));
-      this.announceZoneLock(this.stageBundle.spawns[0].id, this.time.now);
+    if (actorRuntime.initialZoneId) {
+      this.announceZoneLock(actorRuntime.initialZoneId, this.time.now);
     }
 
     this.breakablePropSystem = featureFlags.breakableProps
-      ? new BreakablePropSystem(this, this.depthSystem, this.collisionSystem, stageRuntime.objects)
+      ? new BreakablePropSystem(this, this.depthSystem, this.collisionSystem, stageRuntime.stageRenderRuntime.objects)
       : null;
 
     this.levelEditor = new LevelEditor(this, {
@@ -421,60 +377,11 @@ export class StreetScene extends Phaser.Scene {
     this.depthSystem.update();
     this.updateCamera();
     this.updateParallax();
-    this.updateTargetTracker(time);
+    this.combatTargeting.prune(time, this.enemies);
     this.tryHandleStageCompletion(time);
     this.updateHud();
     this.updatePerfOverlay();
     this.renderDebug(delta);
-  }
-
-  private spawnEnemy(x: number, y: number, archetype: EnemyArchetype = "brawler"): EnemyBasic {
-    if (!featureFlags.enemyRoster && archetype !== "brawler" && archetype !== "rusher" && archetype !== "tank" && archetype !== "knife_fighter") {
-      archetype = "brawler";
-    }
-    const combatBalance = getCombatBalancePreset();
-    const spawnConfig = combatBalance.enemySpawnByArchetype[archetype];
-    const profile = {
-      maxHp: ENEMY_MAX_HP + spawnConfig.maxHpBonus,
-      moveSpeed: ENEMY_MOVE_SPEED * spawnConfig.moveSpeedMultiplier,
-      tint: ENEMY_TINT_BY_ARCHETYPE[archetype],
-    };
-
-    const enemyAttackData = buildEnemyAttackData(this.playerAttackData, archetype);
-
-    const enemy = new EnemyBasic(this, {
-      id: `E_${Math.floor(this.time.now)}_${Math.floor(Math.random() * 1000)}`,
-      team: "enemy",
-      x,
-      y,
-      animationOwner: "enemy",
-      maxHp: profile.maxHp,
-      moveSpeed: profile.moveSpeed,
-      attackData: enemyAttackData,
-      visualProfile: fighterVisualProfiles.enemy,
-      clampPosition: (x, y) => this.collisionSystem.clampPositionToRail(x, y),
-      navigationSystem: this.navigationSystem,
-      getNavigationZoneState: () => this.spawnManager.getNavigationState(),
-    }, archetype);
-    enemy.sprite.setTint(profile.tint);
-    this.collisionSystem.attachFootCollider(enemy);
-    this.collisionSystem.applyWorldBounds(enemy);
-    this.depthSystem.register(enemy.shadow, {
-      layer: "FIGHTER_SHADOW",
-      dynamicY: () => enemy.y,
-      priority: depthPriorities.FIGHTER_SHADOW,
-    });
-    this.depthSystem.register(enemy.spriteOutline, {
-      layer: "FIGHTER_OUTLINE",
-      dynamicY: () => enemy.y,
-      priority: depthPriorities.FIGHTER_OUTLINE,
-    });
-    this.depthSystem.register(enemy.sprite, {
-      layer: "FIGHTER",
-      dynamicY: () => enemy.y,
-      priority: depthPriorities.FIGHTER,
-    });
-    return enemy;
   }
 
   private cleanupDeadEnemies(): void {
@@ -489,9 +396,7 @@ export class StreetScene extends Phaser.Scene {
       this.depthSystem.unregister(enemy.shadow);
       this.depthSystem.unregister(enemy.spriteOutline);
       this.depthSystem.unregister(enemy.sprite);
-      if (this.targetEnemy?.id === enemy.id) {
-        this.targetEnemy = null;
-      }
+      this.combatTargeting.clear(enemy.id);
       enemy.destroy();
     }
     this.enemies = survivors;
@@ -506,60 +411,20 @@ export class StreetScene extends Phaser.Scene {
     this.stageRenderer.updateParallax(this.cameras.main.scrollX);
   }
 
-  private updateTargetTracker(nowMs: number): void {
-    if (!this.targetEnemy) {
-      return;
-    }
-    if (nowMs >= this.targetEnemy.expiresAt) {
-      this.targetEnemy = null;
-      return;
-    }
-
-    const enemy = this.enemies.find((entry) => entry.id === this.targetEnemy?.id);
-    if (!enemy || !enemy.isAlive()) {
-      this.targetEnemy = null;
-    }
-  }
-
   private updateHud(): void {
-    const cam = this.cameras.main;
-    const visibleEnemies = this.enemies
-      .filter((enemy) => enemy.isAlive() && enemy.x >= cam.scrollX - 20 && enemy.x <= cam.scrollX + cam.width + 20)
-      .map((enemy) => ({
-        id: enemy.id,
-        hp: enemy.hp,
-        maxHp: enemy.maxHp,
-        x: enemy.x - cam.scrollX,
-        y: enemy.y - cam.scrollY - 82,
-      }));
-
-    let targetEnemyPayload: { id: string; hp: number; maxHp: number; ttlMs: number } | null = null;
-    if (this.targetEnemy) {
-      const tracked = this.enemies.find((enemy) => enemy.id === this.targetEnemy?.id && enemy.isAlive());
-      if (tracked) {
-        targetEnemyPayload = {
-          id: tracked.id,
-          hp: tracked.hp,
-          maxHp: tracked.maxHp,
-          ttlMs: Math.max(0, this.targetEnemy.expiresAt - this.time.now),
-        };
-      }
-    }
-
-    const stageElapsed = this.time.now - this.stageStartedAt;
-    const timeRemainingSec = Math.max(0, Math.ceil((this.stageTimeLimitMs - stageElapsed) / 1000));
-    this.game.events.emit("hud:update", {
-      playerHp: this.player.hp,
-      playerMaxHp: this.player.maxHp,
-      playerName: this.selectedCharacter.displayName,
-      playerPortraitKey: this.selectedCharacter.portraitKey,
+    const nowMs = this.time.now;
+    const payload = buildStreetHudPayload({
+      nowMs,
+      camera: this.cameras.main,
+      player: this.player,
+      selectedCharacter: this.selectedCharacter,
+      enemies: this.enemies,
       score: this.score,
-      timeRemainingSec,
-      specialCooldownRatio: this.player.getSpecialCooldownRatio(this.time.now),
       stageName: this.stageBundle.displayName,
+      stageStartedAt: this.stageStartedAt,
+      stageTimeLimitMs: this.stageTimeLimitMs,
       zoneId: this.spawnManager.getActiveZoneId(),
-      targetEnemy: targetEnemyPayload,
-      visibleEnemies,
+      targetEnemy: this.combatTargeting.getPayload(nowMs, this.enemies),
       controlsHintVisible: this.controlsHintVisible,
       isPaused: this.isPausedByPlayer,
       isGameOver: !this.player.isAlive(),
@@ -567,6 +432,7 @@ export class StreetScene extends Phaser.Scene {
       objectiveText: this.getObjectiveText(),
       bindingHints: this.inputManager.getBindingHints(),
     });
+    this.game.events.emit("hud:update", payload);
   }
 
   private getObjectiveText(): string {
@@ -976,24 +842,5 @@ export class StreetScene extends Phaser.Scene {
       duration: 130,
       ease: "Sine.easeOut",
     });
-  }
-
-  private onCombatHit(payload: {
-    attackerId: string;
-    targetId: string;
-    targetHp: number;
-    targetMaxHp: number;
-    at: number;
-    attackId: AttackId;
-  }): void {
-    void payload.targetHp;
-    void payload.targetMaxHp;
-    if (payload.attackerId !== this.player.id) {
-      return;
-    }
-    this.targetEnemy = {
-      id: payload.targetId,
-      expiresAt: payload.at + TARGET_ENEMY_TTL_MS,
-    };
   }
 }

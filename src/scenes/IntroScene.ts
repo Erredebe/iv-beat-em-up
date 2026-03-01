@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
 import { createPanel, createSceneTitle } from "../ui/sceneChrome";
+import { resolveNextSceneFromIntro } from "./sceneFlow";
 
 type IntroCardStyle = {
   backgroundColor: number;
@@ -248,6 +249,6 @@ export class IntroScene extends Phaser.Scene {
 
   private startGame(): void {
     this.cleanupEvents();
-    this.scene.start("StreetScene");
+    this.scene.start(resolveNextSceneFromIntro());
   }
 }

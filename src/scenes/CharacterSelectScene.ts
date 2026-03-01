@@ -7,6 +7,7 @@ import { stageCatalog } from "../config/levels/stageCatalog";
 import { updateSessionState } from "../config/gameplay/sessionState";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
 import { createPanel, createSceneTitle } from "../ui/sceneChrome";
+import { resolveNextSceneFromCharacterSelect } from "./sceneFlow";
 
 export class CharacterSelectScene extends Phaser.Scene {
   private selectedIndex = 0;
@@ -302,11 +303,12 @@ export class CharacterSelectScene extends Phaser.Scene {
       this.sound.play("sfx_ui", { volume: 0.28, rate: 1.06 });
     }
 
-    if (isFeatureEnabled("storyIntro")) {
-      this.scene.start("IntroScene");
-      return;
-    }
-    this.scene.start("StreetScene");
+    this.scene.start(
+      resolveNextSceneFromCharacterSelect({
+        characterSelect: isFeatureEnabled("characterSelect"),
+        storyIntro: isFeatureEnabled("storyIntro"),
+      }),
+    );
   }
 }
 

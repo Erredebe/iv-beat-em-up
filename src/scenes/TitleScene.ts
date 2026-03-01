@@ -4,6 +4,7 @@ import { isFeatureEnabled } from "../config/features";
 import { resetSessionState } from "../config/gameplay/sessionState";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
 import { createPanel, createSceneTitle } from "../ui/sceneChrome";
+import { resolveNextSceneFromTitle } from "./sceneFlow";
 
 type MenuAction = "play" | "options" | "instructions" | "credits";
 
@@ -302,10 +303,11 @@ export class TitleScene extends Phaser.Scene {
 
   private startGame(): void {
     resetSessionState();
-    if (isFeatureEnabled("characterSelect")) {
-      this.scene.start("CharacterSelectScene");
-      return;
-    }
-    this.scene.start("StreetScene");
+    this.scene.start(
+      resolveNextSceneFromTitle({
+        characterSelect: isFeatureEnabled("characterSelect"),
+        storyIntro: isFeatureEnabled("storyIntro"),
+      }),
+    );
   }
 }

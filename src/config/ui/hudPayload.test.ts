@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { HudPayload } from "../../ui/HudScene";
+import type { HudPayload } from "./hudPayload";
 
 describe("hud payload contract", () => {
   it("requires arcade HUD fields", () => {

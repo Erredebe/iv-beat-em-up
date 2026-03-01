@@ -1,28 +1,9 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
 import { isFeatureEnabled } from "../config/features";
+import type { HudPayload } from "../config/ui/hudPayload";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
 import { depthLayers } from "../config/visual/depthLayers";
-
-export interface HudPayload {
-  playerHp: number;
-  playerMaxHp: number;
-  playerName: string;
-  playerPortraitKey: string;
-  score: number;
-  timeRemainingSec: number;
-  specialCooldownRatio: number;
-  stageName: string;
-  zoneId: string | null;
-  targetEnemy: { id: string; hp: number; maxHp: number; ttlMs: number } | null;
-  visibleEnemies: Array<{ id: string; hp: number; maxHp: number; x: number; y: number }>;
-  controlsHintVisible: boolean;
-  isPaused: boolean;
-  isGameOver: boolean;
-  zoneMessage: string | null;
-  bindingHints: { keyboard: string[]; gamepad: string[] };
-  objectiveText: string;
-}
 
 export class HudScene extends Phaser.Scene {
   private static readonly ENEMY_HINT_FADE_THRESHOLD = 5;
