@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type { BaseFighter } from "../entities/BaseFighter";
 import type { StageBreakablePropConfig } from "../config/levels/stageTypes";
+import { depthPriorities, resolveBreakableDynamicY } from "../config/visual/depthLayers";
 import { resolveScaleReference } from "../config/visual/scaleSystem";
 import type { DepthSystem } from "./DepthSystem";
 import type { CollisionSystem, GroundObstacle } from "./CollisionSystem";
@@ -67,7 +68,12 @@ export class BreakablePropSystem {
         .setOrigin(config.originX, config.originY)
         .setScale(scale)
         .setTint(0xb8c7d2);
-      depthSystem.register(sprite, 0, undefined, 6);
+      // Breakables follow their feet y so they cross behind/in front of fighters predictably.
+      depthSystem.register(sprite, {
+        layer: "BREAKABLE",
+        dynamicY: () => resolveBreakableDynamicY(sprite.y),
+        priority: depthPriorities.BREAKABLE,
+      });
 
       const width = sprite.width * scale;
       const height = sprite.height * scale;

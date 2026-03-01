@@ -1,7 +1,17 @@
+import { dynamicDepthBaseByLayer, type DynamicDepthLayer } from "../config/visual/depthLayers";
+
+type DynamicYResolver = number | (() => number);
+
+interface DepthRegistration {
+  layer: DynamicDepthLayer;
+  dynamicY?: DynamicYResolver;
+  priority?: number;
+}
+
 interface DepthEntry {
   object: Phaser.GameObjects.GameObject & { y: number; depth: number };
-  offset: number;
-  yResolver?: () => number;
+  layer: DynamicDepthLayer;
+  dynamicY?: DynamicYResolver;
   priority: number;
 }
 
@@ -10,11 +20,14 @@ export class DepthSystem {
 
   register(
     object: Phaser.GameObjects.GameObject & { y: number; depth: number },
-    offset = 0,
-    yResolver?: () => number,
-    priority = 0,
+    registration: DepthRegistration,
   ): void {
-    this.entries.push({ object, offset, yResolver, priority });
+    this.entries.push({
+      object,
+      layer: registration.layer,
+      dynamicY: registration.dynamicY,
+      priority: registration.priority ?? 0,
+    });
   }
 
   unregister(object: Phaser.GameObjects.GameObject): void {
@@ -26,8 +39,7 @@ export class DepthSystem {
 
   update(): void {
     for (const entry of this.entries) {
-      const y = entry.yResolver ? entry.yResolver() : entry.object.y;
-      entry.object.depth = 1000 + y + entry.offset + entry.priority * 0.001;
+      entry.object.depth = this.resolveDepth(entry);
     }
   }
 
@@ -36,7 +48,22 @@ export class DepthSystem {
     if (!entry) {
       return null;
     }
-    const y = entry.yResolver ? entry.yResolver() : entry.object.y;
-    return y + entry.offset + entry.priority * 0.001;
+    return this.resolveDepth(entry);
+  }
+
+  private resolveDepth(entry: DepthEntry): number {
+    const layerBase = dynamicDepthBaseByLayer[entry.layer];
+    const y = this.resolveDynamicY(entry);
+    return layerBase + y + entry.priority * 0.001;
+  }
+
+  private resolveDynamicY(entry: DepthEntry): number {
+    if (entry.dynamicY === undefined) {
+      return entry.object.y;
+    }
+    if (typeof entry.dynamicY === "number") {
+      return entry.dynamicY;
+    }
+    return entry.dynamicY();
   }
 }

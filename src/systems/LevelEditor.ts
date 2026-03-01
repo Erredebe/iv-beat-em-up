@@ -7,6 +7,7 @@ import {
   type StagePropConfig,
 } from "../config/levels/street95Zone1";
 import { cloneSpawnZones, type StageSpawnZoneConfig } from "../config/levels/street95Zone1Spawns";
+import { depthLayers } from "../config/visual/depthLayers";
 import {
   SCALE_TIER_ORDER,
   STAGE_PROP_SCALE_REFERENCE,
@@ -114,12 +115,12 @@ export class LevelEditor {
       three: Phaser.Input.Keyboard.KeyCodes.THREE,
     }) as EditorKeyMap;
 
-    this.overlay = scene.add.graphics().setDepth(6300).setVisible(false);
+    this.overlay = scene.add.graphics().setDepth(depthLayers.EDITOR_OVERLAY).setVisible(false);
     this.panelBg = scene.add
       .rectangle(8, 8, BASE_WIDTH - 16, 94, 0x050812, 0.84)
       .setOrigin(0, 0)
       .setScrollFactor(0)
-      .setDepth(6340)
+      .setDepth(depthLayers.EDITOR_PANEL_BG)
       .setVisible(false);
     this.panelText = scene.add
       .text(14, 13, "", {
@@ -128,7 +129,7 @@ export class LevelEditor {
         color: "#dbf5ff",
       })
       .setScrollFactor(0)
-      .setDepth(6350)
+      .setDepth(depthLayers.EDITOR_PANEL_TEXT)
       .setVisible(false);
   }
 

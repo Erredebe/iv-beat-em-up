@@ -18,7 +18,9 @@ export interface StagePropConfig {
   originY: number;
   scaleTier: ScaleTier;
   spriteSpecId: SpriteSpecId;
+  // Optional virtual feet anchor used by DepthSystem for deterministic ordering vs fighters.
   depthAnchorY?: number;
+  // Fine-tune offset applied on top of y/depthAnchorY when resolving dynamic depth.
   depthOffset: number;
 }
 
@@ -42,6 +44,7 @@ export interface StageBreakablePropConfig {
   spriteSpecId: SpriteSpecId;
   maxHp: number;
   points: number;
+  // Breakables are depth-sorted by their own y using the BREAKABLE dynamic layer.
   dropType?: "none" | "small_heal" | "medium_heal";
   dropChance?: number;
   healAmount?: number;

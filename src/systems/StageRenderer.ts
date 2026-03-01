@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT } from "../config/constants";
 import type { StageLayoutConfig } from "../config/levels/stageTypes";
+import { depthLayers, depthPriorities, resolveStagePropDynamicY } from "../config/visual/depthLayers";
 import { resolveScaleReference } from "../config/visual/scaleSystem";
 import type { CollisionSystem } from "./CollisionSystem";
 import type { DepthSystem } from "./DepthSystem";
@@ -107,11 +108,12 @@ export class StageRenderer {
           .setTint(this.layout.visualProfile.foregroundAccents.crateTint)
           .setAlpha(this.layout.visualProfile.foregroundAccents.crateAlpha);
       }
-      if (config.depthAnchorY !== undefined) {
-        depthSystem.register(image, config.depthOffset, () => config.depthAnchorY!, 5);
-      } else {
-        depthSystem.register(image, config.depthOffset, undefined, 5);
-      }
+      // Props with depthAnchorY use that anchor as virtual feet; otherwise they follow their own y.
+      depthSystem.register(image, {
+        layer: "STAGE_PROP",
+        dynamicY: () => resolveStagePropDynamicY(image.y, config.depthAnchorY, config.depthOffset),
+        priority: depthPriorities.STAGE_PROP,
+      });
       return image;
     });
 
@@ -135,7 +137,7 @@ export class StageRenderer {
           stroke: "#000000",
           strokeThickness: 2,
         })
-        .setDepth(58)
+        .setDepth(depthLayers.STAGE_NEON)
         .setAlpha(Phaser.Math.Clamp(this.layout.visualProfile.neonIntensity, 0.55, 1)),
     );
 
@@ -215,7 +217,7 @@ export class StageRenderer {
     const baseGradient = this.layout.visualProfile.baseGradient;
     gradient.fillGradientStyle(baseGradient.topColor, baseGradient.topColor, baseGradient.bottomColor, baseGradient.bottomColor, 1);
     gradient.fillRect(0, 0, worldWidth, BASE_HEIGHT);
-    gradient.setDepth(0);
+    gradient.setDepth(depthLayers.BACKGROUND);
     this.backgroundGradient = gradient;
 
     const gradeConfig = this.layout.visualProfile.colorGrade;
@@ -227,13 +229,13 @@ export class StageRenderer {
       gradeConfig.color,
       Phaser.Math.Clamp(gradeConfig.alpha, 0.03, 0.13),
     );
-    grade.setDepth(4500);
+    grade.setDepth(depthLayers.STAGE_COLOR_GRADE);
     grade.setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.gradeOverlay = grade;
 
     const rainIntensity = Phaser.Math.Clamp(this.layout.visualProfile.rainIntensity, 0, 1);
     if (rainIntensity > 0.01) {
-      const rain = this.scene.add.graphics().setDepth(4501);
+      const rain = this.scene.add.graphics().setDepth(depthLayers.STAGE_RAIN);
       rain.lineStyle(1, 0xcce8ff, 0.04 + rainIntensity * 0.09);
       for (let x = 0; x < worldWidth; x += 24) {
         for (let y = -24; y < BASE_HEIGHT; y += 30) {

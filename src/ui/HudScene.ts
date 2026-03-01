@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
 import { isFeatureEnabled } from "../config/features";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
+import { depthLayers } from "../config/visual/depthLayers";
 
 export interface HudPayload {
   playerHp: number;
@@ -82,7 +83,7 @@ export class HudScene extends Phaser.Scene {
     this.createGameOverPanel();
     this.createCrtOverlay();
 
-    this.enemyBarsGraphics = this.add.graphics().setScrollFactor(0).setDepth(5800);
+    this.enemyBarsGraphics = this.add.graphics().setScrollFactor(0).setDepth(depthLayers.HUD_ENEMY_BARS);
     this.game.events.on("hud:update", this.onHudUpdate, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.game.events.off("hud:update", this.onHudUpdate, this);
@@ -157,7 +158,7 @@ export class HudScene extends Phaser.Scene {
 
   private createMainHud(): void {
     const mainHudScale = 0.58;
-    const panel = this.add.container(6, 6).setScrollFactor(0).setDepth(5600).setScale(mainHudScale);
+    const panel = this.add.container(6, 6).setScrollFactor(0).setDepth(depthLayers.HUD_MAIN).setScale(mainHudScale);
 
     const bg = this.add.rectangle(0, 0, 246, 66, 0x05070a, 0.58).setOrigin(0, 0);
     const border = this.add.rectangle(0, 0, 246, 66, 0x3f5c7a, 0).setOrigin(0, 0).setStrokeStyle(1.5, 0x6f89a3, 0.45);
@@ -244,7 +245,7 @@ export class HudScene extends Phaser.Scene {
   private createTargetHud(): void {
     const panelWidth = 174;
     const panelX = BASE_WIDTH - Math.floor(panelWidth * 0.85) - 8;
-    const panel = this.add.container(panelX, 8).setScrollFactor(0).setDepth(5600).setScale(0.85);
+    const panel = this.add.container(panelX, 8).setScrollFactor(0).setDepth(depthLayers.HUD_MAIN).setScale(0.85);
     panel.add(this.add.rectangle(0, 0, panelWidth, 32, 0x080910, 0.58).setOrigin(0, 0));
     panel.add(this.add.tileSprite(0, 0, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0xff6eb0));
 
@@ -263,7 +264,7 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createControlsPanel(): void {
-    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5900);
+    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_CONTROLS);
     panel.add(this.add.rectangle(20, 152, 388, 88, 0x07090f, 0.45).setOrigin(0, 0));
     panel.add(this.add.tileSprite(20, 152, 388, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
     panel.add(
@@ -281,7 +282,7 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createTutorialPanel(): void {
-    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5950);
+    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_TUTORIAL);
     panel.add(this.add.rectangle(78, 224, 272, 28, 0x05050a, 0.86).setOrigin(0, 0));
     panel.add(this.add.tileSprite(78, 224, 272, 2, "hud_frame").setOrigin(0, 0).setTint(0xffc870));
     panel.add(
@@ -299,7 +300,7 @@ export class HudScene extends Phaser.Scene {
     const panelWidth = 174;
     const panelX = BASE_WIDTH - Math.floor(panelWidth * 0.85) - 8;
     const panelY = 40; 
-    const panel = this.add.container(panelX, panelY).setScrollFactor(0).setDepth(5590).setScale(0.85);
+    const panel = this.add.container(panelX, panelY).setScrollFactor(0).setDepth(depthLayers.HUD_STATUS).setScale(0.85);
     panel.add(this.add.rectangle(0, 0, panelWidth, 24, 0x03050b, 0.58).setOrigin(0, 0));
     panel.add(this.add.tileSprite(0, 0, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0x60f5ff));
     this.statusText = this.add.text(8, 6, "", {
@@ -321,10 +322,10 @@ export class HudScene extends Phaser.Scene {
       .rectangle(0, 0, BASE_WIDTH, BASE_HEIGHT, 0x000000, 0.84)
       .setOrigin(0, 0)
       .setScrollFactor(0)
-      .setDepth(6040)
+      .setDepth(depthLayers.HUD_GAME_OVER_DIM)
       .setVisible(false);
 
-    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(6050);
+    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_GAME_OVER);
     const panelX = Math.floor((BASE_WIDTH - 252) * 0.5);
     const panelY = Math.floor((BASE_HEIGHT - 96) * 0.5);
     panel.add(this.add.rectangle(panelX, panelY, 252, 96, 0x05050a, 0.94).setOrigin(0, 0));
@@ -355,10 +356,10 @@ export class HudScene extends Phaser.Scene {
       .rectangle(0, 0, BASE_WIDTH, BASE_HEIGHT, 0x000000, 0.66)
       .setOrigin(0, 0)
       .setScrollFactor(0)
-      .setDepth(5990)
+      .setDepth(depthLayers.HUD_PAUSE_DIM)
       .setVisible(false);
 
-    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(6000);
+    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_PAUSE_MAIN);
     panel.add(this.add.rectangle(32, 32, 364, 172, 0x06070c, 0.95).setOrigin(0, 0));
     panel.add(this.add.tileSprite(32, 32, 364, 2, "hud_frame").setOrigin(0, 0).setTint(0xff6fb5));
     panel.add(
@@ -479,7 +480,7 @@ export class HudScene extends Phaser.Scene {
 
   private createCrtOverlay(): void {
     const enabled = new URLSearchParams(window.location.search).get("crt") === "1";
-    const overlay = this.add.graphics().setScrollFactor(0).setDepth(6035);
+    const overlay = this.add.graphics().setScrollFactor(0).setDepth(depthLayers.HUD_CRT);
     if (enabled) {
       overlay.fillStyle(0x0a0d12, 0.09);
       for (let y = 0; y < BASE_HEIGHT; y += 2) {
@@ -536,7 +537,7 @@ export class HudScene extends Phaser.Scene {
     }
 
     this.enemyBarsGraphics.clear();
-    this.enemyBarsGraphics.setDepth(5750);
+    this.enemyBarsGraphics.setDepth(depthLayers.HUD_ENEMY_BARS);
     const visibleEnemies = this.selectEnemiesForBars();
     for (const enemy of visibleEnemies) {
       const ratio = Phaser.Math.Clamp(enemy.hp / enemy.maxHp, 0, 1);

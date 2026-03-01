@@ -20,6 +20,7 @@ import { getPlayableCharacter } from "../config/gameplay/playableRoster";
 import { getSessionState, resetSessionState, updateSessionState } from "../config/gameplay/sessionState";
 import { getStageBundle, type StageBundle } from "../config/levels/stageCatalog";
 import { getStageWalkRails } from "../config/levels/stageTypes";
+import { depthLayers, depthPriorities } from "../config/visual/depthLayers";
 import { fighterVisualProfiles } from "../config/visual/fighterVisualProfiles";
 import { ensureFighterAnimations } from "../config/visual/fighterAnimationSets";
 import { EnemyBasic, buildEnemyAttackData, type EnemyArchetype } from "../entities/EnemyBasic";
@@ -189,9 +190,21 @@ export class StreetScene extends Phaser.Scene {
     this.collisionSystem.attachFootCollider(this.player);
     this.collisionSystem.applyWorldBounds(this.player);
 
-    this.depthSystem.register(this.player.shadow, -1, () => this.player.y, -20);
-    this.depthSystem.register(this.player.spriteOutline, -0.2, () => this.player.y, -10);
-    this.depthSystem.register(this.player.sprite, 0, () => this.player.y, 20);
+    this.depthSystem.register(this.player.shadow, {
+      layer: "FIGHTER_SHADOW",
+      dynamicY: () => this.player.y,
+      priority: depthPriorities.FIGHTER_SHADOW,
+    });
+    this.depthSystem.register(this.player.spriteOutline, {
+      layer: "FIGHTER_OUTLINE",
+      dynamicY: () => this.player.y,
+      priority: depthPriorities.FIGHTER_OUTLINE,
+    });
+    this.depthSystem.register(this.player.sprite, {
+      layer: "FIGHTER",
+      dynamicY: () => this.player.y,
+      priority: depthPriorities.FIGHTER,
+    });
 
     this.combatSystem = new CombatSystem({
       hitStopSystem: this.hitStopSystem,
@@ -244,13 +257,13 @@ export class StreetScene extends Phaser.Scene {
       .rectangle(0, 0, BASE_WIDTH, BASE_HEIGHT, 0xffffff, 0)
       .setOrigin(0)
       .setScrollFactor(0)
-      .setDepth(6100);
+      .setDepth(depthLayers.SCENE_FLASH);
 
     this.damageFlashOverlay = this.add
       .rectangle(0, 0, BASE_WIDTH, BASE_HEIGHT, 0xff1f3a, 0)
       .setOrigin(0)
       .setScrollFactor(0)
-      .setDepth(6095);
+      .setDepth(depthLayers.SCENE_DAMAGE_FLASH);
 
     this.debugGraphics = this.add.graphics();
     this.debugText = this.add
@@ -260,7 +273,7 @@ export class StreetScene extends Phaser.Scene {
         color: "#ffffff",
       })
       .setScrollFactor(0)
-      .setDepth(6200)
+      .setDepth(depthLayers.DEBUG_TEXT)
       .setVisible(false);
     this.debugKey = this.input.keyboard!.addKey(DEBUG_TOGGLE_KEY);
     this.perfEnabled = new URLSearchParams(window.location.search).get("perf") === "1";
@@ -276,7 +289,7 @@ export class StreetScene extends Phaser.Scene {
         })
         .setOrigin(1, 0)
         .setScrollFactor(0)
-        .setDepth(6400);
+        .setDepth(depthLayers.PERF_OVERLAY);
     }
 
     this.controlsHintUntil = this.time.now + CONTROLS_HINT_DURATION_MS;
@@ -446,9 +459,21 @@ export class StreetScene extends Phaser.Scene {
     enemy.sprite.setTint(profile.tint);
     this.collisionSystem.attachFootCollider(enemy);
     this.collisionSystem.applyWorldBounds(enemy);
-    this.depthSystem.register(enemy.shadow, -1, () => enemy.y, -20);
-    this.depthSystem.register(enemy.spriteOutline, -0.2, () => enemy.y, -10);
-    this.depthSystem.register(enemy.sprite, 0, () => enemy.y, 20);
+    this.depthSystem.register(enemy.shadow, {
+      layer: "FIGHTER_SHADOW",
+      dynamicY: () => enemy.y,
+      priority: depthPriorities.FIGHTER_SHADOW,
+    });
+    this.depthSystem.register(enemy.spriteOutline, {
+      layer: "FIGHTER_OUTLINE",
+      dynamicY: () => enemy.y,
+      priority: depthPriorities.FIGHTER_OUTLINE,
+    });
+    this.depthSystem.register(enemy.sprite, {
+      layer: "FIGHTER",
+      dynamicY: () => enemy.y,
+      priority: depthPriorities.FIGHTER,
+    });
     return enemy;
   }
 
@@ -813,25 +838,25 @@ export class StreetScene extends Phaser.Scene {
         .setDisplaySize(22, 22)
         .setTint(0x102014)
         .setAlpha(0.95)
-        .setDepth(235);
+        .setDepth(depthLayers.PICKUP_OUTLINE);
       const sprite = this.add
         .image(pickup.x, pickup.y - 16, "utility-white")
         .setDisplaySize(18, 18)
         .setTint(isMediumHeal ? 0x45f28f : 0x89ffcf)
         .setAlpha(1)
-        .setDepth(236);
+        .setDepth(depthLayers.PICKUP_MAIN);
       const crossVertical = this.add
         .image(pickup.x, pickup.y - 16, "utility-white")
         .setDisplaySize(6, 14)
         .setTint(0xffffff)
         .setAlpha(0.96)
-        .setDepth(237);
+        .setDepth(depthLayers.PICKUP_ICON);
       const crossHorizontal = this.add
         .image(pickup.x, pickup.y - 16, "utility-white")
         .setDisplaySize(14, 6)
         .setTint(0xffffff)
         .setAlpha(0.96)
-        .setDepth(237);
+        .setDepth(depthLayers.PICKUP_ICON);
       const pickupSpriteParts: Phaser.GameObjects.Image[] = [outline, sprite, crossVertical, crossHorizontal];
       this.tweens.add({
         targets: pickupSpriteParts,
@@ -901,7 +926,7 @@ export class StreetScene extends Phaser.Scene {
         strokeThickness: 2,
       })
       .setOrigin(0.5)
-      .setDepth(5100);
+      .setDepth(depthLayers.FX_FLOATING_TEXT);
 
     this.tweens.add({
       targets: text,
@@ -921,7 +946,7 @@ export class StreetScene extends Phaser.Scene {
   }
 
   private createHitSpark(x: number, y: number): void {
-    const spark = this.add.image(x, y, "hit_spark").setScale(0.6).setTint(0xfff9c2).setDepth(5000);
+    const spark = this.add.image(x, y, "hit_spark").setScale(0.6).setTint(0xfff9c2).setDepth(depthLayers.FX_HIT);
     this.tweens.add({
       targets: spark,
       alpha: { from: 0.95, to: 0 },
