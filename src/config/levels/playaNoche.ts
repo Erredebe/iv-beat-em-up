@@ -106,7 +106,7 @@ export const playaNocheSpawns: StageSpawnZoneConfig[] = [
       { x: 1360, y: 212, archetype: "rusher" },
       { x: 1500, y: 198, archetype: "agile_f" },
       { x: 1620, y: 206, archetype: "bat_wielder" },
-      { x: 1760, y: 208, archetype: "tank" },
+      { x: 1760, y: 208, archetype: "brawler" },
     ],
   },
 ];
