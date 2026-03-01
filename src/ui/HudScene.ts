@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
+import { isFeatureEnabled } from "../config/features";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
 
 export interface HudPayload {
@@ -23,6 +24,12 @@ export interface HudPayload {
 }
 
 export class HudScene extends Phaser.Scene {
+  private static readonly ENEMY_HINT_FADE_THRESHOLD = 5;
+  private static readonly ENEMY_BARS_LIMIT_THRESHOLD = 7;
+  private static readonly ENEMY_BARS_TARGET_ONLY_THRESHOLD = 11;
+  private static readonly ENEMY_BARS_MAX_NEARBY = 4;
+  private static readonly ENEMY_BAR_NEARBY_DISTANCE = 84;
+
   private hpLabel!: Phaser.GameObjects.Text;
   private hpValue!: Phaser.GameObjects.Text;
   private stageLabel!: Phaser.GameObjects.Text;
@@ -41,7 +48,8 @@ export class HudScene extends Phaser.Scene {
   private pausePanel!: Phaser.GameObjects.Container;
   private tutorialPanel!: Phaser.GameObjects.Container;
   private zoneMessagePanel!: Phaser.GameObjects.Container;
-  private objectivePanel!: Phaser.GameObjects.Container;
+  private statusPanel!: Phaser.GameObjects.Container;
+  private statusText!: Phaser.GameObjects.Text;
   private gameOverPanel!: Phaser.GameObjects.Container;
   private gameOverDim!: Phaser.GameObjects.Rectangle;
   private pauseDim!: Phaser.GameObjects.Rectangle;
@@ -52,17 +60,17 @@ export class HudScene extends Phaser.Scene {
   private currentPayload: HudPayload | null = null;
   private displayedPlayerHp = 0;
   private renderedHintsKey = "";
-  private zoneMessageText!: Phaser.GameObjects.Text;
-  private objectiveText!: Phaser.GameObjects.Text;
   private wasGameOverVisible = false;
   private previousPlayerHp = 0;
   private activePortraitKey = "";
+  private isHudMinimalPreset = false;
 
   constructor() {
     super("HudScene");
   }
 
   create(): void {
+    this.isHudMinimalPreset = isFeatureEnabled("hudMinimalPreset");
     this.cameras.main.setScroll(0, 0);
     this.cameras.main.setBackgroundColor("rgba(0,0,0,0)");
     this.createMainHud();
@@ -70,8 +78,7 @@ export class HudScene extends Phaser.Scene {
     this.createControlsPanel();
     this.createPausePanel();
     this.createTutorialPanel();
-    this.createZoneMessagePanel();
-    this.createObjectivePanel();
+    this.createStatusPanel();
     this.createGameOverPanel();
     this.createCrtOverlay();
 
@@ -99,12 +106,12 @@ export class HudScene extends Phaser.Scene {
 
     this.hpFill.width = Math.floor(this.maxBarWidth * hpRatio);
     this.hpLag.width = Math.floor(this.maxBarWidth * lagRatio);
-    this.hpFill.fillColor = hpRatio < 0.25 ? 0xff466a : 0xf06b3b;
+    this.hpFill.fillColor = hpRatio < 0.25 ? 0xff3b63 : 0xff7b4e;
     this.hpValue.setText(`${roundedHp} / ${this.currentPayload.playerMaxHp}`);
 
     this.specialFill.width = Math.floor(this.specialBarWidth * Phaser.Math.Clamp(this.currentPayload.specialCooldownRatio, 0, 1));
 
-    this.stageLabel.setText(`${this.currentPayload.stageName} ${this.currentPayload.zoneId ? `| ${this.formatZoneLabel(this.currentPayload.zoneId)}` : ""}`);
+    this.stageLabel.setText(this.currentPayload.stageName);
     const scoreText = Math.max(0, Math.floor(this.currentPayload.score)).toString().padStart(7, "0").slice(-7);
     this.scoreLabel.setText(`PUNTOS ${scoreText}`);
     this.timeLabel.setText(`TIEMPO ${this.currentPayload.timeRemainingSec.toString().padStart(3, "0")}`);
@@ -118,13 +125,15 @@ export class HudScene extends Phaser.Scene {
     this.updateTargetBar();
     this.drawEnemyBars();
     this.setHudVisible(!this.currentPayload.isGameOver);
-    this.controlsPanel.setVisible(this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
+    const enemyCount = this.currentPayload.visibleEnemies.length;
+    const shouldFadeHints = enemyCount >= HudScene.ENEMY_HINT_FADE_THRESHOLD;
+    const controlsVisible = this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver;
+
+    this.controlsPanel.setVisible(controlsVisible);
+    this.controlsPanel.setAlpha(shouldFadeHints ? 0.46 : 0.9);
     this.pausePanel.setVisible(this.currentPayload.isPaused);
     this.tutorialPanel.setVisible(this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
-    this.objectivePanel.setVisible(!this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
-    this.zoneMessagePanel.setVisible(Boolean(this.currentPayload.zoneMessage) && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
-    this.zoneMessageText.setText(this.currentPayload.zoneMessage ?? "");
-    this.objectiveText.setText(this.currentPayload.objectiveText);
+    this.updateStatusPanel();
     this.gameOverPanel.setVisible(this.currentPayload.isGameOver);
 
     this.pauseDim.setVisible(this.currentPayload.isPaused && !this.currentPayload.isGameOver);
@@ -157,13 +166,13 @@ export class HudScene extends Phaser.Scene {
     this.portrait = this.add.image(19, 31, "portrait_kastro").setOrigin(0.5).setScale(0.72).setTint(0xfff4dd);
     this.hpLag = this.add.rectangle(48, 26, this.maxBarWidth, 8, 0x5c2143, 0.86).setOrigin(0, 0.5);
     this.hpFill = this.add.rectangle(48, 26, this.maxBarWidth, 8, 0xf06b3b, 1).setOrigin(0, 0.5);
-    this.specialFill = this.add.rectangle(48, 42, this.specialBarWidth, 6, 0x4dc8ff, 1).setOrigin(0, 0.5);
+    this.specialFill = this.add.rectangle(48, 42, this.specialBarWidth, 6, 0x5fd6ff, 1).setOrigin(0, 0.5);
 
     this.hpLabel = this.add.text(46, 3, "JUGADOR", {
       fontFamily: getUiThemeTokens().typography.families.hudText,
       fontSize: "9px",
-      color: "#d4dee7",
-      stroke: "#06080d",
+      color: "#e8f2ff",
+      stroke: "#020304",
       strokeThickness: 1,
     });
 
@@ -171,23 +180,23 @@ export class HudScene extends Phaser.Scene {
       fontFamily: getUiThemeTokens().typography.families.hudText,
       fontSize: "10px",
       color: "#ffffff",
-      stroke: "#06080d",
+      stroke: "#020304",
       strokeThickness: 1,
     });
 
     this.specialLabel = this.add.text(46, 37, "ESP", {
       fontFamily: getUiThemeTokens().typography.families.hudText,
       fontSize: "10px",
-      color: "#9fd6e3",
-      stroke: "#06080d",
+      color: "#a8ebff",
+      stroke: "#020304",
       strokeThickness: 1,
     });
 
     this.stageLabel = this.add.text(0, 68, "STAGE", {
       fontFamily: getUiThemeTokens().typography.families.hudText,
       fontSize: "10px",
-      color: "#9fd6e3",
-      stroke: "#06080d",
+      color: "#a7e6ff",
+      stroke: "#020304",
       strokeThickness: 1,
     });
 
@@ -195,8 +204,8 @@ export class HudScene extends Phaser.Scene {
       .text(242, 2, "PUNTOS 000000", {
         fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "10px",
-        color: "#fff1c3",
-        stroke: "#06080d",
+        color: "#fff4cf",
+        stroke: "#020304",
         strokeThickness: 1,
         wordWrap: { width: 378, useAdvancedWrap: true },
       })
@@ -206,8 +215,8 @@ export class HudScene extends Phaser.Scene {
       .text(242, 13, "TIEMPO 000", {
         fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "10px",
-        color: "#ffcc88",
-        stroke: "#06080d",
+        color: "#ffd498",
+        stroke: "#020304",
         strokeThickness: 1,
         wordWrap: { width: 378, useAdvancedWrap: true },
       })
@@ -236,15 +245,17 @@ export class HudScene extends Phaser.Scene {
     const panelWidth = 174;
     const panelX = BASE_WIDTH - panelWidth - 8;
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5600);
-    panel.add(this.add.rectangle(panelX, 8, panelWidth, 32, 0x090910, 0.62).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(panelX, 8, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
+    panel.add(this.add.rectangle(panelX, 8, panelWidth, 32, 0x080910, 0.74).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(panelX, 8, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0xff6eb0));
 
-    this.targetFill = this.add.rectangle(panelX + 8, 22, this.targetBarWidth, 7, 0xff5a6f, 1).setOrigin(0, 0.5).setDepth(5602);
+    this.targetFill = this.add.rectangle(panelX + 8, 22, this.targetBarWidth, 7, 0xff6685, 1).setOrigin(0, 0.5).setDepth(5602);
     this.targetLabel = this.add
       .text(panelX + 8, 11, "OBJETIVO", {
         fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "10px",
-        color: "#ffd1e8",
+        color: "#ffdeee",
+        stroke: "#1a0b14",
+        strokeThickness: 1,
       })
       .setDepth(5602);
     this.targetFill.setScrollFactor(0);
@@ -287,42 +298,25 @@ export class HudScene extends Phaser.Scene {
     panel.setVisible(true);
   }
 
-  private createZoneMessagePanel(): void {
-    const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5970);
-    panel.add(this.add.rectangle(84, 120, 262, 24, 0x040409, 0.94).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(84, 120, 262, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
-    this.zoneMessageText = this.add.text(92, 126, "", {
-      fontFamily: getUiThemeTokens().typography.families.hudText,
-      fontSize: "9px",
-      color: "#ffe7f4",
-      stroke: "#060309",
-      strokeThickness: 1,
-      wordWrap: { width: 246 },
-      maxLines: 2,
-    });
-    panel.add(this.zoneMessageText);
-    this.zoneMessagePanel = panel;
-    panel.setVisible(false);
-  }
-
-  private createObjectivePanel(): void {
+  private createStatusPanel(): void {
     const panelWidth = 174;
     const panelX = BASE_WIDTH - panelWidth - 8;
     const panelY = 44;
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5590);
-    panel.add(this.add.rectangle(panelX, panelY, panelWidth, 30, 0x040409, 0.58).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
-    this.objectiveText = this.add.text(panelX + 8, panelY + 6, "", {
+    panel.add(this.add.rectangle(panelX, panelY, panelWidth, 24, 0x03050b, 0.76).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0x60f5ff));
+    this.statusText = this.add.text(panelX + 8, panelY + 6, "", {
       fontFamily: getUiThemeTokens().typography.families.hudText,
-      fontSize: "10px",
-      color: "#d9f4ff",
-      stroke: "#041018",
+      fontSize: "9px",
+      color: "#e2f7ff",
+      stroke: "#021118",
       strokeThickness: 1,
       wordWrap: { width: 158, useAdvancedWrap: true },
-      maxLines: 2,
+      maxLines: 1,
     });
-    panel.add(this.objectiveText);
-    this.objectivePanel = panel;
+    panel.add(this.statusText);
+    this.statusPanel = panel;
+    this.zoneMessagePanel = panel;
   }
 
   private createGameOverPanel(): void {
@@ -546,16 +540,74 @@ export class HudScene extends Phaser.Scene {
 
     this.enemyBarsGraphics.clear();
     this.enemyBarsGraphics.setDepth(5750);
-    for (const enemy of this.currentPayload.visibleEnemies) {
+    const visibleEnemies = this.selectEnemiesForBars();
+    for (const enemy of visibleEnemies) {
       const ratio = Phaser.Math.Clamp(enemy.hp / enemy.maxHp, 0, 1);
       const width = 30;
       const x = Math.floor(enemy.x - width * 0.5);
       const y = Math.floor(enemy.y);
-      this.enemyBarsGraphics.fillStyle(0x090910, 0.8);
+      this.enemyBarsGraphics.fillStyle(0x080912, 0.86);
       this.enemyBarsGraphics.fillRect(x, y, width, 5);
-      this.enemyBarsGraphics.fillStyle(0xd9435f, 1);
+      this.enemyBarsGraphics.fillStyle(0xff5470, 1);
       this.enemyBarsGraphics.fillRect(x + 1, y + 1, Math.floor((width - 2) * ratio), 3);
     }
+  }
+
+  private selectEnemiesForBars(): Array<{ id: string; hp: number; maxHp: number; x: number; y: number }> {
+    if (!this.currentPayload) {
+      return [];
+    }
+
+    const enemies = this.currentPayload.visibleEnemies;
+    if (enemies.length <= HudScene.ENEMY_BARS_LIMIT_THRESHOLD) {
+      return enemies;
+    }
+
+    const targetId = this.currentPayload.targetEnemy?.id;
+    if (targetId && enemies.length >= HudScene.ENEMY_BARS_TARGET_ONLY_THRESHOLD) {
+      return enemies.filter((enemy) => enemy.id === targetId);
+    }
+
+    const playerFocusY = BASE_HEIGHT * 0.66;
+    const closeEnemies = enemies
+      .filter((enemy) => Math.abs(enemy.y - playerFocusY) <= HudScene.ENEMY_BAR_NEARBY_DISTANCE)
+      .sort((a, b) => Math.abs(a.y - playerFocusY) - Math.abs(b.y - playerFocusY))
+      .slice(0, HudScene.ENEMY_BARS_MAX_NEARBY);
+
+    if (targetId) {
+      const target = enemies.find((enemy) => enemy.id === targetId);
+      if (target && !closeEnemies.some((enemy) => enemy.id === target.id)) {
+        closeEnemies.unshift(target);
+      }
+    }
+
+    return closeEnemies.length > 0 ? closeEnemies : enemies.slice(0, HudScene.ENEMY_BARS_MAX_NEARBY);
+  }
+
+  private updateStatusPanel(): void {
+    if (!this.currentPayload) {
+      return;
+    }
+
+    const panelVisible = !this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver;
+    this.statusPanel.setVisible(panelVisible);
+    if (!panelVisible) {
+      return;
+    }
+
+    const zoneLine = this.currentPayload.zoneId ? this.formatZoneLabel(this.currentPayload.zoneId) : null;
+    const statusLine = this.currentPayload.zoneMessage?.trim() || this.currentPayload.objectiveText.trim() || zoneLine || "SIGUE ADELANTE";
+
+    this.statusText.setText(this.isHudMinimalPreset ? this.compactStatusText(statusLine) : statusLine);
+    this.statusPanel.setAlpha(this.isHudMinimalPreset ? 0.82 : 1);
+  }
+
+  private compactStatusText(text: string): string {
+    const cleanText = text.replace(/\s+/g, " ").trim();
+    if (cleanText.length <= 34) {
+      return cleanText;
+    }
+    return `${cleanText.slice(0, 31)}...`;
   }
 
   private setHudVisible(visible: boolean): void {
@@ -567,7 +619,7 @@ export class HudScene extends Phaser.Scene {
     this.enemyBarsGraphics?.setVisible(visible);
     if (!visible) {
       this.targetPanel.setVisible(false);
-      this.objectivePanel.setVisible(false);
+      this.statusPanel.setVisible(false);
       this.controlsPanel.setVisible(false);
       this.tutorialPanel.setVisible(false);
       this.zoneMessagePanel.setVisible(false);

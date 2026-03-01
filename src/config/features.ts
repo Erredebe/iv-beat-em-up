@@ -8,6 +8,7 @@ export interface FeatureFlags {
   breakableProps: boolean;
   enhancedSfx: boolean;
   uiThemeV2: boolean;
+  hudMinimalPreset: boolean;
 }
 
 const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
@@ -20,6 +21,7 @@ const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   breakableProps: true,
   enhancedSfx: true,
   uiThemeV2: false,
+  hudMinimalPreset: false,
 };
 
 const STORAGE_KEY = "spain90.featureFlags";
