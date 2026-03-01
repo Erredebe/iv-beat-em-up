@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
+import { getUiThemeTokens } from "../config/ui/uiTheme";
 
 export interface HudPayload {
   playerHp: number;
@@ -159,54 +160,56 @@ export class HudScene extends Phaser.Scene {
     this.specialFill = this.add.rectangle(48, 42, this.specialBarWidth, 6, 0x4dc8ff, 1).setOrigin(0, 0.5);
 
     this.hpLabel = this.add.text(46, 3, "JUGADOR", {
-      fontFamily: "monospace",
-      fontSize: "10px",
+      fontFamily: getUiThemeTokens().typography.families.hudText,
+      fontSize: "9px",
       color: "#d4dee7",
       stroke: "#06080d",
-      strokeThickness: 2,
+      strokeThickness: 1,
     });
 
     this.hpValue = this.add.text(46, 14, "120 / 120", {
-      fontFamily: "monospace",
+      fontFamily: getUiThemeTokens().typography.families.hudText,
       fontSize: "10px",
       color: "#ffffff",
       stroke: "#06080d",
-      strokeThickness: 2,
+      strokeThickness: 1,
     });
 
     this.specialLabel = this.add.text(46, 37, "ESP", {
-      fontFamily: "monospace",
+      fontFamily: getUiThemeTokens().typography.families.hudText,
       fontSize: "10px",
       color: "#9fd6e3",
       stroke: "#06080d",
-      strokeThickness: 2,
+      strokeThickness: 1,
     });
 
     this.stageLabel = this.add.text(0, 68, "STAGE", {
-      fontFamily: "monospace",
+      fontFamily: getUiThemeTokens().typography.families.hudText,
       fontSize: "10px",
       color: "#9fd6e3",
       stroke: "#06080d",
-      strokeThickness: 2,
+      strokeThickness: 1,
     });
 
     this.scoreLabel = this.add
       .text(242, 2, "PUNTOS 000000", {
-        fontFamily: "monospace",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "10px",
         color: "#fff1c3",
         stroke: "#06080d",
-        strokeThickness: 2,
+        strokeThickness: 1,
+        wordWrap: { width: 378, useAdvancedWrap: true },
       })
       .setOrigin(1, 0);
 
     this.timeLabel = this.add
       .text(242, 13, "TIEMPO 000", {
-        fontFamily: "monospace",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "10px",
         color: "#ffcc88",
         stroke: "#06080d",
-        strokeThickness: 2,
+        strokeThickness: 1,
+        wordWrap: { width: 378, useAdvancedWrap: true },
       })
       .setOrigin(1, 0);
 
@@ -234,13 +237,12 @@ export class HudScene extends Phaser.Scene {
     const panelX = BASE_WIDTH - panelWidth - 8;
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(5600);
     panel.add(this.add.rectangle(panelX, 8, panelWidth, 32, 0x090910, 0.62).setOrigin(0, 0));
-    panel.add(this.add.rectangle(panelX + 8, 22, this.targetBarWidth, 7, 0x232334, 0.92).setOrigin(0, 0.5));
     panel.add(this.add.tileSprite(panelX, 8, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
 
     this.targetFill = this.add.rectangle(panelX + 8, 22, this.targetBarWidth, 7, 0xff5a6f, 1).setOrigin(0, 0.5).setDepth(5602);
     this.targetLabel = this.add
       .text(panelX + 8, 11, "OBJETIVO", {
-        fontFamily: "monospace",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "10px",
         color: "#ffd1e8",
       })
@@ -258,11 +260,12 @@ export class HudScene extends Phaser.Scene {
     panel.add(this.add.tileSprite(20, 152, 388, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
     panel.add(
       this.add.text(26, 158, "CONTROLES", {
-        fontFamily: "monospace",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "11px",
         color: "#ffffff",
         stroke: "#030408",
-        strokeThickness: 2,
+        strokeThickness: 1,
+        wordWrap: { width: 378, useAdvancedWrap: true },
       }),
     );
     this.controlsPanel = panel;
@@ -275,7 +278,7 @@ export class HudScene extends Phaser.Scene {
     panel.add(this.add.tileSprite(78, 224, 272, 2, "hud_frame").setOrigin(0, 0).setTint(0xffc870));
     panel.add(
       this.add.text(86, 233, "Pulsa ENTER para cerrar la ayuda", {
-        fontFamily: "monospace",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "10px",
         color: "#ffe6b5",
       }),
@@ -289,11 +292,13 @@ export class HudScene extends Phaser.Scene {
     panel.add(this.add.rectangle(84, 120, 262, 24, 0x040409, 0.94).setOrigin(0, 0));
     panel.add(this.add.tileSprite(84, 120, 262, 2, "hud_frame").setOrigin(0, 0).setTint(0xff5ea8));
     this.zoneMessageText = this.add.text(92, 126, "", {
-      fontFamily: "monospace",
-      fontSize: "10px",
+      fontFamily: getUiThemeTokens().typography.families.hudText,
+      fontSize: "9px",
       color: "#ffe7f4",
       stroke: "#060309",
-      strokeThickness: 2,
+      strokeThickness: 1,
+      wordWrap: { width: 246 },
+      maxLines: 2,
     });
     panel.add(this.zoneMessageText);
     this.zoneMessagePanel = panel;
@@ -308,12 +313,13 @@ export class HudScene extends Phaser.Scene {
     panel.add(this.add.rectangle(panelX, panelY, panelWidth, 30, 0x040409, 0.58).setOrigin(0, 0));
     panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
     this.objectiveText = this.add.text(panelX + 8, panelY + 6, "", {
-      fontFamily: "monospace",
+      fontFamily: getUiThemeTokens().typography.families.hudText,
       fontSize: "10px",
       color: "#d9f4ff",
       stroke: "#041018",
-      strokeThickness: 2,
-      wordWrap: { width: 158 },
+      strokeThickness: 1,
+      wordWrap: { width: 158, useAdvancedWrap: true },
+      maxLines: 2,
     });
     panel.add(this.objectiveText);
     this.objectivePanel = panel;
@@ -335,18 +341,18 @@ export class HudScene extends Phaser.Scene {
     panel.add(this.add.rectangle(panelX + 24, panelY + 53, 204, 1, 0x6f465b, 0.9).setOrigin(0, 0));
     panel.add(
       this.add.text(panelX + 76, panelY + 20, "DERROTA", {
-        fontFamily: "monospace",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "22px",
         color: "#ff8da8",
       }),
     );
     panel.add(
       this.add.text(panelX + 44, panelY + 64, "Pulsa ENTER para reiniciar", {
-        fontFamily: "monospace",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "11px",
         color: "#fff8fb",
         stroke: "#1d0f16",
-        strokeThickness: 2,
+        strokeThickness: 1,
       }),
     );
     this.gameOverPanel = panel;
@@ -366,7 +372,7 @@ export class HudScene extends Phaser.Scene {
     panel.add(this.add.tileSprite(32, 32, 364, 2, "hud_frame").setOrigin(0, 0).setTint(0xff6fb5));
     panel.add(
       this.add.text(48, 48, "PAUSA", {
-        fontFamily: "monospace",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
         fontSize: "16px",
         color: "#f2dbe6",
       }),
@@ -397,29 +403,32 @@ export class HudScene extends Phaser.Scene {
 
     const compact = this.add
       .text(26, 174, `${hints.keyboard[0]}  |  ${hints.keyboard[1]}  |  ${hints.keyboard[2]}`, {
-        fontFamily: "monospace",
-        fontSize: "11px",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontSize: "10px",
         color: "#e8f7ff",
         stroke: "#04070b",
-        strokeThickness: 2,
+        strokeThickness: 1,
+        wordWrap: { width: 376, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     const compact2 = this.add
       .text(26, 192, `${hints.keyboard[3]}  |  ${hints.keyboard[4]}`, {
-        fontFamily: "monospace",
-        fontSize: "11px",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontSize: "10px",
         color: "#ffdeea",
         stroke: "#080307",
-        strokeThickness: 2,
+        strokeThickness: 1,
+        wordWrap: { width: 376, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     const compact3 = this.add
       .text(26, 210, `${hints.gamepad[0]}  |  ${hints.gamepad[1]}`, {
-        fontFamily: "monospace",
-        fontSize: "11px",
+        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontSize: "10px",
         color: "#ffd6e7",
         stroke: "#080307",
-        strokeThickness: 2,
+        strokeThickness: 1,
+        wordWrap: { width: 376, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     this.controlsPanel.add([compact, compact2, compact3]);
@@ -427,22 +436,22 @@ export class HudScene extends Phaser.Scene {
     this.pausePanel.add(
       this.add
         .text(48, 82, "TECLADO", {
-          fontFamily: "monospace",
+          fontFamily: getUiThemeTokens().typography.families.hudText,
           fontSize: "11px",
           color: "#a9deea",
           stroke: "#04070b",
-          strokeThickness: 2,
+          strokeThickness: 1,
         })
         .setName("dynamic-control"),
     );
     this.pausePanel.add(
       this.add
         .text(220, 82, "GAMEPAD", {
-          fontFamily: "monospace",
+          fontFamily: getUiThemeTokens().typography.families.hudText,
           fontSize: "11px",
           color: "#f0c8d9",
           stroke: "#080307",
-          strokeThickness: 2,
+          strokeThickness: 1,
         })
         .setName("dynamic-control"),
     );
@@ -451,11 +460,11 @@ export class HudScene extends Phaser.Scene {
     for (const line of hints.keyboard) {
       const text = this.add
         .text(48, y, line, {
-          fontFamily: "monospace",
+          fontFamily: getUiThemeTokens().typography.families.hudText,
           fontSize: "11px",
           color: "#e7f3f7",
           stroke: "#04070b",
-          strokeThickness: 2,
+          strokeThickness: 1,
         })
         .setName("dynamic-control");
       this.pausePanel.add(text);
@@ -465,11 +474,11 @@ export class HudScene extends Phaser.Scene {
     for (const line of hints.gamepad) {
       const text = this.add
         .text(220, y, line, {
-          fontFamily: "monospace",
+          fontFamily: getUiThemeTokens().typography.families.hudText,
           fontSize: "11px",
           color: "#fae5ee",
           stroke: "#080307",
-          strokeThickness: 2,
+          strokeThickness: 1,
         })
         .setName("dynamic-control");
       this.pausePanel.add(text);

@@ -71,7 +71,7 @@ export function createSceneTitle(scene: Phaser.Scene, options: SceneTitleOptions
   const container = scene.add.container(options.x, options.y);
 
   const title = scene.add.text(0, 0, options.title, {
-    fontFamily: "monospace",
+    fontFamily: theme.typography.families.uiTitle,
     fontSize: options.titleSize ?? theme.typography.title,
     color: theme.palette.textPrimary,
     stroke: theme.textStroke.medium.color,
@@ -84,7 +84,7 @@ export function createSceneTitle(scene: Phaser.Scene, options: SceneTitleOptions
 
   if (options.subtitle) {
     const subtitle = scene.add.text(0, currentY, options.subtitle, {
-      fontFamily: "monospace",
+      fontFamily: theme.typography.families.uiBody,
       fontSize: options.subtitleSize ?? theme.typography.subtitle,
       color: theme.palette.textSecondary,
       stroke: theme.textStroke.light.color,
@@ -97,7 +97,7 @@ export function createSceneTitle(scene: Phaser.Scene, options: SceneTitleOptions
 
   if (options.description) {
     const description = scene.add.text(0, currentY, options.description, {
-      fontFamily: "monospace",
+      fontFamily: theme.typography.families.uiBody,
       fontSize: options.descriptionSize ?? theme.typography.body,
       color: theme.palette.textPrimary,
       stroke: theme.textStroke.light.color,

@@ -116,7 +116,7 @@ export class TitleScene extends Phaser.Scene {
       });
       const label = this.add
         .text(10, 5, item.label, {
-          fontFamily: "monospace",
+          fontFamily: theme.typography.families.uiTitle,
           fontSize: theme.typography.subtitle,
           color: theme.palette.textPrimary,
           stroke: theme.textStroke.light.color,
@@ -136,7 +136,7 @@ export class TitleScene extends Phaser.Scene {
 
     this.add
       .text(50, 228, "UP/DOWN para navegar  |  ENTER confirmar", {
-        fontFamily: "monospace",
+        fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.subtitle,
         color: theme.palette.textSecondary,
       })
@@ -160,7 +160,7 @@ export class TitleScene extends Phaser.Scene {
 
     this.infoPanel = panel.container;
     this.infoPanelTitle = this.add.text(10, 8, "INSTRUCCIONES", {
-      fontFamily: "monospace",
+      fontFamily: theme.typography.families.uiBody,
       fontSize: theme.typography.subtitle,
       color: theme.palette.textHighlight,
       stroke: theme.textStroke.light.color,
@@ -168,7 +168,7 @@ export class TitleScene extends Phaser.Scene {
     });
 
     this.infoPanelText = this.add.text(10, 24, "", {
-      fontFamily: "monospace",
+      fontFamily: theme.typography.families.uiBody,
       fontSize: theme.typography.caption,
       color: theme.palette.textPrimary,
       wordWrap: { width: 166 },
@@ -176,7 +176,7 @@ export class TitleScene extends Phaser.Scene {
     });
 
     this.optionsVolumeText = this.add.text(10, 24, "", {
-      fontFamily: "monospace",
+      fontFamily: theme.typography.families.uiBody,
       fontSize: theme.typography.caption,
       color: theme.palette.textSecondary,
       lineSpacing: 5,

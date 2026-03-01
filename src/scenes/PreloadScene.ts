@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { assetManifest, requiredAssetKeys } from "../config/assets/assetManifest";
 import { derivedTextureCrops } from "../config/assets/derivedTextureCrops";
+import { getUiThemeTokens } from "../config/ui/uiTheme";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -35,11 +36,14 @@ export class PreloadScene extends Phaser.Scene {
     const bg = this.add.rectangle(width * 0.5, height * 0.5, width, height, 0x08020f, 1);
     bg.setOrigin(0.5);
 
+    const theme = getUiThemeTokens();
     this.add
       .text(width * 0.5, height * 0.5 - 26, "CARGANDO CALLE 1995", {
-        fontFamily: "monospace",
-        fontSize: "12px",
+        fontFamily: theme.typography.families.uiTitle,
+        fontSize: theme.typography.body,
         color: "#f4efff",
+        stroke: theme.textStroke.light.color,
+        strokeThickness: theme.textStroke.light.thickness,
       })
       .setOrigin(0.5);
 
