@@ -198,6 +198,7 @@ export class StreetScene extends Phaser.Scene {
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       combatRuntime.dispose();
+      this.inputManager.destroy();
       this.stageRenderer.destroy();
       this.levelEditor.destroy();
       this.breakablePropSystem?.destroy();

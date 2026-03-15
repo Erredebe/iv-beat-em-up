@@ -29,12 +29,18 @@ interface ZoneRuntime {
   rightBarrierSegments: ZoneBarrierSegment[];
   holdStartedAt: number;
   spawnedEnemyCount: number;
+  deployedEnemyCount: number;
   cacheDestroyedIds: Set<string>;
   started: boolean;
   active: boolean;
   cleared: boolean;
   enemies: EnemyBasic[];
+  pendingSpawns: StageSpawnPointConfig[];
+  nextReinforcementAt: number;
 }
+
+const STAGGERED_REINFORCEMENT_DELAY_MS = 1400;
+const BURST_REINFORCEMENT_DELAY_MS = 650;
 
 export interface ZoneObjectiveProgress {
   label: string;
@@ -81,11 +87,14 @@ export class SpawnManager {
         rightBarrierSegments,
         holdStartedAt: 0,
         spawnedEnemyCount: 0,
+        deployedEnemyCount: 0,
         cacheDestroyedIds: new Set<string>(),
         started: false,
         active: false,
         cleared: false,
         enemies: [],
+        pendingSpawns: [],
+        nextReinforcementAt: 0,
       };
     });
   }
@@ -104,6 +113,12 @@ export class SpawnManager {
 
       const alive = zone.enemies.filter((enemy) => enemy.isAlive());
       zone.enemies = alive;
+      const reinforcements = this.tryDeployReinforcements(zone, alive.length, nowMs);
+      if (reinforcements.length > 0) {
+        zone.enemies.push(...reinforcements);
+        alive.push(...reinforcements);
+        spawned.push(...reinforcements);
+      }
       if (this.isZoneObjectiveCompleted(zone, alive.length, nowMs)) {
         zone.active = false;
         zone.cleared = true;
@@ -127,6 +142,7 @@ export class SpawnManager {
     zone.cleared = false;
     zone.holdStartedAt = nowMs;
     zone.spawnedEnemyCount = zone.spawns.length;
+    zone.deployedEnemyCount = 0;
     zone.cacheDestroyedIds.clear();
     this.activeZoneId = zone.id;
 
@@ -135,7 +151,8 @@ export class SpawnManager {
       this.setBarriersEnabled(zone.rightBarriers, true);
     }
 
-    zone.enemies = zone.spawns.map((spawn) => this.createEnemy(spawn));
+    zone.pendingSpawns = [...zone.spawns];
+    zone.enemies = this.deployInitialWave(zone, nowMs);
     return zone.enemies;
   }
 
@@ -319,6 +336,64 @@ export class SpawnManager {
     }
 
     return segments;
+  }
+
+  private deployInitialWave(zone: ZoneRuntime, nowMs: number): EnemyBasic[] {
+    const initialCount = this.resolveInitialSpawnCount(zone);
+    return this.spawnFromQueue(zone, initialCount, nowMs);
+  }
+
+  private tryDeployReinforcements(zone: ZoneRuntime, aliveCount: number, nowMs: number): EnemyBasic[] {
+    if (!zone.active || zone.pendingSpawns.length === 0) {
+      return [];
+    }
+
+    if (zone.reinforcementPolicy === "none") {
+      return this.spawnFromQueue(zone, zone.pendingSpawns.length, nowMs);
+    }
+
+    if (zone.reinforcementPolicy === "burst") {
+      if (nowMs < zone.nextReinforcementAt || aliveCount > Math.max(1, zone.deployedEnemyCount - 1)) {
+        return [];
+      }
+      return this.spawnFromQueue(zone, zone.pendingSpawns.length, nowMs);
+    }
+
+    if (nowMs < zone.nextReinforcementAt) {
+      return [];
+    }
+    if (aliveCount > Math.max(1, Math.ceil(zone.deployedEnemyCount * 0.5))) {
+      return [];
+    }
+
+    return this.spawnFromQueue(zone, 1, nowMs);
+  }
+
+  private resolveInitialSpawnCount(zone: ZoneRuntime): number {
+    const total = zone.pendingSpawns.length;
+    if (zone.reinforcementPolicy === "staggered") {
+      return Math.max(1, Math.ceil(total * 0.5));
+    }
+    if (zone.reinforcementPolicy === "burst") {
+      return Math.max(1, total - 1);
+    }
+    return total;
+  }
+
+  private spawnFromQueue(zone: ZoneRuntime, count: number, nowMs: number): EnemyBasic[] {
+    const resolvedCount = Math.max(0, Math.min(count, zone.pendingSpawns.length));
+    if (resolvedCount === 0) {
+      return [];
+    }
+
+    const spawned = zone.pendingSpawns.splice(0, resolvedCount).map((spawn) => this.createEnemy(spawn));
+    zone.deployedEnemyCount += spawned.length;
+    if (zone.pendingSpawns.length > 0) {
+      zone.nextReinforcementAt = nowMs + (zone.reinforcementPolicy === "burst" ? BURST_REINFORCEMENT_DELAY_MS : STAGGERED_REINFORCEMENT_DELAY_MS);
+    } else {
+      zone.nextReinforcementAt = 0;
+    }
+    return spawned;
   }
 
   private isZoneObjectiveCompleted(zone: ZoneRuntime, aliveCount: number, nowMs: number): boolean {

@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "build:runtime-images": "node scripts/art/build-runtime-images.cjs"
+    "build:runtime-images": "node scripts/art/build-runtime-images.cjs",
+    "qa:stage": "node scripts/qa/complete-stage-smoke.cjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

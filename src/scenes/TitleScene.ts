@@ -28,6 +28,11 @@ export class TitleScene extends Phaser.Scene {
   private infoPanelTitle!: Phaser.GameObjects.Text;
   private optionsVolumeText!: Phaser.GameObjects.Text;
   private volume = 0.7;
+  private readonly onMoveSelectionUp = () => this.moveSelection(-1);
+  private readonly onMoveSelectionDown = () => this.moveSelection(1);
+  private readonly onConfirmSelection = () => this.triggerSelectedAction();
+  private readonly onVolumeLeft = () => this.changeVolume(-0.1);
+  private readonly onVolumeRight = () => this.changeVolume(0.1);
 
   constructor() {
     super("TitleScene");
@@ -46,6 +51,7 @@ export class TitleScene extends Phaser.Scene {
     this.bindInputs();
     this.refreshSelection();
     this.showInstructions();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.unbindInputs, this);
   }
 
   private createBackdrop(): void {
@@ -188,12 +194,21 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private bindInputs(): void {
-    this.input.keyboard?.on("keydown-UP", () => this.moveSelection(-1));
-    this.input.keyboard?.on("keydown-DOWN", () => this.moveSelection(1));
-    this.input.keyboard?.on("keydown-ENTER", () => this.triggerSelectedAction());
-    this.input.keyboard?.on("keydown-SPACE", () => this.triggerSelectedAction());
-    this.input.keyboard?.on("keydown-LEFT", () => this.changeVolume(-0.1));
-    this.input.keyboard?.on("keydown-RIGHT", () => this.changeVolume(0.1));
+    this.input.keyboard?.on("keydown-UP", this.onMoveSelectionUp);
+    this.input.keyboard?.on("keydown-DOWN", this.onMoveSelectionDown);
+    this.input.keyboard?.on("keydown-ENTER", this.onConfirmSelection);
+    this.input.keyboard?.on("keydown-SPACE", this.onConfirmSelection);
+    this.input.keyboard?.on("keydown-LEFT", this.onVolumeLeft);
+    this.input.keyboard?.on("keydown-RIGHT", this.onVolumeRight);
+  }
+
+  private unbindInputs(): void {
+    this.input.keyboard?.off("keydown-UP", this.onMoveSelectionUp);
+    this.input.keyboard?.off("keydown-DOWN", this.onMoveSelectionDown);
+    this.input.keyboard?.off("keydown-ENTER", this.onConfirmSelection);
+    this.input.keyboard?.off("keydown-SPACE", this.onConfirmSelection);
+    this.input.keyboard?.off("keydown-LEFT", this.onVolumeLeft);
+    this.input.keyboard?.off("keydown-RIGHT", this.onVolumeRight);
   }
 
   private moveSelection(delta: number): void {

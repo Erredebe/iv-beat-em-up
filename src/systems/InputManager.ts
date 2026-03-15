@@ -20,6 +20,7 @@ type DirectionTap = "left" | "right";
 
 export class InputManager {
   private readonly scene: Phaser.Scene;
+  private readonly keyboard: Phaser.Input.Keyboard.KeyboardPlugin;
   private readonly keys: Record<InputAction, Phaser.Input.Keyboard.Key>;
   private readonly bufferedAt = new Map<InputAction, number>();
   private readonly previousGamepadButtons = new Map<number, boolean[]>();
@@ -29,6 +30,7 @@ export class InputManager {
   };
   private bufferedBackstep: { at: number; direction: -1 | 1 } | null = null;
   private nowMs = 0;
+  private readonly handleKeyDown: (event: KeyboardEvent) => void;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -36,6 +38,7 @@ export class InputManager {
     if (!keyboard) {
       throw new Error("Keyboard input is required for InputManager.");
     }
+    this.keyboard = keyboard;
 
     this.keys = keyboard.addKeys({
       up: Phaser.Input.Keyboard.KeyCodes.UP,
@@ -49,11 +52,22 @@ export class InputManager {
       ui_confirm: Phaser.Input.Keyboard.KeyCodes.ENTER,
     }) as Record<InputAction, Phaser.Input.Keyboard.Key>;
 
-    keyboard.on("keydown", (event: KeyboardEvent) => {
+    this.handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === "NumpadEnter") {
         this.bufferedAt.set("ui_confirm", this.nowMs);
       }
-    });
+    };
+    keyboard.on("keydown", this.handleKeyDown);
+  }
+
+  destroy(): void {
+    this.keyboard.off("keydown", this.handleKeyDown);
+    for (const key of Object.values(this.keys)) {
+      this.keyboard.removeKey(key);
+    }
+    this.previousGamepadButtons.clear();
+    this.bufferedAt.clear();
+    this.bufferedBackstep = null;
   }
 
   update(timeMs: number): void {

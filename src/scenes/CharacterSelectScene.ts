@@ -16,6 +16,11 @@ export class CharacterSelectScene extends Phaser.Scene {
   private selectedStageText!: Phaser.GameObjects.Text;
   private selectedStageBanner!: Phaser.GameObjects.Rectangle;
   private selectedStageIcon!: Phaser.GameObjects.Text;
+  private readonly onMoveLeft = () => this.moveSelection(-1);
+  private readonly onMoveRight = () => this.moveSelection(1);
+  private readonly onMoveStageUp = () => this.moveStageSelection(-1);
+  private readonly onMoveStageDown = () => this.moveStageSelection(1);
+  private readonly onConfirmSelection = () => this.confirmSelection();
 
   constructor() {
     super("CharacterSelectScene");
@@ -134,19 +139,37 @@ export class CharacterSelectScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    this.input.keyboard?.on("keydown-LEFT", () => this.moveSelection(-1));
-    this.input.keyboard?.on("keydown-A", () => this.moveSelection(-1));
-    this.input.keyboard?.on("keydown-RIGHT", () => this.moveSelection(1));
-    this.input.keyboard?.on("keydown-D", () => this.moveSelection(1));
-    this.input.keyboard?.on("keydown-UP", () => this.moveStageSelection(-1));
-    this.input.keyboard?.on("keydown-DOWN", () => this.moveStageSelection(1));
-    this.input.keyboard?.on("keydown-W", () => this.moveStageSelection(-1));
-    this.input.keyboard?.on("keydown-S", () => this.moveStageSelection(1));
-    this.input.keyboard?.on("keydown-ENTER", () => this.confirmSelection());
-    this.input.keyboard?.on("keydown-SPACE", () => this.confirmSelection());
+    this.bindInputs();
 
     this.refreshSelection();
     this.refreshStageSelection();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.unbindInputs, this);
+  }
+
+  private bindInputs(): void {
+    this.input.keyboard?.on("keydown-LEFT", this.onMoveLeft);
+    this.input.keyboard?.on("keydown-A", this.onMoveLeft);
+    this.input.keyboard?.on("keydown-RIGHT", this.onMoveRight);
+    this.input.keyboard?.on("keydown-D", this.onMoveRight);
+    this.input.keyboard?.on("keydown-UP", this.onMoveStageUp);
+    this.input.keyboard?.on("keydown-DOWN", this.onMoveStageDown);
+    this.input.keyboard?.on("keydown-W", this.onMoveStageUp);
+    this.input.keyboard?.on("keydown-S", this.onMoveStageDown);
+    this.input.keyboard?.on("keydown-ENTER", this.onConfirmSelection);
+    this.input.keyboard?.on("keydown-SPACE", this.onConfirmSelection);
+  }
+
+  private unbindInputs(): void {
+    this.input.keyboard?.off("keydown-LEFT", this.onMoveLeft);
+    this.input.keyboard?.off("keydown-A", this.onMoveLeft);
+    this.input.keyboard?.off("keydown-RIGHT", this.onMoveRight);
+    this.input.keyboard?.off("keydown-D", this.onMoveRight);
+    this.input.keyboard?.off("keydown-UP", this.onMoveStageUp);
+    this.input.keyboard?.off("keydown-DOWN", this.onMoveStageDown);
+    this.input.keyboard?.off("keydown-W", this.onMoveStageUp);
+    this.input.keyboard?.off("keydown-S", this.onMoveStageDown);
+    this.input.keyboard?.off("keydown-ENTER", this.onConfirmSelection);
+    this.input.keyboard?.off("keydown-SPACE", this.onConfirmSelection);
   }
 
   private moveSelection(delta: number): void {
