@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import type Phaser from "phaser";
 
 const MAX_EFFECTIVE_HIT_STOP_MS = 24;
 
@@ -25,7 +25,11 @@ export class HitStopSystem {
     }
   }
 
+  isActiveAt(nowMs: number): boolean {
+    return this.stopUntil > nowMs;
+  }
+
   isActive(): boolean {
-    return this.stopUntil > this.scene.time.now;
+    return this.isActiveAt(this.scene.time.now);
   }
 }

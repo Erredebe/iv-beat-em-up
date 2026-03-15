@@ -233,6 +233,21 @@ export class BaseFighter {
     this.updateVisualTone(nowMs);
   }
 
+  setAnimationPaused(paused: boolean): void {
+    if (paused) {
+      this.sprite.anims.pause();
+      this.spriteOutline.anims.pause();
+      return;
+    }
+    this.sprite.anims.resume();
+    this.spriteOutline.anims.resume();
+  }
+
+  syncExternalPosition(nowMs: number): void {
+    this.syncVisual();
+    this.updateVisualTone(nowMs);
+  }
+
   destroy(): void {
     this.sprite.destroy();
     this.spriteOutline.destroy();
@@ -249,6 +264,10 @@ export class BaseFighter {
 
   clearMoveIntent(): void {
     this.moveIntent.set(0, 0);
+  }
+
+  setPosition(x: number, y: number): void {
+    this.footCollider.setPosition(x, y);
   }
 
   faceTowards(targetX: number): void {
@@ -653,7 +672,26 @@ export class BaseFighter {
       return;
     }
     const displacement = movedFrames * selfMoveXPerFrame * this.facing;
-    this.footCollider.setPosition(this.x + displacement, this.y);
+    const currentX = this.x;
+    const currentY = this.y;
+    let nextX = currentX + displacement;
+    let nextY = currentY;
+
+    if (this.clampPosition) {
+      const clamped = this.clampPosition(nextX, nextY);
+      nextX = clamped.x;
+      nextY = clamped.y;
+    }
+
+    if (this.navigationSystem && this.getNavigationZoneState) {
+      const from = this.navigationSystem.projectToNearestRail(currentX, currentY);
+      const to = this.navigationSystem.projectToNearestRail(nextX, nextY);
+      if (this.navigationSystem.isPathBlocked(from, to, this.getNavigationZoneState())) {
+        return;
+      }
+    }
+
+    this.footCollider.setPosition(nextX, nextY);
   }
 
   private applyVelocity(deltaMs: number): void {
@@ -807,6 +845,10 @@ export class BaseFighter {
   }
 
   private resolveClipForState(state: FighterState): AnimationClipId {
+    const attackClip = this.attackRuntime ? this.attackData[this.attackRuntime.attackId]?.visualClipId : null;
+    if (attackClip) {
+      return attackClip;
+    }
     if (state === "WALK") {
       return "walk";
     }

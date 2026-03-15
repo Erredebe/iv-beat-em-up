@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import type Phaser from "phaser";
 import type { BaseFighter } from "../entities/BaseFighter";
 import type { HitStopSystem } from "./HitStopSystem";
 import { rectIntersects } from "./combatMath";

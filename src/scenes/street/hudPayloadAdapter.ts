@@ -14,6 +14,8 @@ interface HudCameraSnapshot {
   scrollX: number;
   scrollY: number;
   width: number;
+  height: number;
+  zoom: number;
 }
 
 export interface StreetHudPayloadInput {
@@ -39,16 +41,31 @@ export interface StreetHudPayloadInput {
   bindingHints: HudBindingHints;
 }
 
+export function projectWorldToHud(
+  camera: HudCameraSnapshot,
+  worldX: number,
+  worldY: number,
+): Pick<HudVisibleEnemyPayload, "x" | "y"> {
+  return {
+    x: (worldX - camera.scrollX) * camera.zoom,
+    y: (worldY - camera.scrollY) * camera.zoom,
+  };
+}
+
 function resolveVisibleEnemies(camera: HudCameraSnapshot, enemies: readonly EnemyBasic[]): HudVisibleEnemyPayload[] {
+  const visibleWorldWidth = camera.width / Math.max(0.0001, camera.zoom);
   return enemies
-    .filter((enemy) => enemy.isAlive() && enemy.x >= camera.scrollX - 20 && enemy.x <= camera.scrollX + camera.width + 20)
-    .map((enemy) => ({
-      id: enemy.id,
-      hp: enemy.hp,
-      maxHp: enemy.maxHp,
-      x: enemy.x - camera.scrollX,
-      y: enemy.y - camera.scrollY - 82,
-    }));
+    .filter((enemy) => enemy.isAlive() && enemy.x >= camera.scrollX - 20 && enemy.x <= camera.scrollX + visibleWorldWidth + 20)
+    .map((enemy) => {
+      const projected = projectWorldToHud(camera, enemy.x, enemy.y - 82);
+      return {
+        id: enemy.id,
+        hp: enemy.hp,
+        maxHp: enemy.maxHp,
+        x: projected.x,
+        y: projected.y,
+      };
+    });
 }
 
 export function buildStreetHudPayload(input: StreetHudPayloadInput): HudPayload {

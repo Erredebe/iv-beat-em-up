@@ -61,6 +61,7 @@ export class StageRenderer {
       const sprite = this.scene.add
         .tileSprite(0, band.y, worldWidth, band.height, band.textureKey)
         .setOrigin(0, 0)
+        .setScrollFactor(0)
         .setDepth(band.depth)
         .setAlpha(band.alpha);
       sprite.setTileScale(0.5, 0.5);

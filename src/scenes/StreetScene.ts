@@ -46,6 +46,9 @@ interface ActiveHealPickup {
 
 type HitSparkTier = "light" | "heavy" | "special";
 
+const FIGHTER_SEPARATION_X = 26;
+const FIGHTER_SEPARATION_Y = 18;
+
 const ENEMY_POINTS_BY_ARCHETYPE: Record<EnemyArchetype, number> = {
   brawler: 120,
   rusher: 140,
@@ -106,6 +109,7 @@ export class StreetScene extends Phaser.Scene {
   private perfMinFps = Number.POSITIVE_INFINITY;
   private perfSumFps = 0;
   private perfSampleCount = 0;
+  private hitStopPausedAnimations = false;
 
   constructor() {
     super("StreetScene");
@@ -119,6 +123,7 @@ export class StreetScene extends Phaser.Scene {
     this.lastActiveZoneId = null;
     this.stageTransitionQueued = false;
     this.healPickups = [];
+    this.hitStopPausedAnimations = false;
 
     if (!this.scene.isActive("HudScene")) {
       this.scene.launch("HudScene");
@@ -329,6 +334,16 @@ export class StreetScene extends Phaser.Scene {
     }
 
     this.hitStopSystem.update(time);
+    if (this.hitStopSystem.isActiveAt(time)) {
+      this.setActorsAnimationPaused(true);
+      this.stopActorsMotion();
+      this.updateParallax();
+      this.updateHud();
+      this.updatePerfOverlay();
+      this.renderDebug(delta);
+      return;
+    }
+    this.setActorsAnimationPaused(false);
     if (this.isPausedByPlayer) {
       this.updateParallax();
       this.updateHud();
@@ -394,6 +409,7 @@ export class StreetScene extends Phaser.Scene {
     }
 
     this.resolveHealPickupCollection();
+    this.separateFighters(time);
     this.cleanupDeadEnemies();
 
     if (this.spawnManager.getActiveZoneId()) {
@@ -671,6 +687,58 @@ export class StreetScene extends Phaser.Scene {
       body.setVelocity(0, 0);
       enemy.clearMoveIntent();
     }
+  }
+
+  private setActorsAnimationPaused(paused: boolean): void {
+    if (this.hitStopPausedAnimations === paused) {
+      return;
+    }
+    this.hitStopPausedAnimations = paused;
+    this.player.setAnimationPaused(paused);
+    for (const enemy of this.enemies) {
+      enemy.setAnimationPaused(paused);
+    }
+  }
+
+  private separateFighters(nowMs: number): void {
+    const fighters = [this.player, ...this.enemies.filter((enemy) => enemy.isAlive())];
+    for (let i = 0; i < fighters.length; i += 1) {
+      for (let j = i + 1; j < fighters.length; j += 1) {
+        const left = fighters[i];
+        const right = fighters[j];
+        const dx = right.x - left.x;
+        const dy = right.y - left.y;
+        const overlapX = FIGHTER_SEPARATION_X - Math.abs(dx);
+        const overlapY = FIGHTER_SEPARATION_Y - Math.abs(dy);
+        if (overlapX <= 0 || overlapY <= 0) {
+          continue;
+        }
+
+        const pushSignX = dx === 0 ? (left.team === "player" ? 1 : -1) : Math.sign(dx);
+        const pushSignY = dy === 0 ? 1 : Math.sign(dy);
+        const preferX = overlapX <= overlapY * 1.4;
+        const playerWeight = left.team === "player" || right.team === "player" ? 0.35 : 0.5;
+        const leftWeight = left.team === "player" ? playerWeight : right.team === "player" ? 1 - playerWeight : 0.5;
+        const rightWeight = 1 - leftWeight;
+
+        if (preferX) {
+          this.pushFighter(left, -(overlapX * leftWeight) * pushSignX, 0, nowMs);
+          this.pushFighter(right, overlapX * rightWeight * pushSignX, 0, nowMs);
+          continue;
+        }
+
+        this.pushFighter(left, 0, -(overlapY * leftWeight) * pushSignY, nowMs);
+        this.pushFighter(right, 0, overlapY * rightWeight * pushSignY, nowMs);
+      }
+    }
+  }
+
+  private pushFighter(fighter: Player | EnemyBasic, deltaX: number, deltaY: number, nowMs: number): void {
+    const clamped = this.collisionSystem.clampPositionToRail(fighter.x + deltaX, fighter.y + deltaY);
+    fighter.setPosition(clamped.x, clamped.y);
+    fighter.syncExternalPosition(nowMs);
+    const body = fighter.footCollider.body as Phaser.Physics.Arcade.Body;
+    body.setVelocity(0, 0);
   }
 
   private renderDebug(deltaMs: number): void {
