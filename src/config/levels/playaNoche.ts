@@ -17,7 +17,7 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
     { id: "rail_east", xStart: 1700, xEnd: 2560, topY: 182, bottomY: 226, preferredY: 205 },
   ],
   layers: [
-    { id: "facade", depth: 76, alpha: 0.8, targetRows: [2, 3], sourceRows: [1, 0] },
+    { id: "facade", depth: 76, alpha: 0.8, scale: 0.625, offsetY: -16, targetRows: [2, 3], sourceRows: [1, 0] },
     { id: "sidewalk", depth: 88, alpha: 0.9, targetRows: [4], sourceRows: [10] },
     { id: "road", depth: 100, alpha: 0.94, targetRows: [5, 6], sourceRows: [11, 11] },
     { id: "foreground_deco", depth: 240, alpha: 0.82, targetRows: [7], sourceRows: [9] },
@@ -29,6 +29,7 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
         textureKey: "prop_booth_front",
         scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
+        scaleOverride: 0.34,
         alpha: 0.7,
         tint: 0x7c9eb2,
       },
@@ -48,6 +49,7 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
         textureKey: "prop_booth_front",
         scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
+        scaleOverride: 0.34,
         tint: 0x8cb9d2,
       },
       transform: {
@@ -63,8 +65,8 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
         color: 0x74dcff,
         footprint: {
           mode: "explicit",
-          width: 58,
-          height: 14,
+          width: 82,
+          height: 18,
         },
       },
       behavior: { type: "static" },
@@ -75,6 +77,7 @@ export const playaNocheLayout: StageLayoutConfig = defineStageLayout({
         textureKey: "prop_booth_front",
         scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
+        scaleOverride: 0.34,
         alpha: 0.76,
         tint: 0x668aa4,
       },

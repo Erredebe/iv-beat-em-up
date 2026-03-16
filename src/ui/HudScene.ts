@@ -37,8 +37,8 @@ export class HudScene extends Phaser.Scene {
   private gameOverDim!: Phaser.GameObjects.Rectangle;
   private pauseDim!: Phaser.GameObjects.Rectangle;
   private hudElements: Phaser.GameObjects.GameObject[] = [];
-  private maxBarWidth = 118;
-  private specialBarWidth = 78;
+  private maxBarWidth = 96;
+  private specialBarWidth = 58;
   private targetBarWidth = 132;
   private currentPayload: HudPayload | null = null;
   private displayedPlayerHp = 0;
@@ -110,10 +110,10 @@ export class HudScene extends Phaser.Scene {
     this.setHudVisible(!this.currentPayload.isGameOver);
     const enemyCount = this.currentPayload.visibleEnemies.length;
     const shouldFadeHints = enemyCount >= HudScene.ENEMY_HINT_FADE_THRESHOLD;
-    const controlsVisible = this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver;
+    const controlsVisible = this.currentPayload.controlsHintVisible && enemyCount === 0 && !this.currentPayload.isPaused && !this.currentPayload.isGameOver;
 
     this.controlsPanel.setVisible(controlsVisible);
-    this.controlsPanel.setAlpha(shouldFadeHints ? 0.46 : 0.9);
+    this.controlsPanel.setAlpha(shouldFadeHints ? 0.34 : 0.72);
     this.pausePanel.setVisible(this.currentPayload.isPaused);
     this.tutorialPanel.setVisible(this.currentPayload.controlsHintVisible && !this.currentPayload.isPaused && !this.currentPayload.isGameOver);
     this.updateStatusPanel();
@@ -140,71 +140,71 @@ export class HudScene extends Phaser.Scene {
 
   private createMainHud(): void {
     const theme = getUiThemeTokens();
-    const panel = this.add.container(8, 8).setScrollFactor(0).setDepth(depthLayers.HUD_MAIN);
+    const panel = this.add.container(6, 6).setScrollFactor(0).setDepth(depthLayers.HUD_MAIN);
 
-    const bg = this.add.rectangle(0, 0, 222, 54, hexColor(theme.panel.overlayFill), 0.82).setOrigin(0, 0);
+    const bg = this.add.rectangle(0, 0, 186, 42, hexColor(theme.panel.overlayFill), 0.78).setOrigin(0, 0);
     const border = this.add
-      .rectangle(0, 0, 222, 54, hexColor(theme.panel.mutedBorder), 0)
+      .rectangle(0, 0, 186, 42, hexColor(theme.panel.mutedBorder), 0)
       .setOrigin(0, 0)
-      .setStrokeStyle(2, hexColor(theme.panel.mutedBorder), 0.78);
-    const topAccent = this.add.rectangle(0, 0, 222, 2, hexColor(theme.palette.accentBlue), 1).setOrigin(0, 0);
-    const hpBg = this.add.rectangle(44, 17, 126, 10, hexColor(theme.palette.panelElevated), 0.98).setOrigin(0, 0);
-    const specialBg = this.add.rectangle(44, 33, 82, 6, hexColor(theme.palette.panelElevated), 0.98).setOrigin(0, 0);
+      .setStrokeStyle(2, hexColor(theme.panel.mutedBorder), 0.72);
+    const topAccent = this.add.rectangle(0, 0, 186, 2, hexColor(theme.palette.accentBlue), 1).setOrigin(0, 0);
+    const hpBg = this.add.rectangle(36, 14, 104, 8, hexColor(theme.palette.panelElevated), 0.98).setOrigin(0, 0);
+    const specialBg = this.add.rectangle(36, 27, 66, 5, hexColor(theme.palette.panelElevated), 0.98).setOrigin(0, 0);
 
-    this.portrait = this.add.image(22, 28, "portrait_kastro").setOrigin(0.5).setScale(0.5).setTint(0xfff4dd);
-    this.hpLag = this.add.rectangle(46, 22, this.maxBarWidth, 6, 0x5c2143, 0.92).setOrigin(0, 0.5);
-    this.hpFill = this.add.rectangle(46, 22, this.maxBarWidth, 6, 0xf06b3b, 1).setOrigin(0, 0.5);
-    this.specialFill = this.add.rectangle(46, 36, this.specialBarWidth, 4, hexColor(theme.palette.accentBlue), 1).setOrigin(0, 0.5);
+    this.portrait = this.add.image(18, 21, "portrait_kastro").setOrigin(0.5).setScale(0.36).setTint(0xfff4dd);
+    this.hpLag = this.add.rectangle(38, 18, this.maxBarWidth, 5, 0x5c2143, 0.92).setOrigin(0, 0.5);
+    this.hpFill = this.add.rectangle(38, 18, this.maxBarWidth, 5, 0xf06b3b, 1).setOrigin(0, 0.5);
+    this.specialFill = this.add.rectangle(38, 29, this.specialBarWidth, 3, hexColor(theme.palette.accentBlue), 1).setOrigin(0, 0.5);
 
-    this.hpLabel = this.add.text(44, 3, "JUGADOR", {
+    this.hpLabel = this.add.text(36, 3, "JUGADOR", {
       fontFamily: theme.typography.families.hudText,
-      fontSize: "10px",
+      fontSize: "8px",
       color: theme.palette.textPrimary,
       stroke: theme.textStroke.light.color,
-      strokeThickness: 2,
+      strokeThickness: 1,
     });
 
-    this.hpValue = this.add.text(176, 15, "120 / 120", {
+    this.hpValue = this.add.text(138, 11, "120/120", {
       fontFamily: theme.typography.families.hudText,
-      fontSize: "10px",
+      fontSize: "8px",
       color: theme.palette.textPrimary,
       stroke: theme.textStroke.light.color,
-      strokeThickness: 2,
+      strokeThickness: 1,
     }).setOrigin(1, 0);
 
-    this.specialLabel = this.add.text(132, 30, "ESP", {
+    this.specialLabel = this.add.text(108, 23, "ESP", {
       fontFamily: theme.typography.families.hudText,
-      fontSize: "9px",
+      fontSize: "8px",
       color: theme.palette.textSecondary,
       stroke: theme.textStroke.light.color,
-      strokeThickness: 2,
+      strokeThickness: 1,
     });
 
-    this.stageLabel = this.add.text(8, 66, "STAGE", {
+    this.stageLabel = this.add.text(6, 50, "STAGE", {
       fontFamily: theme.typography.families.hudText,
-      fontSize: "10px",
+      fontSize: "8px",
       color: theme.palette.textSecondary,
       stroke: theme.textStroke.light.color,
-      strokeThickness: 2,
+      strokeThickness: 1,
     });
 
     this.scoreLabel = this.add
-      .text(BASE_WIDTH - 8, 8, "PUNTOS 000000", {
+      .text(BASE_WIDTH - 6, 6, "PUNTOS 000000", {
         fontFamily: theme.typography.families.hudText,
-        fontSize: "11px",
+        fontSize: "10px",
         color: theme.palette.textHighlight,
         stroke: theme.textStroke.light.color,
-        strokeThickness: 2,
+        strokeThickness: 1,
       })
       .setOrigin(1, 0);
 
     this.timeLabel = this.add
-      .text(BASE_WIDTH - 8, 22, "TIEMPO 000", {
+      .text(BASE_WIDTH - 6, 18, "TIEMPO 000", {
         fontFamily: theme.typography.families.hudText,
-        fontSize: "11px",
+        fontSize: "10px",
         color: theme.palette.accentGold,
         stroke: theme.textStroke.light.color,
-        strokeThickness: 2,
+        strokeThickness: 1,
       })
       .setOrigin(1, 0);
 
@@ -251,17 +251,17 @@ export class HudScene extends Phaser.Scene {
   private createControlsPanel(): void {
     const theme = getUiThemeTokens();
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_CONTROLS);
-    const panelX = BASE_WIDTH - 176;
-    const panelY = 68;
-    const panelWidth = 168;
-    const panelHeight = 68;
+    const panelX = BASE_WIDTH - 130;
+    const panelY = 54;
+    const panelWidth = 122;
+    const panelHeight = 40;
 
-    panel.add(this.add.rectangle(panelX, panelY, panelWidth, panelHeight, hexColor(theme.panel.overlayFill), 0.64).setOrigin(0, 0));
+    panel.add(this.add.rectangle(panelX, panelY, panelWidth, panelHeight, hexColor(theme.panel.overlayFill), 0.58).setOrigin(0, 0));
     panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(hexColor(theme.palette.accentBlue)));
     panel.add(
-      this.add.text(panelX + 8, panelY + 6, "CONTROLES", {
+      this.add.text(panelX + 6, panelY + 4, "CONTROLES", {
         fontFamily: theme.typography.families.hudText,
-        fontSize: "9px",
+        fontSize: "8px",
         color: theme.palette.textPrimary,
         stroke: theme.textStroke.light.color,
         strokeThickness: 1,
@@ -393,34 +393,35 @@ export class HudScene extends Phaser.Scene {
       }
     }
 
+    const compactHints = this.summarizeBindingHints(hints.keyboard);
     const compact = this.add
-      .text(BASE_WIDTH - 164, 88, `${hints.keyboard[0]}`, {
+      .text(BASE_WIDTH - 124, 68, compactHints[0], {
         fontFamily: theme.typography.families.hudText,
-        fontSize: "10px",
+        fontSize: "8px",
         color: theme.palette.textPrimary,
         stroke: theme.textStroke.light.color,
         strokeThickness: 1,
-        wordWrap: { width: 152, useAdvancedWrap: true },
+        wordWrap: { width: 112, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     const compact2 = this.add
-      .text(BASE_WIDTH - 164, 102, `${hints.keyboard[1]}  |  ${hints.keyboard[2]}`, {
+      .text(BASE_WIDTH - 124, 78, compactHints[1], {
         fontFamily: theme.typography.families.hudText,
-        fontSize: "10px",
+        fontSize: "8px",
         color: theme.palette.textHighlight,
         stroke: theme.textStroke.light.color,
         strokeThickness: 1,
-        wordWrap: { width: 152, useAdvancedWrap: true },
+        wordWrap: { width: 112, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     const compact3 = this.add
-      .text(BASE_WIDTH - 164, 116, `${hints.keyboard[3]}  |  ${hints.keyboard[4]}`, {
+      .text(BASE_WIDTH - 124, 88, compactHints[2], {
         fontFamily: theme.typography.families.hudText,
-        fontSize: "10px",
+        fontSize: "8px",
         color: theme.palette.textSecondary,
         stroke: theme.textStroke.light.color,
         strokeThickness: 1,
-        wordWrap: { width: 152, useAdvancedWrap: true },
+        wordWrap: { width: 112, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     this.controlsPanel.add([compact, compact2, compact3]);
@@ -639,6 +640,25 @@ export class HudScene extends Phaser.Scene {
       return cleanText;
     }
     return `${cleanText.slice(0, 31)}...`;
+  }
+
+  private summarizeBindingHints(keyboardHints: string[]): [string, string, string] {
+    const move = keyboardHints[0] ?? "Mover";
+    const attack = keyboardHints[1] ?? "Atacar";
+    const jump = keyboardHints[2] ?? "Saltar";
+    const special = keyboardHints[3] ?? "Especial";
+    const pause = keyboardHints[4] ?? "Pausa";
+
+    return [
+      this.compactHintLine(move, 18),
+      `${this.compactHintLine(attack, 12)} | ${this.compactHintLine(jump, 10)}`,
+      `${this.compactHintLine(special, 11)} | ${this.compactHintLine(pause, 9)}`,
+    ];
+  }
+
+  private compactHintLine(text: string, maxLength: number): string {
+    const cleanText = text.replace(/\s+/g, " ").trim();
+    return cleanText.length > maxLength ? `${cleanText.slice(0, Math.max(0, maxLength - 1))}.` : cleanText;
   }
 
   private setHudVisible(visible: boolean): void {

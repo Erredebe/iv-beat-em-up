@@ -28,7 +28,7 @@ export const DEFAULT_HITSTOP_MS = 80;
 export const SPECIAL_HP_COST_RATIO = 0.1;
 export const SPECIAL_COOLDOWN_MS = 900;
 export const TARGET_ENEMY_TTL_MS = 2500;
-export const CONTROLS_HINT_DURATION_MS = 4500;
+export const CONTROLS_HINT_DURATION_MS = 2200;
 export const BACKSTEP_DURATION_MS = 170;
 export const BACKSTEP_SPEED = 205;
 

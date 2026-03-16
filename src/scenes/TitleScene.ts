@@ -3,7 +3,7 @@ import { BASE_WIDTH } from "../config/constants";
 import { isFeatureEnabled } from "../config/features";
 import { resetSessionState } from "../config/gameplay/sessionState";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
-import { createFooterHint, createPanel, createSceneBackdrop, createSceneTitle, hexColor } from "../ui/sceneChrome";
+import { createPanel, createSceneBackdrop, createSceneTitle, hexColor } from "../ui/sceneChrome";
 import { resolveNextSceneFromTitle } from "./sceneFlow";
 
 type MenuAction = "play" | "options" | "instructions" | "credits";
@@ -56,7 +56,7 @@ export class TitleScene extends Phaser.Scene {
 
   private createBackdrop(): void {
     const theme = getUiThemeTokens();
-    createSceneBackdrop(this, { variant: "title", includeOrb: true });
+    createSceneBackdrop(this, { variant: "title" });
     this.add.rectangle(BASE_WIDTH * 0.5, 74, BASE_WIDTH - 40, 1, hexColor(theme.palette.accentPink), 0.24).setOrigin(0.5);
     this.add.rectangle(BASE_WIDTH * 0.5, 210, BASE_WIDTH - 64, 1, hexColor(theme.palette.accentBlue), 0.18).setOrigin(0.5);
     const moon = this.add.circle(348, 56, 24, hexColor(theme.palette.accentGold), 0.55).setDepth(2);
@@ -134,25 +134,22 @@ export class TitleScene extends Phaser.Scene {
         this.selectedIndex = i;
         this.refreshSelection();
       });
-      row.on("pointerdown", () => this.triggerSelectedAction());
+      row.on("pointerdown", () => {
+        this.selectedIndex = i;
+        this.refreshSelection();
+        this.triggerSelectedAction();
+      });
       this.buttons.push(row);
     }
-
-    createFooterHint(this, {
-      text: "UP/DOWN navegar  |  ENTER confirmar",
-      y: 218,
-      depth: 5,
-      accentColor: hexColor(theme.palette.accentPink),
-    });
   }
 
   private createInfoPanel(): void {
     const theme = getUiThemeTokens();
     const panel = createPanel(this, {
       x: 222,
-      y: 124,
+      y: 118,
       width: 188,
-      height: 108,
+      height: 114,
       depth: 5,
       fillColor: hexColor(theme.palette.panelElevated),
       fillAlpha: 0.9,

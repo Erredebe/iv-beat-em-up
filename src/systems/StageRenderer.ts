@@ -100,7 +100,10 @@ export class StageRenderer {
       }
       layer.putTilesAt(this.buildLayerData(layerConfig.targetRows, layerConfig.sourceRows), 0, 0);
       layer.setDepth(layerConfig.depth);
-      layer.setScale(0.5);
+      layer.setScale(layerConfig.scale ?? 0.5);
+      if (layerConfig.offsetY !== undefined) {
+        layer.setY(layerConfig.offsetY);
+      }
       if (layerConfig.alpha !== undefined) {
         layer.setAlpha(layerConfig.alpha);
       }

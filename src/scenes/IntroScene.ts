@@ -6,7 +6,7 @@ import { getSessionState } from "../config/gameplay/sessionState";
 import { getStageBundle } from "../config/levels/stageCatalog";
 import { storyBeatCatalog } from "../config/lore/storyBeats";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
-import { createFooterHint, createPanel, createSceneBackdrop, createSceneTitle, hexColor } from "../ui/sceneChrome";
+import { createPanel, createSceneBackdrop, createSceneTitle, hexColor } from "../ui/sceneChrome";
 import { resolveNextSceneFromIntro } from "./sceneFlow";
 
 type IntroCardStyle = {
@@ -103,25 +103,12 @@ export class IntroScene extends Phaser.Scene {
       .rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, BASE_WIDTH, BASE_HEIGHT, hexColor(theme.palette.bgTertiary), 0.18)
       .setOrigin(0.5);
 
-    createPanel(this, {
-      x: 44,
-      y: 18,
-      width: BASE_WIDTH - 88,
-      height: 24,
-      fillColor: hexColor(theme.palette.panelElevated),
-      fillAlpha: 0.84,
-      borderColor: hexColor(theme.panel.mutedBorder),
-      borderAlpha: 0.55,
-      borderWidth: 1,
-      topAccentColor: hexColor(theme.palette.accentPink),
-      topAccentHeight: 2,
-    });
-
     const panel = createPanel(this, {
-      x: BASE_WIDTH * 0.5 - 180,
-      y: BASE_HEIGHT * 0.5 - 82,
-      width: 360,
-      height: 164,
+      x: BASE_WIDTH * 0.5 - 170,
+      y: 58,
+      width: 340,
+      height: 128,
+      depth: 3,
       fillColor: hexColor(theme.palette.panelElevated),
       fillAlpha: 0.94,
       borderColor: hexColor(theme.panel.mutedBorder),
@@ -132,7 +119,7 @@ export class IntroScene extends Phaser.Scene {
 
     createSceneTitle(this, {
       x: BASE_WIDTH * 0.5,
-      y: 20,
+      y: 18,
       title: "OPERACION CALLE",
       subtitle: "BRIEFING NARRATIVO",
       titleSize: theme.typography.subtitle,
@@ -140,7 +127,7 @@ export class IntroScene extends Phaser.Scene {
     });
 
     this.lineText = this.add
-      .text(BASE_WIDTH * 0.5, 108, "", {
+      .text(BASE_WIDTH * 0.5, 104, "", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.body,
         color: theme.palette.textPrimary,
@@ -151,7 +138,7 @@ export class IntroScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.advanceText = this.add
-      .text(BASE_WIDTH * 0.5, 194, "ENTER · AVANZAR", {
+      .text(BASE_WIDTH * 0.5, 198, "ENTER · AVANZAR", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.caption,
         color: theme.palette.textHighlight,
@@ -161,7 +148,7 @@ export class IntroScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.skipText = this.add
-      .text(BASE_WIDTH * 0.5, 208, "SPACE · SALTAR", {
+      .text(BASE_WIDTH * 0.5, 212, "SPACE · SALTAR", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.caption,
         color: theme.palette.textSecondary,
@@ -171,16 +158,12 @@ export class IntroScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.cardContainer = this.add.container(0, 0, [panel.container, this.lineText, this.advanceText, this.skipText]);
-    createFooterHint(this, {
-      text: "ENTER avanza tarjeta  |  SPACE salta al combate",
-      y: 218,
-      accentColor: hexColor(theme.palette.accentPink),
-    });
 
     this.applyCard(0);
 
     this.input.keyboard?.on("keydown-ENTER", this.onAdvance, this);
     this.input.keyboard?.on("keydown-SPACE", this.startGame, this);
+    this.input.on("pointerdown", this.onAdvance, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanupEvents, this);
   }
 
@@ -273,6 +256,7 @@ export class IntroScene extends Phaser.Scene {
   private cleanupEvents(): void {
     this.input.keyboard?.off("keydown-ENTER", this.onAdvance, this);
     this.input.keyboard?.off("keydown-SPACE", this.startGame, this);
+    this.input.off("pointerdown", this.onAdvance, this);
     this.revealEvent?.remove(false);
     this.autoAdvanceEvent?.remove(false);
   }

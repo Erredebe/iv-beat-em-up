@@ -17,7 +17,7 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
     { id: "rail_east", xStart: 1640, xEnd: 2560, topY: 174, bottomY: 216, preferredY: 197 },
   ],
   layers: [
-    { id: "facade", depth: 86, alpha: 0.98, targetRows: [0, 1, 2, 3], sourceRows: [0, 1, 2, 2] },
+    { id: "facade", depth: 86, alpha: 0.98, scale: 0.625, offsetY: -32, targetRows: [0, 1, 2, 3], sourceRows: [0, 1, 2, 2] },
     { id: "sidewalk", depth: 94, alpha: 1, targetRows: [4], sourceRows: [10] },
     { id: "road", depth: 108, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
     { id: "foreground_deco", depth: 248, alpha: 0.96, targetRows: [7], sourceRows: [9] },
@@ -29,6 +29,7 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
         textureKey: "prop_booth_front",
         scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
+        scaleOverride: 0.34,
         alpha: 0.74,
         tint: 0x8a99b8,
       },
@@ -48,6 +49,7 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
         textureKey: "prop_booth_front",
         scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
+        scaleOverride: 0.34,
       },
       transform: {
         x: 604,
@@ -62,8 +64,8 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
         color: 0x66d1ff,
         footprint: {
           mode: "explicit",
-          width: 58,
-          height: 14,
+          width: 82,
+          height: 18,
         },
       },
       behavior: { type: "static" },
@@ -131,6 +133,7 @@ export const metroSurLayout: StageLayoutConfig = defineStageLayout({
         textureKey: "prop_booth_front",
         scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
+        scaleOverride: 0.34,
         alpha: 0.68,
         tint: 0x7785a1,
       },

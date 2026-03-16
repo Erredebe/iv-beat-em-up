@@ -17,7 +17,7 @@ export const puertoRojoLayout: StageLayoutConfig = defineStageLayout({
     { id: "rail_east", xStart: 1640, xEnd: 2560, topY: 176, bottomY: 220, preferredY: 199 },
   ],
   layers: [
-    { id: "facade", depth: 84, alpha: 0.98, targetRows: [1, 2, 3], sourceRows: [2, 1, 0] },
+    { id: "facade", depth: 84, alpha: 0.98, scale: 0.625, offsetY: -24, targetRows: [1, 2, 3], sourceRows: [2, 1, 0] },
     { id: "sidewalk", depth: 94, alpha: 1, targetRows: [4], sourceRows: [10] },
     { id: "road", depth: 108, alpha: 1, targetRows: [5, 6], sourceRows: [11, 11] },
     { id: "foreground_deco", depth: 252, alpha: 0.98, targetRows: [7], sourceRows: [9] },
@@ -57,6 +57,7 @@ export const puertoRojoLayout: StageLayoutConfig = defineStageLayout({
         textureKey: "prop_booth_front",
         scaleTier: "tiny",
         spriteSpecId: "stage_prop_arcade",
+        scaleOverride: 0.34,
         alpha: 0.78,
         tint: 0xa3b0cb,
       },

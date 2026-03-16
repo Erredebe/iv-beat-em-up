@@ -6,7 +6,7 @@ import { playableCharacters } from "../config/gameplay/playableRoster";
 import { stageCatalog } from "../config/levels/stageCatalog";
 import { updateSessionState } from "../config/gameplay/sessionState";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
-import { createFooterHint, createPanel, createSceneBackdrop, createSceneTitle, hexColor } from "../ui/sceneChrome";
+import { createPanel, createSceneBackdrop, createSceneTitle, hexColor } from "../ui/sceneChrome";
 import { resolveNextSceneFromCharacterSelect } from "./sceneFlow";
 
 export class CharacterSelectScene extends Phaser.Scene {
@@ -49,16 +49,32 @@ export class CharacterSelectScene extends Phaser.Scene {
       y: 18,
       title: "SELECCIONA PERSONAJE",
       titleSize: theme.typography.title,
-      subtitle: "ROSTER CALLEJERO · ELIGE LUCHADOR Y RUTA",
-      subtitleSize: theme.typography.caption,
     });
+
+    this.selectedStageBanner = this.add
+      .rectangle(BASE_WIDTH * 0.5, 58, 252, 24, hexColor(theme.palette.panelElevated), 0.92)
+      .setStrokeStyle(2, hexColor(theme.panel.mutedBorder), 0.9);
+    this.selectedStageIcon = this.add
+      .text(BASE_WIDTH * 0.5 - 100, 58, "", {
+        fontFamily: theme.typography.families.uiBody,
+        fontSize: theme.typography.caption,
+        color: theme.palette.accentGold,
+      })
+      .setOrigin(0.5);
+    this.selectedStageText = this.add
+      .text(BASE_WIDTH * 0.5 + 14, 58, "", {
+        fontFamily: theme.typography.families.uiBody,
+        fontSize: theme.typography.body,
+        color: theme.palette.textPrimary,
+      })
+      .setOrigin(0.5);
 
     const startX = 14;
     const spacing = 132;
     for (let i = 0; i < playableCharacters.length; i += 1) {
       const character = playableCharacters[i];
       const x = startX + i * spacing;
-      const card = this.add.container(x, 54);
+      const card = this.add.container(x, 82);
       const panel = createPanel(this, {
         x: 0,
         y: 0,
@@ -130,38 +146,6 @@ export class CharacterSelectScene extends Phaser.Scene {
         selectionCursor,
       });
     }
-
-    this.add
-      .text(BASE_WIDTH * 0.5, 190, "NIVEL", {
-        fontFamily: theme.typography.families.uiBody,
-        fontSize: theme.typography.caption,
-        color: theme.palette.accentGold,
-      })
-      .setOrigin(0.5);
-
-    this.selectedStageBanner = this.add
-      .rectangle(BASE_WIDTH * 0.5, 208, 260, 28, hexColor(theme.palette.panelElevated), 0.92)
-      .setStrokeStyle(2, hexColor(theme.panel.mutedBorder), 0.9);
-    this.selectedStageIcon = this.add
-      .text(BASE_WIDTH * 0.5 - 108, 208, "", {
-        fontFamily: theme.typography.families.uiBody,
-        fontSize: theme.typography.subtitle,
-        color: theme.palette.accentGold,
-      })
-      .setOrigin(0.5);
-    this.selectedStageText = this.add
-      .text(BASE_WIDTH * 0.5 + 12, 208, "", {
-        fontFamily: theme.typography.families.uiBody,
-        fontSize: theme.typography.subtitle,
-        color: theme.palette.textPrimary,
-      })
-      .setOrigin(0.5);
-
-    createFooterHint(this, {
-      text: "LEFT/RIGHT personaje  |  UP/DOWN nivel  |  ENTER confirmar",
-      y: 220,
-      accentColor: hexColor(theme.palette.accentGold),
-    });
 
     this.bindInputs();
 

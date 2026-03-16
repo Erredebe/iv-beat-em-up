@@ -6,6 +6,8 @@ export interface StageLayerConfig {
   id: "facade" | "sidewalk" | "road" | "foreground_deco";
   depth: number;
   alpha?: number;
+  scale?: number;
+  offsetY?: number;
   targetRows: number[];
   sourceRows: number[];
 }
