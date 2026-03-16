@@ -59,19 +59,19 @@ function createFrameOffsets(frameCount: number, bobAmplitude = 0): SpritePixelOf
   }));
 }
 
-function createConstantFrameOffsets(frameCount: number, yOffset: number): SpritePixelOffset[] {
-  return Array.from({ length: frameCount }, () => ({
-    x: 0,
-    y: yOffset,
-  }));
-}
-
 function createFootLockOffsets(bottomPaddingByFrame: number[], lockedPad: number): SpritePixelOffset[] {
   return bottomPaddingByFrame.map((bottomPad) => ({
     x: 0,
     y: bottomPad - lockedPad,
   }));
 }
+
+const KASTRO_KNOCKDOWN_BOTTOM_PADDING = [40, 38, 34, 30, 30, 30, 34, 34, 34, 34] as const;
+const MARINA_KNOCKDOWN_BOTTOM_PADDING = [41, 39, 35, 31, 31, 31, 35, 35, 35, 35] as const;
+const MENEILLOS_KNOCKDOWN_BOTTOM_PADDING = [40, 38, 34, 30, 30, 30, 34, 34, 34, 34] as const;
+const ENEMY_KNOCKDOWN_BOTTOM_PADDING = [76, 74, 70, 66, 66, 66, 70, 70, 70, 70] as const;
+const GENERIC_GETUP_BOTTOM_PADDING = [10, 10, 10, 13, 13, 17, 17, 20, 20, 20] as const;
+const MARINA_GETUP_BOTTOM_PADDING = [11, 11, 11, 14, 14, 18, 18, 21, 21, 21] as const;
 
 function createVisualProfile(
   owner: AnimationOwner,
@@ -117,6 +117,8 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       attack2: 0.98,
       special: 0.97,
       hurt: 0.98,
+      knockdown: 1.08,
+      getup: 1.04,
     },
   }),
   marina: createVisualProfile("marina", {
@@ -130,6 +132,8 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       attack3: 1.02,
       airAttack: 1.03,
       special: 1.01,
+      knockdown: 1.08,
+      getup: 1.04,
     },
   }),
   meneillos: createVisualProfile("meneillos", {
@@ -142,6 +146,8 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       attack2: 0.99,
       special: 0.99,
       hurt: 0.99,
+      knockdown: 1.08,
+      getup: 1.04,
     },
   }),
   enemy: createVisualProfile("enemy", {
@@ -155,6 +161,8 @@ export const fighterVisualProfiles: Record<AnimationOwner, FighterVisualProfile>
       attack3: 1.02,
       airAttack: 1.02,
       hurt: 0.95,
+      knockdown: 1.08,
+      getup: 1.04,
     },
   }),
 };
@@ -163,14 +171,14 @@ fighterVisualProfiles.kastro.frameOffsetByClip.idle = createFootLockOffsets([9, 
 fighterVisualProfiles.marina.frameOffsetByClip.idle = createFootLockOffsets([10, 6, 4, 4, 6, 10, 14, 16, 16, 14], 10);
 fighterVisualProfiles.meneillos.frameOffsetByClip.idle = createFootLockOffsets([9, 5, 3, 3, 5, 9, 13, 15, 15, 13], 9);
 fighterVisualProfiles.enemy.frameOffsetByClip.idle = createFootLockOffsets([9, 3, 0, 0, 3, 9, 15, 19, 19, 15], 9);
-fighterVisualProfiles.marina.frameOffsetByClip.knockdown = createConstantFrameOffsets(
-  getFighterSpriteSpec("marina").requiredClips.knockdown.frameCount,
-  15,
-);
-fighterVisualProfiles.enemy.frameOffsetByClip.knockdown = createConstantFrameOffsets(
-  getFighterSpriteSpec("enemy").requiredClips.knockdown.frameCount,
-  15,
-);
+fighterVisualProfiles.kastro.frameOffsetByClip.knockdown = createFootLockOffsets([...KASTRO_KNOCKDOWN_BOTTOM_PADDING], 30);
+fighterVisualProfiles.kastro.frameOffsetByClip.getup = createFootLockOffsets([...GENERIC_GETUP_BOTTOM_PADDING], 10);
+fighterVisualProfiles.marina.frameOffsetByClip.knockdown = createFootLockOffsets([...MARINA_KNOCKDOWN_BOTTOM_PADDING], 31);
+fighterVisualProfiles.marina.frameOffsetByClip.getup = createFootLockOffsets([...MARINA_GETUP_BOTTOM_PADDING], 11);
+fighterVisualProfiles.meneillos.frameOffsetByClip.knockdown = createFootLockOffsets([...MENEILLOS_KNOCKDOWN_BOTTOM_PADDING], 30);
+fighterVisualProfiles.meneillos.frameOffsetByClip.getup = createFootLockOffsets([...GENERIC_GETUP_BOTTOM_PADDING], 10);
+fighterVisualProfiles.enemy.frameOffsetByClip.knockdown = createFootLockOffsets([...ENEMY_KNOCKDOWN_BOTTOM_PADDING], 66);
+fighterVisualProfiles.enemy.frameOffsetByClip.getup = createFootLockOffsets([...GENERIC_GETUP_BOTTOM_PADDING], 10);
 
 function validateVisualProfilesAgainstSpriteSpecs(
   profiles: Record<AnimationOwner, FighterVisualProfile>,

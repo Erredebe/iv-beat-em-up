@@ -96,6 +96,21 @@ npm run build:runtime-images
 - [ ] No hay regresiones obvias en colisiones, daño o animaciones.
 - [ ] Tests automáticos relevantes en verde.
 
+### Skill reutilizable: Stage Visual QA
+
+Si tocas escala, composicion, props, fondos o HUD de gameplay, usa la guia:
+
+- `docs/agent-skills/stage-visual-qa.md`
+
+Y ejecuta, cuando aplique:
+
+```bash
+npm run qa:stage-scales
+npm run qa:stage-composition
+```
+
+Estos scripts generan capturas reales y reportes en `artifacts/` para validar decisiones visuales con evidencia, no solo leyendo config.
+
 ## 8) Política de cambios
 
 - Si el cambio es grande, dividir en pasos lógicos y explicarlo en el PR.

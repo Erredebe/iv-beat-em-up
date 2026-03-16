@@ -8,6 +8,7 @@ import {
   type StageLayoutConfig,
   type StageObjectDefinition,
 } from "../config/levels/stageTypes";
+import { getUiThemeTokens } from "../config/ui/uiTheme";
 import { depthLayers, depthPriorities, resolveBreakableDynamicY, resolveStagePropDynamicY } from "../config/visual/depthLayers";
 import { resolveScaleReference } from "../config/visual/scaleSystem";
 import type { CollisionSystem, GroundObstacle } from "./CollisionSystem";
@@ -64,7 +65,8 @@ export class StageRenderer {
         .setScrollFactor(0)
         .setDepth(band.depth)
         .setAlpha(band.alpha);
-      sprite.setTileScale(0.5, 0.5);
+      const tileScale = band.tileScale ?? 0.5;
+      sprite.setTileScale(tileScale, tileScale);
       if (band.id === "skyline_far") {
         sprite.setTint(this.layout.visualProfile.foregroundAccents.skylineFar);
       } else if (band.id === "skyline_mid") {
@@ -116,14 +118,25 @@ export class StageRenderer {
         scaleTier: config.visual.scaleTier,
         spriteSpecId: config.visual.spriteSpecId,
       });
+      const finalScale = config.visual.scaleOverride ?? scale;
       const image = this.scene.add
         .image(config.transform.x, config.transform.y, config.visual.textureKey)
         .setOrigin(config.transform.originX, config.transform.originY)
-        .setScale(scale);
+        .setScale(finalScale);
 
-      if (isBreakableStageObject(config)) {
+      if (config.visual.alpha !== undefined) {
+        image.setAlpha(config.visual.alpha);
+      }
+      if (config.visual.tint !== undefined) {
+        image.setTint(config.visual.tint);
+      }
+
+      if (isBreakableStageObject(config) && config.visual.tint === undefined) {
         image.setTint(config.behavior.intactTint ?? 0xb8c7d2);
-      } else if (config.id.includes("crate") || config.id.includes("barrel") || config.id.includes("table")) {
+      } else if (
+        config.visual.tint === undefined &&
+        (config.id.includes("crate") || config.id.includes("barrel") || config.id.includes("table") || config.id.includes("container"))
+      ) {
         image
           .setTint(this.layout.visualProfile.foregroundAccents.crateTint)
           .setAlpha(this.layout.visualProfile.foregroundAccents.crateAlpha);
@@ -168,13 +181,14 @@ export class StageRenderer {
       };
     });
 
+    const theme = getUiThemeTokens();
     this.neonTexts = this.layout.neonLabels.map((entry) =>
       this.scene.add
         .text(entry.x, entry.y, entry.text, {
-          fontFamily: "monospace",
+          fontFamily: theme.typography.families.uiTitle,
           fontSize: entry.fontSize,
           color: entry.color,
-          stroke: "#000000",
+          stroke: "#05070a",
           strokeThickness: 2,
         })
         .setDepth(depthLayers.STAGE_NEON)

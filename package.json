@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "build:runtime-images": "node scripts/art/build-runtime-images.cjs",
-    "qa:stage": "node scripts/qa/complete-stage-smoke.cjs"
+    "qa:stage": "node scripts/qa/complete-stage-smoke.cjs",
+    "qa:stage-scales": "node scripts/qa/capture-stage-scales.cjs",
+    "qa:stage-composition": "node scripts/qa/capture-stage-composition.cjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

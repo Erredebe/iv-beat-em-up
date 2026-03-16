@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { assetManifest } from "../assets/assetManifest";
+import { derivedAssetKeys } from "../assets/derivedTextureCrops";
 import { stageCatalog } from "./stageCatalog";
 import {
   getStageObjects,
@@ -11,6 +13,29 @@ import {
 } from "./stageTypes";
 
 describe("stage layout calibration", () => {
+  it("keeps every stage texture reference backed by loaded assets", () => {
+    const availableTextureKeys = new Set<string>([
+      ...assetManifest.filter((entry) => entry.type !== "audio").map((entry) => entry.key),
+      ...derivedAssetKeys,
+    ]);
+
+    for (const bundle of Object.values(stageCatalog)) {
+      const layout = bundle.layout;
+      expect(availableTextureKeys.has(layout.tilesetKey), `${bundle.id} tileset key is not loadable`).toBe(true);
+
+      for (const band of layout.parallaxBands) {
+        expect(availableTextureKeys.has(band.textureKey), `${bundle.id}:${band.id} parallax key is not loadable`).toBe(true);
+      }
+
+      for (const object of getStageObjects(layout)) {
+        expect(
+          availableTextureKeys.has(object.visual.textureKey),
+          `${layout.stageId}:${object.id} object texture key is not loadable`,
+        ).toBe(true);
+      }
+    }
+  });
+
   it("keeps walk lane and layer depth ordering coherent", () => {
     for (const bundle of Object.values(stageCatalog)) {
       const layout = bundle.layout;

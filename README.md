@@ -72,6 +72,15 @@ Tests:
 npm test
 ```
 
+QA visual de escenarios:
+
+```bash
+npm run qa:stage-scales
+npm run qa:stage-composition
+```
+
+Ambos scripts generan capturas y reportes en `artifacts/` para revisar escala de props y composicion real en gameplay.
+
 ## Controles
 
 Teclado:
@@ -138,3 +147,5 @@ Sigue siempre este orden para mantener consistencia entre carga, animacion y ren
 - Mantener overlays legibles: `colorGrade.alpha` recomendado `0.03-0.13`; evitar valores altos que apaguen sprites o hit sparks.
 - Ajusta `neonIntensity` entre `0.55-1` para que carteles destaquen sin competir con VFX de combate.
 - Usa `rainIntensity` `0-1` y valida en gameplay real (multienemigo + efectos de golpe) antes de cerrar cambios.
+
+Si un agente necesita validar stages con evidencia real, sigue `docs/agent-skills/stage-visual-qa.md`.

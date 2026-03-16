@@ -36,9 +36,9 @@ export class HudScene extends Phaser.Scene {
   private gameOverDim!: Phaser.GameObjects.Rectangle;
   private pauseDim!: Phaser.GameObjects.Rectangle;
   private hudElements: Phaser.GameObjects.GameObject[] = [];
-  private maxBarWidth = 136;
-  private specialBarWidth = 84;
-  private targetBarWidth = 120;
+  private maxBarWidth = 118;
+  private specialBarWidth = 78;
+  private targetBarWidth = 132;
   private currentPayload: HudPayload | null = null;
   private displayedPlayerHp = 0;
   private renderedHintsKey = "";
@@ -138,76 +138,77 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createMainHud(): void {
-    const mainHudScale = 0.58;
-    const panel = this.add.container(6, 6).setScrollFactor(0).setDepth(depthLayers.HUD_MAIN).setScale(mainHudScale);
+    const panel = this.add.container(8, 8).setScrollFactor(0).setDepth(depthLayers.HUD_MAIN);
 
-    const bg = this.add.rectangle(0, 0, 246, 66, 0x05070a, 0.58).setOrigin(0, 0);
-    const border = this.add.rectangle(0, 0, 246, 66, 0x3f5c7a, 0).setOrigin(0, 0).setStrokeStyle(1.5, 0x6f89a3, 0.45);
-    const hpBg = this.add.rectangle(46, 21, 164, 11, 0x0a0a14, 0.95).setOrigin(0, 0);
+    const bg = this.add.rectangle(0, 0, 222, 54, 0x04070c, 0.76).setOrigin(0, 0);
+    const border = this.add.rectangle(0, 0, 222, 54, 0x3f5c7a, 0).setOrigin(0, 0).setStrokeStyle(2, 0x6f89a3, 0.72);
+    const topAccent = this.add.rectangle(0, 0, 222, 2, 0x56c8ff, 1).setOrigin(0, 0);
+    const hpBg = this.add.rectangle(44, 17, 126, 10, 0x090d15, 0.98).setOrigin(0, 0);
+    const specialBg = this.add.rectangle(44, 33, 82, 6, 0x09111a, 0.98).setOrigin(0, 0);
 
-    this.portrait = this.add.image(24, 33, "portrait_kastro").setOrigin(0.5).setScale(0.3).setTint(0xfff4dd);
-    this.hpLag = this.add.rectangle(48, 26, this.maxBarWidth, 8, 0x5c2143, 0.86).setOrigin(0, 0.5);
-    this.hpFill = this.add.rectangle(48, 26, this.maxBarWidth, 8, 0xf06b3b, 1).setOrigin(0, 0.5);
-    this.specialFill = this.add.rectangle(48, 42, this.specialBarWidth, 6, 0x5fd6ff, 1).setOrigin(0, 0.5);
+    this.portrait = this.add.image(22, 28, "portrait_kastro").setOrigin(0.5).setScale(0.5).setTint(0xfff4dd);
+    this.hpLag = this.add.rectangle(46, 22, this.maxBarWidth, 6, 0x5c2143, 0.92).setOrigin(0, 0.5);
+    this.hpFill = this.add.rectangle(46, 22, this.maxBarWidth, 6, 0xf06b3b, 1).setOrigin(0, 0.5);
+    this.specialFill = this.add.rectangle(46, 36, this.specialBarWidth, 4, 0x5fd6ff, 1).setOrigin(0, 0.5);
 
-    this.hpLabel = this.add.text(46, 3, "JUGADOR", {
+    this.hpLabel = this.add.text(44, 3, "JUGADOR", {
       fontFamily: getUiThemeTokens().typography.families.hudText,
-      fontSize: "11px",
+      fontSize: "10px",
       color: "#e8f2ff",
       stroke: "#020304",
       strokeThickness: 2,
     });
 
-    this.hpValue = this.add.text(46, 14, "120 / 120", {
+    this.hpValue = this.add.text(176, 15, "120 / 120", {
       fontFamily: getUiThemeTokens().typography.families.hudText,
-      fontSize: "12px",
+      fontSize: "10px",
       color: "#ffffff",
       stroke: "#020304",
       strokeThickness: 2,
-    });
+    }).setOrigin(1, 0);
 
-    this.specialLabel = this.add.text(46, 37, "ESP", {
+    this.specialLabel = this.add.text(132, 30, "ESP", {
       fontFamily: getUiThemeTokens().typography.families.hudText,
-      fontSize: "12px",
+      fontSize: "9px",
       color: "#a8ebff",
       stroke: "#020304",
       strokeThickness: 2,
     });
 
-    this.stageLabel = this.add.text(0, 72, "STAGE", {
+    this.stageLabel = this.add.text(8, 66, "STAGE", {
       fontFamily: getUiThemeTokens().typography.families.hudText,
-      fontSize: "12px",
+      fontSize: "10px",
       color: "#a7e6ff",
       stroke: "#020304",
       strokeThickness: 2,
     });
 
     this.scoreLabel = this.add
-      .text(242, 2, "PUNTOS 000000", {
+      .text(BASE_WIDTH - 8, 8, "PUNTOS 000000", {
         fontFamily: getUiThemeTokens().typography.families.hudText,
-        fontSize: "12px",
+        fontSize: "11px",
         color: "#fff4cf",
         stroke: "#020304",
         strokeThickness: 2,
-        wordWrap: { width: 378, useAdvancedWrap: true },
       })
       .setOrigin(1, 0);
 
     this.timeLabel = this.add
-      .text(242, 14, "TIEMPO 000", {
+      .text(BASE_WIDTH - 8, 22, "TIEMPO 000", {
         fontFamily: getUiThemeTokens().typography.families.hudText,
-        fontSize: "12px",
+        fontSize: "11px",
         color: "#ffd498",
         stroke: "#020304",
         strokeThickness: 2,
-        wordWrap: { width: 378, useAdvancedWrap: true },
       })
       .setOrigin(1, 0);
 
     panel.add([
       bg,
       border,
+      topAccent,
       hpBg,
+      specialBg,
       this.portrait,
       this.hpLag,
       this.hpFill,
@@ -215,26 +216,23 @@ export class HudScene extends Phaser.Scene {
       this.hpLabel,
       this.hpValue,
       this.specialLabel,
-      this.stageLabel,
-      this.scoreLabel,
-      this.timeLabel,
     ]);
 
-    this.hudElements.push(panel);
+    this.hudElements.push(panel, this.stageLabel, this.scoreLabel, this.timeLabel);
   }
 
   private createTargetHud(): void {
-    const panelWidth = 174;
-    const panelX = BASE_WIDTH - Math.floor(panelWidth * 0.85) - 8;
-    const panel = this.add.container(panelX, 8).setScrollFactor(0).setDepth(depthLayers.HUD_MAIN).setScale(0.85);
-    panel.add(this.add.rectangle(0, 0, panelWidth, 32, 0x080910, 0.58).setOrigin(0, 0));
+    const panelWidth = 148;
+    const panelX = BASE_WIDTH - panelWidth - 8;
+    const panel = this.add.container(panelX, 40).setScrollFactor(0).setDepth(depthLayers.HUD_MAIN);
+    panel.add(this.add.rectangle(0, 0, panelWidth, 28, 0x080910, 0.68).setOrigin(0, 0));
     panel.add(this.add.tileSprite(0, 0, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0xff6eb0));
 
-    this.targetFill = this.add.rectangle(8, 14, this.targetBarWidth, 7, 0xff6685, 1).setOrigin(0, 0.5);
+    this.targetFill = this.add.rectangle(8, 17, this.targetBarWidth, 6, 0xff6685, 1).setOrigin(0, 0.5);
     this.targetLabel = this.add
       .text(8, 2, "OBJETIVO", {
         fontFamily: getUiThemeTokens().typography.families.hudText,
-        fontSize: "11px",
+        fontSize: "10px",
         color: "#ffdeee",
         stroke: "#1a0b14",
         strokeThickness: 2,
@@ -287,19 +285,19 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createStatusPanel(): void {
-    const panelWidth = 174;
-    const panelX = BASE_WIDTH - Math.floor(panelWidth * 0.85) - 8;
+    const panelWidth = 160;
+    const panelX = BASE_WIDTH - panelWidth - 8;
     const panelY = 40; 
-    const panel = this.add.container(panelX, panelY).setScrollFactor(0).setDepth(depthLayers.HUD_STATUS).setScale(0.85);
-    panel.add(this.add.rectangle(0, 0, panelWidth, 24, 0x03050b, 0.58).setOrigin(0, 0));
+    const panel = this.add.container(panelX, panelY + 32).setScrollFactor(0).setDepth(depthLayers.HUD_STATUS);
+    panel.add(this.add.rectangle(0, 0, panelWidth, 24, 0x03050b, 0.68).setOrigin(0, 0));
     panel.add(this.add.tileSprite(0, 0, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0x60f5ff));
     this.statusText = this.add.text(8, 6, "", {
       fontFamily: getUiThemeTokens().typography.families.hudText,
-      fontSize: "11px",
+      fontSize: "10px",
       color: "#e2f7ff",
       stroke: "#021118",
       strokeThickness: 2,
-      wordWrap: { width: 158, useAdvancedWrap: true },
+      wordWrap: { width: 144, useAdvancedWrap: true },
       maxLines: 1,
     });
     panel.add(this.statusText);

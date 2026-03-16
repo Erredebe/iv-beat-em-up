@@ -57,6 +57,9 @@ export interface StageObjectVisualIdentity {
   textureKey: string;
   scaleTier: ScaleTier;
   spriteSpecId: SpriteSpecId;
+  scaleOverride?: number;
+  alpha?: number;
+  tint?: number;
 }
 
 export interface StageObjectTransformDefinition {
@@ -161,6 +164,7 @@ export interface StageParallaxBand {
   depth: number;
   alpha: number;
   scrollFactor: number;
+  tileScale?: number;
 }
 
 export interface StageNeonLabel {
@@ -334,6 +338,9 @@ function cloneStageObjectDefinition(object: StageObjectDefinition): StageObjectD
       textureKey: object.visual.textureKey,
       scaleTier: object.visual.scaleTier,
       spriteSpecId: object.visual.spriteSpecId,
+      scaleOverride: object.visual.scaleOverride,
+      alpha: object.visual.alpha,
+      tint: object.visual.tint,
     },
     transform: {
       x: object.transform.x,
@@ -396,6 +403,7 @@ function cloneStageLayoutDefinition(layout: StageLayoutDefinition): StageLayoutD
       depth: band.depth,
       alpha: band.alpha,
       scrollFactor: band.scrollFactor,
+      tileScale: band.tileScale,
     })),
     neonLabels: layout.neonLabels.map((label) => ({
       x: label.x,

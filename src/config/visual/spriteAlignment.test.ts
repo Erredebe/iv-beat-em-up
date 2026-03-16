@@ -6,6 +6,11 @@ import { getFighterAnimationSet, type AnimationClipId, type AnimationOwner } fro
 import { getFighterSpriteSpec } from "./fighterSpriteSpecs";
 import { fighterVisualProfiles, type SpritePixelOffset } from "./fighterVisualProfiles";
 
+const FLOOR_CLIP_STATE: Record<"knockdown" | "getup", "KNOCKDOWN" | "GETUP"> = {
+  knockdown: "KNOCKDOWN",
+  getup: "GETUP",
+};
+
 function readPng(path: string): PNG {
   const content = readFileSync(resolve(process.cwd(), path));
   return PNG.sync.read(content);
@@ -77,6 +82,33 @@ describe("fighter sprite alignment", () => {
             `${profileId} ${clipId} frame ${frame} is too far from baseline`,
           ).toBeLessThanOrEqual(baselineTolerancePx);
         }
+      }
+    }
+  });
+
+  it("keeps floor animations visually locked to the pavement", () => {
+    const floorClips = ["knockdown", "getup"] as const;
+    for (const profileId of ["kastro", "marina", "meneillos", "enemy"] as AnimationOwner[]) {
+      const animationSet = getFighterAnimationSet(profileId);
+      const spriteSpec = getFighterSpriteSpec(profileId);
+      const frameWidth = spriteSpec.frameSize.width;
+
+      for (const clipId of floorClips) {
+        const clip = animationSet.clips[clipId];
+        const png = readPng(`public/assets/external/arcade/sprites/${clip.textureKey}.png`);
+        const stateOffsetY = fighterVisualProfiles[profileId].stateOffsetByState[FLOOR_CLIP_STATE[clipId]].y;
+        const effectivePads: number[] = [];
+
+        for (let frame = 0; frame < clip.frameCount; frame += 1) {
+          const bottomPad = getBottomPadding(png, frame, frameWidth);
+          const frameOffset = getFrameOffset(profileId, clipId, frame);
+          effectivePads.push(bottomPad - stateOffsetY - frameOffset.y);
+        }
+
+        expect(
+          Math.max(...effectivePads) - Math.min(...effectivePads),
+          `${profileId} ${clipId} drifts away from the pavement between frames`,
+        ).toBeLessThanOrEqual(1);
       }
     }
   });
