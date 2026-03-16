@@ -58,7 +58,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     for (let i = 0; i < playableCharacters.length; i += 1) {
       const character = playableCharacters[i];
       const x = startX + i * spacing;
-      const card = this.add.container(x, 62);
+      const card = this.add.container(x, 54);
       const panel = createPanel(this, {
         x: 0,
         y: 0,
@@ -132,7 +132,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     }
 
     this.add
-      .text(BASE_WIDTH * 0.5, 205, "NIVEL", {
+      .text(BASE_WIDTH * 0.5, 190, "NIVEL", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.caption,
         color: theme.palette.accentGold,
@@ -140,17 +140,17 @@ export class CharacterSelectScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.selectedStageBanner = this.add
-      .rectangle(BASE_WIDTH * 0.5, 222, 260, 32, hexColor(theme.palette.panelElevated), 0.92)
+      .rectangle(BASE_WIDTH * 0.5, 208, 260, 28, hexColor(theme.palette.panelElevated), 0.92)
       .setStrokeStyle(2, hexColor(theme.panel.mutedBorder), 0.9);
     this.selectedStageIcon = this.add
-      .text(BASE_WIDTH * 0.5 - 108, 222, "", {
+      .text(BASE_WIDTH * 0.5 - 108, 208, "", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.subtitle,
         color: theme.palette.accentGold,
       })
       .setOrigin(0.5);
     this.selectedStageText = this.add
-      .text(BASE_WIDTH * 0.5 + 12, 222, "", {
+      .text(BASE_WIDTH * 0.5 + 12, 208, "", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.subtitle,
         color: theme.palette.textPrimary,
@@ -159,7 +159,7 @@ export class CharacterSelectScene extends Phaser.Scene {
 
     createFooterHint(this, {
       text: "LEFT/RIGHT personaje  |  UP/DOWN nivel  |  ENTER confirmar",
-      y: 232,
+      y: 220,
       accentColor: hexColor(theme.palette.accentGold),
     });
 

@@ -140,7 +140,7 @@ export class TitleScene extends Phaser.Scene {
 
     createFooterHint(this, {
       text: "UP/DOWN navegar  |  ENTER confirmar",
-      y: 228,
+      y: 218,
       depth: 5,
       accentColor: hexColor(theme.palette.accentPink),
     });

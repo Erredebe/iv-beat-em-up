@@ -173,7 +173,7 @@ export class IntroScene extends Phaser.Scene {
     this.cardContainer = this.add.container(0, 0, [panel.container, this.lineText, this.advanceText, this.skipText]);
     createFooterHint(this, {
       text: "ENTER avanza tarjeta  |  SPACE salta al combate",
-      y: 228,
+      y: 218,
       accentColor: hexColor(theme.palette.accentPink),
     });
 
