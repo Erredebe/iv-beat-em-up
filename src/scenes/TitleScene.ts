@@ -1,9 +1,9 @@
 import Phaser from "phaser";
-import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
+import { BASE_WIDTH } from "../config/constants";
 import { isFeatureEnabled } from "../config/features";
 import { resetSessionState } from "../config/gameplay/sessionState";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
-import { createPanel, createSceneTitle } from "../ui/sceneChrome";
+import { createFooterHint, createPanel, createSceneBackdrop, createSceneTitle, hexColor } from "../ui/sceneChrome";
 import { resolveNextSceneFromTitle } from "./sceneFlow";
 
 type MenuAction = "play" | "options" | "instructions" | "credits";
@@ -56,21 +56,14 @@ export class TitleScene extends Phaser.Scene {
 
   private createBackdrop(): void {
     const theme = getUiThemeTokens();
-    this.add.rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, BASE_WIDTH, BASE_HEIGHT, 0x0d1022, 1).setOrigin(0.5);
-    this.add.rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.42, BASE_WIDTH, 120, 0x28174a, 0.45).setOrigin(0.5);
-    this.add.rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.6, BASE_WIDTH, 84, 0x11091e, 0.66).setOrigin(0.5);
-
-    const grid = this.add.graphics().setDepth(2);
-    grid.lineStyle(1, Number.parseInt(theme.palette.accentBlue.replace("#", "0x"), 16), 0.22);
-    for (let y = 92; y < BASE_HEIGHT; y += 18) {
-      grid.lineBetween(0, y, BASE_WIDTH, y);
-    }
-
-    const moon = this.add.circle(348, 56, 24, 0xffc26f, 0.8).setDepth(1);
+    createSceneBackdrop(this, { variant: "title", includeOrb: true });
+    this.add.rectangle(BASE_WIDTH * 0.5, 74, BASE_WIDTH - 40, 1, hexColor(theme.palette.accentPink), 0.24).setOrigin(0.5);
+    this.add.rectangle(BASE_WIDTH * 0.5, 210, BASE_WIDTH - 64, 1, hexColor(theme.palette.accentBlue), 0.18).setOrigin(0.5);
+    const moon = this.add.circle(348, 56, 24, hexColor(theme.palette.accentGold), 0.55).setDepth(2);
     this.tweens.add({
       targets: moon,
-      alpha: 0.55,
-      duration: 1200,
+      alpha: 0.3,
+      duration: theme.motion.pulseSlowMs,
       yoyo: true,
       repeat: -1,
       ease: "Sine.InOut",
@@ -84,9 +77,11 @@ export class TitleScene extends Phaser.Scene {
       y: 15,
       width: 282,
       height: 78,
-      fillColor: 0x05050a,
+      fillColor: hexColor(theme.palette.panelElevated),
       fillAlpha: 0.88,
-      topAccentColor: Number.parseInt(theme.palette.accentPink.replace("#", "0x"), 16),
+      borderColor: hexColor(theme.panel.mutedBorder),
+      borderAlpha: 0.65,
+      topAccentColor: hexColor(theme.palette.accentPink),
       topAccentHeight: 2,
     });
 
@@ -104,25 +99,27 @@ export class TitleScene extends Phaser.Scene {
 
   private createMenu(): void {
     const theme = getUiThemeTokens();
-    const startY = 126;
-    const spacing = 26;
+    const startY = 118;
+    const spacing = 28;
 
     for (let i = 0; i < this.menuItems.length; i += 1) {
       const item = this.menuItems[i];
       const y = startY + i * spacing;
 
-      const row = this.add.container(50, y).setDepth(5).setSize(160, 22);
+      const row = this.add.container(48, y).setDepth(5).setSize(164, 24);
       const panel = createPanel(this, {
         x: 0,
         y: 0,
-        width: 160,
-        height: 22,
-        fillAlpha: 0.85,
+        width: 164,
+        height: 24,
+        fillColor: hexColor(theme.panel.overlayFill),
+        fillAlpha: 0.9,
+        borderColor: hexColor(theme.panel.mutedBorder),
         borderWidth: 1,
-        borderAlpha: 0.85,
+        borderAlpha: 0.75,
       });
       const label = this.add
-        .text(10, 5, item.label, {
+        .text(12, 6, item.label, {
           fontFamily: theme.typography.families.uiTitle,
           fontSize: theme.typography.subtitle,
           color: theme.palette.textPrimary,
@@ -132,7 +129,7 @@ export class TitleScene extends Phaser.Scene {
         .setName("menu-label");
 
       row.add([panel.fill, panel.border, label]);
-      row.setInteractive(new Phaser.Geom.Rectangle(0, 0, 160, 22), Phaser.Geom.Rectangle.Contains);
+      row.setInteractive(new Phaser.Geom.Rectangle(0, 0, 164, 24), Phaser.Geom.Rectangle.Contains);
       row.on("pointerover", () => {
         this.selectedIndex = i;
         this.refreshSelection();
@@ -141,13 +138,12 @@ export class TitleScene extends Phaser.Scene {
       this.buttons.push(row);
     }
 
-    this.add
-      .text(50, 228, "UP/DOWN para navegar  |  ENTER confirmar", {
-        fontFamily: theme.typography.families.uiBody,
-        fontSize: theme.typography.subtitle,
-        color: theme.palette.textSecondary,
-      })
-      .setDepth(5);
+    createFooterHint(this, {
+      text: "UP/DOWN navegar  |  ENTER confirmar",
+      y: 228,
+      depth: 5,
+      accentColor: hexColor(theme.palette.accentPink),
+    });
   }
 
   private createInfoPanel(): void {
@@ -158,10 +154,11 @@ export class TitleScene extends Phaser.Scene {
       width: 188,
       height: 108,
       depth: 5,
-      fillColor: 0x05050a,
+      fillColor: hexColor(theme.palette.panelElevated),
       fillAlpha: 0.9,
-      borderAlpha: 0,
-      topAccentColor: Number.parseInt(theme.palette.accentGold.replace("#", "0x"), 16),
+      borderColor: hexColor(theme.panel.mutedBorder),
+      borderAlpha: 0.55,
+      topAccentColor: hexColor(theme.palette.accentGold),
       topAccentHeight: 2,
     });
 
@@ -223,9 +220,10 @@ export class TitleScene extends Phaser.Scene {
       const background = button.list[0] as Phaser.GameObjects.Rectangle;
       const border = button.list[1] as Phaser.GameObjects.Rectangle;
       const label = button.getByName("menu-label") as Phaser.GameObjects.Text;
-      background.setFillStyle(active ? Number.parseInt(theme.panel.highlightFill.replace("#", "0x"), 16) : Number.parseInt(theme.palette.panelFill.replace("#", "0x"), 16), active ? 0.95 : 0.85);
-      border.setStrokeStyle(1, active ? Number.parseInt(theme.palette.accentPink.replace("#", "0x"), 16) : Number.parseInt(theme.palette.accentBlue.replace("#", "0x"), 16), active ? 1 : 0.45);
+      background.setFillStyle(active ? hexColor(theme.panel.highlightFill) : hexColor(theme.panel.overlayFill), active ? 0.98 : 0.88);
+      border.setStrokeStyle(1, active ? hexColor(theme.palette.accentPink) : hexColor(theme.panel.mutedBorder), active ? 1 : 0.55);
       label.setColor(active ? theme.palette.textHighlight : theme.palette.textPrimary);
+      button.setX(active ? 52 : 48);
     });
 
     const action = this.menuItems[this.selectedIndex].action;

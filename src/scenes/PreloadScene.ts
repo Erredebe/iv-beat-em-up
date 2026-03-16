@@ -3,6 +3,7 @@ import { assetManifest, requiredAssetKeys } from "../config/assets/assetManifest
 import { derivedTextureCrops } from "../config/assets/derivedTextureCrops";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
 import { ANIMATION_CLIP_IDS, ANIMATION_OWNERS, getFighterSpriteSpec } from "../config/visual/fighterSpriteSpecs";
+import { createPanel, createSceneBackdrop, createSceneTitle, hexColor } from "../ui/sceneChrome";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -34,28 +35,47 @@ export class PreloadScene extends Phaser.Scene {
 
   private createLoadingUi(): void {
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(width * 0.5, height * 0.5, width, height, 0x08020f, 1);
-    bg.setOrigin(0.5);
-
     const theme = getUiThemeTokens();
+    createSceneBackdrop(this, { variant: "loading", includeOrb: true });
+    createPanel(this, {
+      x: Math.floor(width * 0.5 - 126),
+      y: Math.floor(height * 0.5 - 42),
+      width: 252,
+      height: 84,
+      fillColor: hexColor(theme.palette.panelElevated),
+      fillAlpha: 0.9,
+      borderColor: hexColor(theme.panel.mutedBorder),
+      borderAlpha: 0.6,
+      borderWidth: 1,
+      topAccentColor: hexColor(theme.palette.accentPink),
+      topAccentHeight: 2,
+    });
+    createSceneTitle(this, {
+      x: width * 0.5,
+      y: height * 0.5 - 34,
+      title: "CARGANDO CALLE 1995",
+      subtitle: "PREPARANDO ESCENAS, HUD Y ROSTER",
+      titleSize: theme.typography.body,
+      subtitleSize: theme.typography.caption,
+    });
     this.add
-      .text(width * 0.5, height * 0.5 - 26, "CARGANDO CALLE 1995", {
-        fontFamily: theme.typography.families.uiTitle,
-        fontSize: theme.typography.body,
-        color: "#f4efff",
+      .text(width * 0.5, height * 0.5 + 24, "COMPILANDO PIXEL-ART Y AUDIO", {
+        fontFamily: theme.typography.families.uiBody,
+        fontSize: theme.typography.caption,
+        color: theme.palette.textSecondary,
         stroke: theme.textStroke.light.color,
         strokeThickness: theme.textStroke.light.thickness,
       })
       .setOrigin(0.5);
 
-    const barBg = this.add.rectangle(width * 0.5, height * 0.5 + 4, 188, 10, 0x19142a, 1).setOrigin(0.5);
-    const barFill = this.add.rectangle(width * 0.5 - 92, height * 0.5 + 4, 0, 6, 0x33b8ff, 1).setOrigin(0, 0.5);
-    this.add.rectangle(width * 0.5, height * 0.5 + 24, 188, 1, 0xff4db8, 0.6).setOrigin(0.5);
+    const barBg = this.add.rectangle(width * 0.5, height * 0.5 + 2, 188, 10, hexColor(theme.panel.overlayFill), 1).setOrigin(0.5);
+    const barFill = this.add.rectangle(width * 0.5 - 92, height * 0.5 + 2, 0, 6, hexColor(theme.palette.accentBlue), 1).setOrigin(0, 0.5);
+    this.add.rectangle(width * 0.5, height * 0.5 + 16, 188, 1, hexColor(theme.palette.accentPink), 0.6).setOrigin(0.5);
 
     this.load.on("progress", (value: number) => {
       barFill.width = 184 * value;
       if (value >= 1) {
-        barBg.fillColor = 0x20374f;
+        barBg.fillColor = hexColor(theme.panel.highlightFill);
       }
     });
   }

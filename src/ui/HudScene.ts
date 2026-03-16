@@ -4,6 +4,7 @@ import { isFeatureEnabled } from "../config/features";
 import type { HudPayload } from "../config/ui/hudPayload";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
 import { depthLayers } from "../config/visual/depthLayers";
+import { hexColor } from "./sceneChrome";
 
 export class HudScene extends Phaser.Scene {
   private static readonly ENEMY_HINT_FADE_THRESHOLD = 5;
@@ -138,67 +139,71 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createMainHud(): void {
+    const theme = getUiThemeTokens();
     const panel = this.add.container(8, 8).setScrollFactor(0).setDepth(depthLayers.HUD_MAIN);
 
-    const bg = this.add.rectangle(0, 0, 222, 54, 0x04070c, 0.76).setOrigin(0, 0);
-    const border = this.add.rectangle(0, 0, 222, 54, 0x3f5c7a, 0).setOrigin(0, 0).setStrokeStyle(2, 0x6f89a3, 0.72);
-    const topAccent = this.add.rectangle(0, 0, 222, 2, 0x56c8ff, 1).setOrigin(0, 0);
-    const hpBg = this.add.rectangle(44, 17, 126, 10, 0x090d15, 0.98).setOrigin(0, 0);
-    const specialBg = this.add.rectangle(44, 33, 82, 6, 0x09111a, 0.98).setOrigin(0, 0);
+    const bg = this.add.rectangle(0, 0, 222, 54, hexColor(theme.panel.overlayFill), 0.82).setOrigin(0, 0);
+    const border = this.add
+      .rectangle(0, 0, 222, 54, hexColor(theme.panel.mutedBorder), 0)
+      .setOrigin(0, 0)
+      .setStrokeStyle(2, hexColor(theme.panel.mutedBorder), 0.78);
+    const topAccent = this.add.rectangle(0, 0, 222, 2, hexColor(theme.palette.accentBlue), 1).setOrigin(0, 0);
+    const hpBg = this.add.rectangle(44, 17, 126, 10, hexColor(theme.palette.panelElevated), 0.98).setOrigin(0, 0);
+    const specialBg = this.add.rectangle(44, 33, 82, 6, hexColor(theme.palette.panelElevated), 0.98).setOrigin(0, 0);
 
     this.portrait = this.add.image(22, 28, "portrait_kastro").setOrigin(0.5).setScale(0.5).setTint(0xfff4dd);
     this.hpLag = this.add.rectangle(46, 22, this.maxBarWidth, 6, 0x5c2143, 0.92).setOrigin(0, 0.5);
     this.hpFill = this.add.rectangle(46, 22, this.maxBarWidth, 6, 0xf06b3b, 1).setOrigin(0, 0.5);
-    this.specialFill = this.add.rectangle(46, 36, this.specialBarWidth, 4, 0x5fd6ff, 1).setOrigin(0, 0.5);
+    this.specialFill = this.add.rectangle(46, 36, this.specialBarWidth, 4, hexColor(theme.palette.accentBlue), 1).setOrigin(0, 0.5);
 
     this.hpLabel = this.add.text(44, 3, "JUGADOR", {
-      fontFamily: getUiThemeTokens().typography.families.hudText,
+      fontFamily: theme.typography.families.hudText,
       fontSize: "10px",
-      color: "#e8f2ff",
-      stroke: "#020304",
+      color: theme.palette.textPrimary,
+      stroke: theme.textStroke.light.color,
       strokeThickness: 2,
     });
 
     this.hpValue = this.add.text(176, 15, "120 / 120", {
-      fontFamily: getUiThemeTokens().typography.families.hudText,
+      fontFamily: theme.typography.families.hudText,
       fontSize: "10px",
-      color: "#ffffff",
-      stroke: "#020304",
+      color: theme.palette.textPrimary,
+      stroke: theme.textStroke.light.color,
       strokeThickness: 2,
     }).setOrigin(1, 0);
 
     this.specialLabel = this.add.text(132, 30, "ESP", {
-      fontFamily: getUiThemeTokens().typography.families.hudText,
+      fontFamily: theme.typography.families.hudText,
       fontSize: "9px",
-      color: "#a8ebff",
-      stroke: "#020304",
+      color: theme.palette.textSecondary,
+      stroke: theme.textStroke.light.color,
       strokeThickness: 2,
     });
 
     this.stageLabel = this.add.text(8, 66, "STAGE", {
-      fontFamily: getUiThemeTokens().typography.families.hudText,
+      fontFamily: theme.typography.families.hudText,
       fontSize: "10px",
-      color: "#a7e6ff",
-      stroke: "#020304",
+      color: theme.palette.textSecondary,
+      stroke: theme.textStroke.light.color,
       strokeThickness: 2,
     });
 
     this.scoreLabel = this.add
       .text(BASE_WIDTH - 8, 8, "PUNTOS 000000", {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "11px",
-        color: "#fff4cf",
-        stroke: "#020304",
+        color: theme.palette.textHighlight,
+        stroke: theme.textStroke.light.color,
         strokeThickness: 2,
       })
       .setOrigin(1, 0);
 
     this.timeLabel = this.add
       .text(BASE_WIDTH - 8, 22, "TIEMPO 000", {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "11px",
-        color: "#ffd498",
-        stroke: "#020304",
+        color: theme.palette.accentGold,
+        stroke: theme.textStroke.light.color,
         strokeThickness: 2,
       })
       .setOrigin(1, 0);
@@ -222,19 +227,20 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createTargetHud(): void {
+    const theme = getUiThemeTokens();
     const panelWidth = 148;
     const panelX = BASE_WIDTH - panelWidth - 8;
     const panel = this.add.container(panelX, 40).setScrollFactor(0).setDepth(depthLayers.HUD_MAIN);
-    panel.add(this.add.rectangle(0, 0, panelWidth, 28, 0x080910, 0.68).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(0, 0, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0xff6eb0));
+    panel.add(this.add.rectangle(0, 0, panelWidth, 28, hexColor(theme.panel.overlayFill), 0.76).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(0, 0, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(hexColor(theme.palette.accentPink)));
 
-    this.targetFill = this.add.rectangle(8, 17, this.targetBarWidth, 6, 0xff6685, 1).setOrigin(0, 0.5);
+    this.targetFill = this.add.rectangle(8, 17, this.targetBarWidth, 6, hexColor(theme.palette.accentDanger), 1).setOrigin(0, 0.5);
     this.targetLabel = this.add
       .text(8, 2, "OBJETIVO", {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "10px",
-        color: "#ffdeee",
-        stroke: "#1a0b14",
+        color: theme.palette.textHighlight,
+        stroke: theme.textStroke.light.color,
         strokeThickness: 2,
       });
     panel.add([this.targetFill, this.targetLabel]);
@@ -243,20 +249,21 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createControlsPanel(): void {
+    const theme = getUiThemeTokens();
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_CONTROLS);
     const panelX = BASE_WIDTH - 176;
     const panelY = 68;
     const panelWidth = 168;
     const panelHeight = 68;
 
-    panel.add(this.add.rectangle(panelX, panelY, panelWidth, panelHeight, 0x07090f, 0.56).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0x50f0ff));
+    panel.add(this.add.rectangle(panelX, panelY, panelWidth, panelHeight, hexColor(theme.panel.overlayFill), 0.64).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(hexColor(theme.palette.accentBlue)));
     panel.add(
       this.add.text(panelX + 8, panelY + 6, "CONTROLES", {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "9px",
-        color: "#ffffff",
-        stroke: "#030408",
+        color: theme.palette.textPrimary,
+        stroke: theme.textStroke.light.color,
         strokeThickness: 1,
       }),
     );
@@ -265,19 +272,20 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createTutorialPanel(): void {
+    const theme = getUiThemeTokens();
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_TUTORIAL);
     const panelWidth = 214;
     const panelHeight = 18;
     const panelX = Math.floor((BASE_WIDTH - panelWidth) * 0.5);
     const panelY = BASE_HEIGHT - panelHeight - 6;
 
-    panel.add(this.add.rectangle(panelX, panelY, panelWidth, panelHeight, 0x05050a, 0.82).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0xffc870));
+    panel.add(this.add.rectangle(panelX, panelY, panelWidth, panelHeight, hexColor(theme.panel.overlayFill), 0.84).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(panelX, panelY, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(hexColor(theme.palette.accentGold)));
     panel.add(
       this.add.text(panelX + 8, panelY + 5, "ENTER para cerrar ayuda", {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "9px",
-        color: "#ffe6b5",
+        color: theme.palette.textHighlight,
       }),
     );
     this.tutorialPanel = panel;
@@ -285,17 +293,18 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createStatusPanel(): void {
+    const theme = getUiThemeTokens();
     const panelWidth = 160;
     const panelX = BASE_WIDTH - panelWidth - 8;
     const panelY = 40; 
     const panel = this.add.container(panelX, panelY + 32).setScrollFactor(0).setDepth(depthLayers.HUD_STATUS);
-    panel.add(this.add.rectangle(0, 0, panelWidth, 24, 0x03050b, 0.68).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(0, 0, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(0x60f5ff));
+    panel.add(this.add.rectangle(0, 0, panelWidth, 24, hexColor(theme.panel.overlayFill), 0.74).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(0, 0, panelWidth, 2, "hud_frame").setOrigin(0, 0).setTint(hexColor(theme.palette.accentBlue)));
     this.statusText = this.add.text(8, 6, "", {
-      fontFamily: getUiThemeTokens().typography.families.hudText,
+      fontFamily: theme.typography.families.hudText,
       fontSize: "10px",
-      color: "#e2f7ff",
-      stroke: "#021118",
+      color: theme.palette.textPrimary,
+      stroke: theme.textStroke.light.color,
       strokeThickness: 2,
       wordWrap: { width: 144, useAdvancedWrap: true },
       maxLines: 1,
@@ -306,6 +315,7 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createGameOverPanel(): void {
+    const theme = getUiThemeTokens();
     this.gameOverDim = this.add
       .rectangle(0, 0, BASE_WIDTH, BASE_HEIGHT, 0x000000, 0.84)
       .setOrigin(0, 0)
@@ -316,22 +326,22 @@ export class HudScene extends Phaser.Scene {
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_GAME_OVER);
     const panelX = Math.floor((BASE_WIDTH - 252) * 0.5);
     const panelY = Math.floor((BASE_HEIGHT - 96) * 0.5);
-    panel.add(this.add.rectangle(panelX, panelY, 252, 96, 0x05050a, 0.94).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(panelX, panelY, 252, 2, "hud_frame").setOrigin(0, 0).setTint(0xff466a));
-    panel.add(this.add.rectangle(panelX + 24, panelY + 53, 204, 1, 0x6f465b, 0.9).setOrigin(0, 0));
+    panel.add(this.add.rectangle(panelX, panelY, 252, 96, hexColor(theme.palette.panelElevated), 0.95).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(panelX, panelY, 252, 2, "hud_frame").setOrigin(0, 0).setTint(hexColor(theme.palette.accentDanger)));
+    panel.add(this.add.rectangle(panelX + 24, panelY + 53, 204, 1, hexColor(theme.panel.mutedBorder), 0.9).setOrigin(0, 0));
     panel.add(
       this.add.text(panelX + 76, panelY + 20, "DERROTA", {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "22px",
-        color: "#ff8da8",
+        color: theme.palette.accentPink,
       }),
     );
     panel.add(
       this.add.text(panelX + 44, panelY + 64, "Pulsa ENTER para reiniciar", {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "11px",
-        color: "#fff8fb",
-        stroke: "#1d0f16",
+        color: theme.palette.textPrimary,
+        stroke: theme.textStroke.light.color,
         strokeThickness: 1,
       }),
     );
@@ -340,6 +350,7 @@ export class HudScene extends Phaser.Scene {
   }
 
   private createPausePanel(): void {
+    const theme = getUiThemeTokens();
     this.pauseDim = this.add
       .rectangle(0, 0, BASE_WIDTH, BASE_HEIGHT, 0x000000, 0.66)
       .setOrigin(0, 0)
@@ -348,16 +359,16 @@ export class HudScene extends Phaser.Scene {
       .setVisible(false);
 
     const panel = this.add.container(0, 0).setScrollFactor(0).setDepth(depthLayers.HUD_PAUSE_MAIN);
-    panel.add(this.add.rectangle(32, 32, 364, 172, 0x06070c, 0.95).setOrigin(0, 0));
-    panel.add(this.add.tileSprite(32, 32, 364, 2, "hud_frame").setOrigin(0, 0).setTint(0xff6fb5));
+    panel.add(this.add.rectangle(32, 32, 364, 172, hexColor(theme.palette.panelElevated), 0.95).setOrigin(0, 0));
+    panel.add(this.add.tileSprite(32, 32, 364, 2, "hud_frame").setOrigin(0, 0).setTint(hexColor(theme.palette.accentPink)));
     panel.add(
       this.add.text(48, 48, "PAUSA", {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "16px",
-        color: "#f2dbe6",
+        color: theme.palette.textPrimary,
       }),
     );
-    panel.add(this.add.rectangle(48, 72, 332, 1, 0x5f5160, 0.95).setOrigin(0, 0));
+    panel.add(this.add.rectangle(48, 72, 332, 1, hexColor(theme.panel.mutedBorder), 0.95).setOrigin(0, 0));
     this.pausePanel = panel;
     panel.setVisible(false);
   }
@@ -375,6 +386,7 @@ export class HudScene extends Phaser.Scene {
   }
 
   private renderControlsText(hints: { keyboard: string[]; gamepad: string[] }): void {
+    const theme = getUiThemeTokens();
     for (const child of [...this.controlsPanel.list, ...this.pausePanel.list]) {
       if (child instanceof Phaser.GameObjects.Text && child.name === "dynamic-control") {
         child.destroy();
@@ -383,30 +395,30 @@ export class HudScene extends Phaser.Scene {
 
     const compact = this.add
       .text(BASE_WIDTH - 164, 88, `${hints.keyboard[0]}`, {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "10px",
-        color: "#e8f7ff",
-        stroke: "#04070b",
+        color: theme.palette.textPrimary,
+        stroke: theme.textStroke.light.color,
         strokeThickness: 1,
         wordWrap: { width: 152, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     const compact2 = this.add
       .text(BASE_WIDTH - 164, 102, `${hints.keyboard[1]}  |  ${hints.keyboard[2]}`, {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "10px",
-        color: "#ffdeea",
-        stroke: "#080307",
+        color: theme.palette.textHighlight,
+        stroke: theme.textStroke.light.color,
         strokeThickness: 1,
         wordWrap: { width: 152, useAdvancedWrap: true },
       })
       .setName("dynamic-control");
     const compact3 = this.add
       .text(BASE_WIDTH - 164, 116, `${hints.keyboard[3]}  |  ${hints.keyboard[4]}`, {
-        fontFamily: getUiThemeTokens().typography.families.hudText,
+        fontFamily: theme.typography.families.hudText,
         fontSize: "10px",
-        color: "#ffd6e7",
-        stroke: "#080307",
+        color: theme.palette.textSecondary,
+        stroke: theme.textStroke.light.color,
         strokeThickness: 1,
         wordWrap: { width: 152, useAdvancedWrap: true },
       })
@@ -416,10 +428,10 @@ export class HudScene extends Phaser.Scene {
     this.pausePanel.add(
       this.add
         .text(48, 82, "TECLADO", {
-          fontFamily: getUiThemeTokens().typography.families.hudText,
+          fontFamily: theme.typography.families.hudText,
           fontSize: "11px",
-          color: "#a9deea",
-          stroke: "#04070b",
+          color: theme.palette.textSecondary,
+          stroke: theme.textStroke.light.color,
           strokeThickness: 1,
         })
         .setName("dynamic-control"),
@@ -427,10 +439,10 @@ export class HudScene extends Phaser.Scene {
     this.pausePanel.add(
       this.add
         .text(220, 82, "GAMEPAD", {
-          fontFamily: getUiThemeTokens().typography.families.hudText,
+          fontFamily: theme.typography.families.hudText,
           fontSize: "11px",
-          color: "#f0c8d9",
-          stroke: "#080307",
+          color: theme.palette.textHighlight,
+          stroke: theme.textStroke.light.color,
           strokeThickness: 1,
         })
         .setName("dynamic-control"),
@@ -440,10 +452,10 @@ export class HudScene extends Phaser.Scene {
     for (const line of hints.keyboard) {
       const text = this.add
         .text(48, y, line, {
-          fontFamily: getUiThemeTokens().typography.families.hudText,
+          fontFamily: theme.typography.families.hudText,
           fontSize: "11px",
-          color: "#e7f3f7",
-          stroke: "#04070b",
+          color: theme.palette.textPrimary,
+          stroke: theme.textStroke.light.color,
           strokeThickness: 1,
         })
         .setName("dynamic-control");
@@ -454,10 +466,10 @@ export class HudScene extends Phaser.Scene {
     for (const line of hints.gamepad) {
       const text = this.add
         .text(220, y, line, {
-          fontFamily: getUiThemeTokens().typography.families.hudText,
+          fontFamily: theme.typography.families.hudText,
           fontSize: "11px",
-          color: "#fae5ee",
-          stroke: "#080307",
+          color: theme.palette.textHighlight,
+          stroke: theme.textStroke.light.color,
           strokeThickness: 1,
         })
         .setName("dynamic-control");
@@ -532,9 +544,9 @@ export class HudScene extends Phaser.Scene {
       const width = 30;
       const x = Math.floor(enemy.x - width * 0.5);
       const y = Math.floor(enemy.y);
-      this.enemyBarsGraphics.fillStyle(0x080912, 0.86);
+      this.enemyBarsGraphics.fillStyle(hexColor(getUiThemeTokens().panel.overlayFill), 0.86);
       this.enemyBarsGraphics.fillRect(x, y, width, 5);
-      this.enemyBarsGraphics.fillStyle(0xff5470, 1);
+      this.enemyBarsGraphics.fillStyle(hexColor(getUiThemeTokens().palette.accentDanger), 1);
       this.enemyBarsGraphics.fillRect(x + 1, y + 1, Math.floor((width - 2) * ratio), 3);
     }
   }
@@ -613,12 +625,12 @@ export class HudScene extends Phaser.Scene {
 
   private resolveStatusColor(level: "low" | "medium" | "high"): string {
     if (level === "high") {
-      return "#ffd0d6";
+      return getUiThemeTokens().palette.textHighlight;
     }
     if (level === "medium") {
-      return "#ffe7bf";
+      return getUiThemeTokens().palette.accentGold;
     }
-    return "#d7f8ff";
+    return getUiThemeTokens().palette.textSecondary;
   }
 
   private compactStatusText(text: string): string {

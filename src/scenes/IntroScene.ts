@@ -6,7 +6,7 @@ import { getSessionState } from "../config/gameplay/sessionState";
 import { getStageBundle } from "../config/levels/stageCatalog";
 import { storyBeatCatalog } from "../config/lore/storyBeats";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
-import { createPanel, createSceneTitle } from "../ui/sceneChrome";
+import { createFooterHint, createPanel, createSceneBackdrop, createSceneTitle, hexColor } from "../ui/sceneChrome";
 import { resolveNextSceneFromIntro } from "./sceneFlow";
 
 type IntroCardStyle = {
@@ -66,7 +66,6 @@ const INTRO_CARDS: IntroCard[] = [
 ];
 
 const TYPE_SPEED_MS = 28;
-const CARD_TRANSITION_MS = 220;
 
 export class IntroScene extends Phaser.Scene {
   private introCards: IntroCard[] = INTRO_CARDS;
@@ -95,30 +94,49 @@ export class IntroScene extends Phaser.Scene {
     const theme = getUiThemeTokens();
     this.cameras.main.setBackgroundColor(theme.palette.bgPrimary);
 
+    createSceneBackdrop(this, { variant: "intro", includeOrb: true });
     this.backgroundRect = this.add
-      .rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, BASE_WIDTH, BASE_HEIGHT, 0x09040f, 1)
+      .rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, BASE_WIDTH, BASE_HEIGHT, hexColor(theme.palette.bgPrimary), 0.64)
       .setOrigin(0.5);
 
     this.overlayRect = this.add
-      .rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, BASE_WIDTH, BASE_HEIGHT, 0x1b1032, 0.28)
+      .rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, BASE_WIDTH, BASE_HEIGHT, hexColor(theme.palette.bgTertiary), 0.18)
       .setOrigin(0.5);
+
+    createPanel(this, {
+      x: 44,
+      y: 18,
+      width: BASE_WIDTH - 88,
+      height: 24,
+      fillColor: hexColor(theme.palette.panelElevated),
+      fillAlpha: 0.84,
+      borderColor: hexColor(theme.panel.mutedBorder),
+      borderAlpha: 0.55,
+      borderWidth: 1,
+      topAccentColor: hexColor(theme.palette.accentPink),
+      topAccentHeight: 2,
+    });
 
     const panel = createPanel(this, {
       x: BASE_WIDTH * 0.5 - 180,
       y: BASE_HEIGHT * 0.5 - 82,
       width: 360,
       height: 164,
-      fillColor: 0x080b14,
+      fillColor: hexColor(theme.palette.panelElevated),
       fillAlpha: 0.94,
-      topAccentColor: Number.parseInt(theme.palette.accentPink.replace("#", "0x"), 16),
+      borderColor: hexColor(theme.panel.mutedBorder),
+      borderAlpha: 0.6,
+      topAccentColor: hexColor(theme.palette.accentPink),
       topAccentHeight: 2,
     });
 
     createSceneTitle(this, {
       x: BASE_WIDTH * 0.5,
-      y: 28,
-      title: "INTRO",
+      y: 20,
+      title: "OPERACION CALLE",
+      subtitle: "BRIEFING NARRATIVO",
       titleSize: theme.typography.subtitle,
+      subtitleSize: theme.typography.caption,
     });
 
     this.lineText = this.add
@@ -135,10 +153,10 @@ export class IntroScene extends Phaser.Scene {
     this.advanceText = this.add
       .text(BASE_WIDTH * 0.5, 194, "ENTER · AVANZAR", {
         fontFamily: theme.typography.families.uiBody,
-        fontSize: theme.typography.body,
-        color: theme.palette.textPrimary,
-        stroke: "#000000",
-        strokeThickness: 3,
+        fontSize: theme.typography.caption,
+        color: theme.palette.textHighlight,
+        stroke: theme.textStroke.medium.color,
+        strokeThickness: theme.textStroke.medium.thickness,
       })
       .setOrigin(0.5);
 
@@ -146,13 +164,18 @@ export class IntroScene extends Phaser.Scene {
       .text(BASE_WIDTH * 0.5, 208, "SPACE · SALTAR", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.caption,
-        color: theme.palette.accentGold,
-        stroke: "#000000",
-        strokeThickness: 2,
+        color: theme.palette.textSecondary,
+        stroke: theme.textStroke.light.color,
+        strokeThickness: theme.textStroke.light.thickness,
       })
       .setOrigin(0.5);
 
     this.cardContainer = this.add.container(0, 0, [panel.container, this.lineText, this.advanceText, this.skipText]);
+    createFooterHint(this, {
+      text: "ENTER avanza tarjeta  |  SPACE salta al combate",
+      y: 228,
+      accentColor: hexColor(theme.palette.accentPink),
+    });
 
     this.applyCard(0);
 
@@ -165,7 +188,7 @@ export class IntroScene extends Phaser.Scene {
     this.cardIndex = index;
     const card = this.introCards[index];
     this.backgroundRect.setFillStyle(card.style.backgroundColor, 1);
-    this.overlayRect.setFillStyle(card.style.overlayColor, 0.28);
+    this.overlayRect.setFillStyle(card.style.overlayColor, 0.22);
     this.lineText.setColor(card.style.textColor);
     this.advanceText.setColor(`#${card.style.accentColor.toString(16).padStart(6, "0")}`);
 
@@ -232,13 +255,13 @@ export class IntroScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.cardContainer,
       alpha: 0,
-      duration: CARD_TRANSITION_MS,
+      duration: getUiThemeTokens().motion.revealMediumMs,
       onComplete: () => {
         this.applyCard(this.cardIndex + 1);
         this.tweens.add({
           targets: this.cardContainer,
           alpha: 1,
-          duration: CARD_TRANSITION_MS,
+          duration: getUiThemeTokens().motion.revealMediumMs,
           onComplete: () => {
             this.isTransitioning = false;
           },

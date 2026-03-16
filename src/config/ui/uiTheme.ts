@@ -3,13 +3,17 @@ import { isFeatureEnabled } from "../features";
 export interface UIThemeTokens {
   palette: {
     bgPrimary: string;
+    bgSecondary: string;
+    bgTertiary: string;
     panelFill: string;
+    panelElevated: string;
     accentPink: string;
     accentBlue: string;
     textPrimary: string;
     textSecondary: string;
     textHighlight: string;
     accentGold: string;
+    accentDanger: string;
   };
   typography: {
     title: string;
@@ -33,6 +37,22 @@ export interface UIThemeTokens {
     borderAlpha: number;
     borderWidth: number;
     highlightFill: string;
+    overlayFill: string;
+    mutedBorder: string;
+  };
+  spacing: {
+    scenePaddingX: number;
+    scenePaddingTop: number;
+    sectionGapSm: number;
+    sectionGapMd: number;
+    sectionGapLg: number;
+  };
+  motion: {
+    pulseSlowMs: number;
+    pulseFastMs: number;
+    fadeShortMs: number;
+    revealMediumMs: number;
+    selectBumpMs: number;
   };
 }
 
@@ -47,13 +67,17 @@ const baseFamilies = {
 const uiThemeClassic: UIThemeTokens = {
   palette: {
     bgPrimary: "#07040d",
+    bgSecondary: "#0d1022",
+    bgTertiary: "#181129",
     panelFill: "#05070f",
+    panelElevated: "#0a1020",
     accentPink: "#ff6fb5",
     accentBlue: "#68abff",
     textPrimary: "#f3f7ff",
     textSecondary: "#f3dceb",
     textHighlight: "#fff7cf",
     accentGold: "#f5ce7b",
+    accentDanger: "#ff6a7b",
   },
   typography: {
     title: "14px",
@@ -73,19 +97,39 @@ const uiThemeClassic: UIThemeTokens = {
     borderAlpha: 0.7,
     borderWidth: 2,
     highlightFill: "#182336",
+    overlayFill: "#04060d",
+    mutedBorder: "#44607c",
+  },
+  spacing: {
+    scenePaddingX: 16,
+    scenePaddingTop: 16,
+    sectionGapSm: 4,
+    sectionGapMd: 8,
+    sectionGapLg: 16,
+  },
+  motion: {
+    pulseSlowMs: 1200,
+    pulseFastMs: 420,
+    fadeShortMs: 120,
+    revealMediumMs: 220,
+    selectBumpMs: 110,
   },
 };
 
 const uiThemeV2Tokens: UIThemeTokens = {
   palette: {
     bgPrimary: "#090717",
+    bgSecondary: "#0d1324",
+    bgTertiary: "#1b1330",
     panelFill: "#0d1020",
+    panelElevated: "#12172b",
     accentPink: "#ff5ea8",
     accentBlue: "#7ab7ff",
     textPrimary: "#f8fbff",
     textSecondary: "#b8d8ef",
     textHighlight: "#ffe9b8",
     accentGold: "#ffc870",
+    accentDanger: "#ff6f84",
   },
   typography: {
     title: "15px",
@@ -105,6 +149,22 @@ const uiThemeV2Tokens: UIThemeTokens = {
     borderAlpha: 0.85,
     borderWidth: 2,
     highlightFill: "#182743",
+    overlayFill: "#070a13",
+    mutedBorder: "#55759b",
+  },
+  spacing: {
+    scenePaddingX: 16,
+    scenePaddingTop: 16,
+    sectionGapSm: 4,
+    sectionGapMd: 8,
+    sectionGapLg: 16,
+  },
+  motion: {
+    pulseSlowMs: 1200,
+    pulseFastMs: 420,
+    fadeShortMs: 120,
+    revealMediumMs: 220,
+    selectBumpMs: 110,
   },
 };
 

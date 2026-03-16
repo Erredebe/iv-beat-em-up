@@ -27,6 +27,18 @@ interface SceneTitleOptions {
   descriptionSize?: string;
 }
 
+interface SceneBackdropOptions {
+  variant?: "title" | "menu" | "intro" | "loading";
+  includeOrb?: boolean;
+}
+
+interface FooterHintOptions {
+  text: string;
+  y: number;
+  accentColor?: number;
+  depth?: number;
+}
+
 export interface PanelBuild {
   container: Phaser.GameObjects.Container;
   fill: Phaser.GameObjects.Rectangle;
@@ -34,8 +46,76 @@ export interface PanelBuild {
   topAccent?: Phaser.GameObjects.Rectangle;
 }
 
-function hexColor(value: string): number {
+export function hexColor(value: string): number {
   return Number.parseInt(value.replace("#", "0x"), 16);
+}
+
+export function createSceneBackdrop(scene: Phaser.Scene, options: SceneBackdropOptions = {}): void {
+  const theme = getUiThemeTokens();
+  const { width, height } = scene.scale;
+  const variant = options.variant ?? "menu";
+  const upperBandColor =
+    variant === "intro"
+      ? hexColor(theme.palette.bgTertiary)
+      : variant === "loading"
+        ? hexColor(theme.palette.panelElevated)
+        : hexColor(theme.palette.bgSecondary);
+  const lowerBandColor = variant === "title" ? 0x12091f : hexColor(theme.panel.overlayFill);
+  const gridAlpha = variant === "loading" ? 0.14 : variant === "intro" ? 0.16 : 0.22;
+
+  scene.add.rectangle(width * 0.5, height * 0.5, width, height, hexColor(theme.palette.bgPrimary), 1).setOrigin(0.5);
+  scene.add.rectangle(width * 0.5, height * 0.37, width, 112, upperBandColor, 0.52).setOrigin(0.5);
+  scene.add.rectangle(width * 0.5, height * 0.66, width, 88, lowerBandColor, 0.72).setOrigin(0.5);
+
+  const grid = scene.add.graphics().setDepth(1);
+  grid.lineStyle(1, hexColor(theme.palette.accentBlue), gridAlpha);
+  for (let y = 88; y < height; y += 18) {
+    grid.lineBetween(0, y, width, y);
+  }
+
+  if (options.includeOrb) {
+    const orbColor = variant === "intro" ? hexColor(theme.palette.accentPink) : hexColor(theme.palette.accentGold);
+    const orb = scene.add.circle(width - 68, 52, 20, orbColor, 0.75).setDepth(0);
+    scene.tweens.add({
+      targets: orb,
+      alpha: 0.48,
+      duration: theme.motion.pulseSlowMs,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.InOut",
+    });
+  }
+}
+
+export function createFooterHint(scene: Phaser.Scene, options: FooterHintOptions): Phaser.GameObjects.Container {
+  const theme = getUiThemeTokens();
+  const width = 276;
+  const x = Math.floor((scene.scale.width - width) * 0.5);
+  const accentColor = options.accentColor ?? hexColor(theme.palette.accentGold);
+  const panel = createPanel(scene, {
+    x,
+    y: options.y,
+    width,
+    height: 18,
+    depth: options.depth,
+    fillColor: hexColor(theme.panel.overlayFill),
+    fillAlpha: 0.86,
+    borderColor: hexColor(theme.panel.mutedBorder),
+    borderAlpha: 0.55,
+    borderWidth: 1,
+    topAccentColor: accentColor,
+    topAccentHeight: 1,
+  });
+  const label = scene.add.text(width * 0.5, 5, options.text, {
+    fontFamily: theme.typography.families.uiBody,
+    fontSize: theme.typography.caption,
+    color: theme.palette.textSecondary,
+    stroke: theme.textStroke.light.color,
+    strokeThickness: theme.textStroke.light.thickness,
+  });
+  label.setOrigin(0.5, 0);
+  panel.container.add(label);
+  return panel.container;
 }
 
 export function createPanel(scene: Phaser.Scene, options: PanelOptions): PanelBuild {

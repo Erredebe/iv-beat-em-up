@@ -1,12 +1,12 @@
 import Phaser from "phaser";
-import { BASE_HEIGHT, BASE_WIDTH } from "../config/constants";
+import { BASE_WIDTH } from "../config/constants";
 import { campaignStageOrder } from "../config/gameplay/campaign";
 import { isFeatureEnabled } from "../config/features";
 import { playableCharacters } from "../config/gameplay/playableRoster";
 import { stageCatalog } from "../config/levels/stageCatalog";
 import { updateSessionState } from "../config/gameplay/sessionState";
 import { getUiThemeTokens } from "../config/ui/uiTheme";
-import { createPanel, createSceneTitle } from "../ui/sceneChrome";
+import { createFooterHint, createPanel, createSceneBackdrop, createSceneTitle, hexColor } from "../ui/sceneChrome";
 import { resolveNextSceneFromCharacterSelect } from "./sceneFlow";
 
 export class CharacterSelectScene extends Phaser.Scene {
@@ -30,12 +30,27 @@ export class CharacterSelectScene extends Phaser.Scene {
     const theme = getUiThemeTokens();
     this.cameras.main.setBackgroundColor(theme.palette.bgPrimary);
 
-    this.add.rectangle(BASE_WIDTH * 0.5, BASE_HEIGHT * 0.5, BASE_WIDTH, BASE_HEIGHT, 0x0a1220, 1).setOrigin(0.5);
+    createSceneBackdrop(this, { variant: "menu", includeOrb: true });
+    createPanel(this, {
+      x: 24,
+      y: 14,
+      width: BASE_WIDTH - 48,
+      height: 28,
+      fillColor: hexColor(theme.palette.panelElevated),
+      fillAlpha: 0.86,
+      borderColor: hexColor(theme.panel.mutedBorder),
+      borderAlpha: 0.55,
+      borderWidth: 1,
+      topAccentColor: hexColor(theme.palette.accentBlue),
+      topAccentHeight: 2,
+    });
     createSceneTitle(this, {
       x: BASE_WIDTH * 0.5,
-      y: 16,
+      y: 18,
       title: "SELECCIONA PERSONAJE",
       titleSize: theme.typography.title,
+      subtitle: "ROSTER CALLEJERO · ELIGE LUCHADOR Y RUTA",
+      subtitleSize: theme.typography.caption,
     });
 
     const startX = 14;
@@ -43,18 +58,27 @@ export class CharacterSelectScene extends Phaser.Scene {
     for (let i = 0; i < playableCharacters.length; i += 1) {
       const character = playableCharacters[i];
       const x = startX + i * spacing;
-      const card = this.add.container(x, 52);
+      const card = this.add.container(x, 62);
       const panel = createPanel(this, {
         x: 0,
         y: 0,
         width: 124,
         height: 150,
+        fillColor: hexColor(theme.panel.overlayFill),
+        borderColor: hexColor(theme.panel.mutedBorder),
+        borderAlpha: 0.75,
       });
 
-      const frameOuter = this.add.rectangle(62, 42, 100, 54, 0x0f1e2f, 0.95).setStrokeStyle(2, 0x3f6aa1, 0.9).setOrigin(0.5);
-      const frameInner = this.add.rectangle(62, 42, 92, 46, 0x08101a, 0.95).setStrokeStyle(1, 0x75a6d4, 0.8).setOrigin(0.5);
+      const frameOuter = this.add
+        .rectangle(62, 42, 100, 54, hexColor(theme.palette.panelElevated), 0.95)
+        .setStrokeStyle(2, hexColor(theme.panel.mutedBorder), 0.9)
+        .setOrigin(0.5);
+      const frameInner = this.add
+        .rectangle(62, 42, 92, 46, hexColor(theme.panel.overlayFill), 0.95)
+        .setStrokeStyle(1, hexColor(theme.palette.accentBlue), 0.8)
+        .setOrigin(0.5);
       const portrait = this.add.image(62, 42, character.portraitKey).setScale(0.5).setTint(character.tint).setOrigin(0.5);
-      const dividerTop = this.add.rectangle(62, 70, 104, 2, 0x2d4f74, 1).setOrigin(0.5);
+      const dividerTop = this.add.rectangle(62, 70, 104, 2, hexColor(theme.palette.accentBlue), 0.9).setOrigin(0.5);
       const name = this.add
         .text(12, 76, character.displayName, {
           fontFamily: theme.typography.families.uiBody,
@@ -62,11 +86,11 @@ export class CharacterSelectScene extends Phaser.Scene {
           color: theme.palette.textPrimary,
         })
         .setOrigin(0, 0);
-      const dividerBottom = this.add.rectangle(62, 94, 104, 1, 0x22384f, 1).setOrigin(0.5);
+      const dividerBottom = this.add.rectangle(62, 94, 104, 1, hexColor(theme.panel.mutedBorder), 0.85).setOrigin(0.5);
       const stats = this.buildStatBars(character, 12, 98);
 
-      const selectionGlow = this.add.rectangle(62, 75, 116, 138, 0xf2cd64, 0.08).setOrigin(0.5).setVisible(false);
-      selectionGlow.setStrokeStyle(2, 0xf2cd64, 0.95);
+      const selectionGlow = this.add.rectangle(62, 75, 116, 138, hexColor(theme.palette.accentGold), 0.08).setOrigin(0.5).setVisible(false);
+      selectionGlow.setStrokeStyle(2, hexColor(theme.palette.accentGold), 0.95);
       const selectionCursor = this.add.text(10, 8, ">", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.subtitle,
@@ -115,29 +139,29 @@ export class CharacterSelectScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    this.selectedStageBanner = this.add.rectangle(BASE_WIDTH * 0.5, 218, 260, 32, 0x112238, 0.9).setStrokeStyle(2, 0x4e7fb1, 0.9);
+    this.selectedStageBanner = this.add
+      .rectangle(BASE_WIDTH * 0.5, 222, 260, 32, hexColor(theme.palette.panelElevated), 0.92)
+      .setStrokeStyle(2, hexColor(theme.panel.mutedBorder), 0.9);
     this.selectedStageIcon = this.add
-      .text(BASE_WIDTH * 0.5 - 108, 218, "", {
+      .text(BASE_WIDTH * 0.5 - 108, 222, "", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.subtitle,
         color: theme.palette.accentGold,
       })
       .setOrigin(0.5);
     this.selectedStageText = this.add
-      .text(BASE_WIDTH * 0.5 + 12, 218, "", {
+      .text(BASE_WIDTH * 0.5 + 12, 222, "", {
         fontFamily: theme.typography.families.uiBody,
         fontSize: theme.typography.subtitle,
         color: theme.palette.textPrimary,
       })
       .setOrigin(0.5);
 
-    this.add
-      .text(BASE_WIDTH * 0.5, 232, "LEFT/RIGHT personaje  |  UP/DOWN nivel  |  ENTER confirmar", {
-        fontFamily: theme.typography.families.uiBody,
-        fontSize: theme.typography.caption,
-        color: theme.palette.textSecondary,
-      })
-      .setOrigin(0.5);
+    createFooterHint(this, {
+      text: "LEFT/RIGHT personaje  |  UP/DOWN nivel  |  ENTER confirmar",
+      y: 232,
+      accentColor: hexColor(theme.palette.accentGold),
+    });
 
     this.bindInputs();
 
@@ -204,13 +228,13 @@ export class CharacterSelectScene extends Phaser.Scene {
           targets: cardView.container,
           scaleX: 1.035,
           scaleY: 1.035,
-          duration: 110,
+          duration: theme.motion.selectBumpMs,
           ease: "Sine.Out",
         });
         this.tweens.add({
           targets: cardView.selectionGlow,
           alpha: { from: 0.2, to: 0.6 },
-          duration: 420,
+          duration: theme.motion.pulseFastMs,
           yoyo: true,
           repeat: -1,
           ease: "Sine.InOut",
@@ -218,7 +242,7 @@ export class CharacterSelectScene extends Phaser.Scene {
         this.tweens.add({
           targets: cardView.selectionCursor,
           x: cardView.selectionCursor.x + 4,
-          duration: 260,
+          duration: theme.motion.revealMediumMs + 40,
           yoyo: true,
           repeat: -1,
           ease: "Sine.InOut",
@@ -244,6 +268,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     this.selectedStageText.setText(stagePreview.name);
     this.selectedStageIcon.setText(stagePreview.icon);
     this.selectedStageBanner.setFillStyle(stagePreview.bannerColor, 0.92);
+    this.selectedStageBanner.setStrokeStyle(2, hexColor(theme.palette.accentBlue), 0.8);
 
     this.tweens.killTweensOf([this.selectedStageText, this.selectedStageIcon, this.selectedStageBanner]);
     this.selectedStageText.setAlpha(0.6);
@@ -252,14 +277,14 @@ export class CharacterSelectScene extends Phaser.Scene {
     this.tweens.add({
       targets: [this.selectedStageText, this.selectedStageIcon],
       alpha: 1,
-      duration: 120,
+      duration: theme.motion.fadeShortMs,
       ease: "Sine.Out",
     });
     this.tweens.add({
       targets: this.selectedStageBanner,
       scaleX: 1,
       scaleY: 1,
-      duration: 130,
+      duration: theme.motion.fadeShortMs + 10,
       ease: "Back.Out",
     });
 
