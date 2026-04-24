@@ -31,12 +31,12 @@ function createArcadeCharacterSet(owner: ManifestAnimationOwner): AssetManifestE
     license: "CC0",
     url: "https://iv-beat.netlify.app/",
     paletteProfile: "arcade-cps-inspired",
-    scaleProfile: "fighter-64x128",
+    scaleProfile: "fighter-64x128-hq",
     packId,
     tags: ["fighter", "arcade", owner, clip],
     frameConfig: {
-      frameWidth: 128,
-      frameHeight: 256,
+      frameWidth: 192,
+      frameHeight: 384,
     },
   }));
 }

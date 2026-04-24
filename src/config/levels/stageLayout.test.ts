@@ -68,6 +68,16 @@ describe("stage layout calibration", () => {
     }
   });
 
+  it("preserves visual layer calibration through layout normalization", () => {
+    const playa = stageCatalog.playa_noche.layout;
+    const facade = playa.layers.find((layer) => layer.id === "facade");
+    const farBand = playa.parallaxBands.find((band) => band.id === "skyline_far");
+
+    expect(facade?.scale, "playa facade scale should survive defineStageLayout").toBe(0.625);
+    expect(facade?.offsetY, "playa facade offset should survive defineStageLayout").toBe(-16);
+    expect(farBand?.tileScale, "playa far skyline tile scale should survive defineStageLayout").toBe(0.38);
+  });
+
   it("keeps object collision and breakable drop integrity", () => {
     for (const bundle of Object.values(stageCatalog)) {
       validateObjectIntegrity(bundle.layout);

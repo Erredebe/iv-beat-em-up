@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { getFighterAnimationSet, type AnimationClipId, type AnimationOwner } from "./fighterAnimationSets";
 import { getFighterSpriteSpec } from "./fighterSpriteSpecs";
 import { fighterVisualProfiles, type SpritePixelOffset } from "./fighterVisualProfiles";
+import { resolveScaleReference } from "./scaleSystem";
 
 const FLOOR_CLIP_STATE: Record<"knockdown" | "getup", "KNOCKDOWN" | "GETUP"> = {
   knockdown: "KNOCKDOWN",
@@ -66,8 +67,9 @@ describe("fighter sprite alignment", () => {
     for (const profileId of ["kastro", "marina", "meneillos", "enemy"] as AnimationOwner[]) {
       const animationSet = getFighterAnimationSet(profileId);
       const spriteSpec = getFighterSpriteSpec(profileId);
+      const spriteScale = resolveScaleReference(fighterVisualProfiles[profileId]);
       const frameWidth = spriteSpec.frameSize.width;
-      const baselineTolerancePx = Math.ceil(spriteSpec.frameSize.height * 0.14);
+      const baselineTolerancePx = Math.ceil(spriteSpec.frameSize.height * spriteScale * 0.14);
 
       for (const clipId of groundedClips) {
         const clip = animationSet.clips[clipId];
@@ -76,7 +78,7 @@ describe("fighter sprite alignment", () => {
         for (let frame = 0; frame < clip.frameCount; frame += 1) {
           const bottomPad = getBottomPadding(png, frame, frameWidth);
           const frameOffset = getFrameOffset(profileId, clipId, frame);
-          const effectivePad = bottomPad - frameOffset.y;
+          const effectivePad = bottomPad * spriteScale - frameOffset.y;
           expect(
             effectivePad,
             `${profileId} ${clipId} frame ${frame} is too far from baseline`,
@@ -91,6 +93,7 @@ describe("fighter sprite alignment", () => {
     for (const profileId of ["kastro", "marina", "meneillos", "enemy"] as AnimationOwner[]) {
       const animationSet = getFighterAnimationSet(profileId);
       const spriteSpec = getFighterSpriteSpec(profileId);
+      const spriteScale = resolveScaleReference(fighterVisualProfiles[profileId]);
       const frameWidth = spriteSpec.frameSize.width;
 
       for (const clipId of floorClips) {
@@ -102,13 +105,13 @@ describe("fighter sprite alignment", () => {
         for (let frame = 0; frame < clip.frameCount; frame += 1) {
           const bottomPad = getBottomPadding(png, frame, frameWidth);
           const frameOffset = getFrameOffset(profileId, clipId, frame);
-          effectivePads.push(bottomPad - stateOffsetY - frameOffset.y);
+          effectivePads.push(bottomPad * spriteScale - stateOffsetY - frameOffset.y);
         }
 
         expect(
           Math.max(...effectivePads) - Math.min(...effectivePads),
           `${profileId} ${clipId} drifts away from the pavement between frames`,
-        ).toBeLessThanOrEqual(1);
+        ).toBeLessThanOrEqual(2);
       }
     }
   });

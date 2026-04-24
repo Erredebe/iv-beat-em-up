@@ -24,6 +24,8 @@ type FakeTileSprite = Chainable & {
   tilePositionX: number;
   depth: number;
   alpha: number;
+  tileScaleX: number;
+  tileScaleY: number;
   tint?: number;
   textureKey: string;
   setOrigin(x: number, y: number): FakeTileSprite;
@@ -76,10 +78,12 @@ type FakeTileLayer = Chainable & {
   depth: number;
   alpha: number;
   scale: number;
+  y: number;
   tiles: number[][] | null;
   tint?: number;
   setDepth(depth: number): FakeTileLayer;
   setScale(scale: number): FakeTileLayer;
+  setY(y: number): FakeTileLayer;
   setAlpha(alpha: number): FakeTileLayer;
   setTint(tint: number): FakeTileLayer;
   putTilesAt(data: number[][], x: number, y: number): FakeTileLayer;
@@ -132,6 +136,8 @@ function createFakeTileSprite(textureKey: string): FakeTileSprite & { destroyed:
     tilePositionX: 0,
     depth: 0,
     alpha: 1,
+    tileScaleX: 1,
+    tileScaleY: 1,
     tint: undefined as number | undefined,
     textureKey,
     setOrigin() {
@@ -148,7 +154,9 @@ function createFakeTileSprite(textureKey: string): FakeTileSprite & { destroyed:
       this.alpha = alpha;
       return this;
     },
-    setTileScale() {
+    setTileScale(x: number, y: number) {
+      this.tileScaleX = x;
+      this.tileScaleY = y;
       return this;
     },
     setTint(tint: number) {
@@ -220,6 +228,7 @@ function createFakeTileLayer(id: string): FakeTileLayer & { destroyed: boolean }
     depth: 0,
     alpha: 1,
     scale: 1,
+    y: 0,
     tiles: null as number[][] | null,
     tint: undefined as number | undefined,
     setDepth(depth: number) {
@@ -228,6 +237,10 @@ function createFakeTileLayer(id: string): FakeTileLayer & { destroyed: boolean }
     },
     setScale(scale: number) {
       this.scale = scale;
+      return this;
+    },
+    setY(y: number) {
+      this.y = y;
       return this;
     },
     setAlpha(alpha: number) {
@@ -388,6 +401,18 @@ describe("StageRenderer", () => {
       expect(collisionSystem.obstacles).toHaveLength(expectedObstacleCount(bundle.layout));
       expect(depthSystem.registered).toHaveLength(bundle.layout.objects.length);
       expect(harness.texts).toHaveLength(bundle.layout.neonLabels.length);
+      runtime.tileLayers.forEach((layer, index) => {
+        const fakeLayer = layer as unknown as FakeTileLayer;
+        const config = bundle.layout.layers[index];
+        expect(fakeLayer.scale).toBe(config.scale ?? 0.5);
+        expect(fakeLayer.y).toBe(config.offsetY ?? 0);
+      });
+      runtime.parallaxBands.forEach((band, index) => {
+        const fakeBand = band as unknown as FakeTileSprite;
+        const expectedTileScale = bundle.layout.parallaxBands[index].tileScale ?? 0.5;
+        expect(fakeBand.tileScaleX).toBe(expectedTileScale);
+        expect(fakeBand.tileScaleY).toBe(expectedTileScale);
+      });
 
       renderer.updateParallax(137);
       runtime.parallaxBands.forEach((band, index) => {

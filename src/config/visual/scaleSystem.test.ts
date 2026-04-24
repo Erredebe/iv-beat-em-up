@@ -18,7 +18,7 @@ describe("scale system contracts", () => {
       });
 
       expect(profile.scale, `${fighterId} profile scale must match resolver`).toBe(effectiveScale);
-      expect(effectiveScale, `${fighterId} effective scale drifted from baseline`).toBe(0.5);
+      expect(effectiveScale, `${fighterId} effective scale drifted from baseline`).toBeCloseTo(1 / 3, 6);
     }
   });
 

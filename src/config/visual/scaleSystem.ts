@@ -31,7 +31,7 @@ const SPRITE_SPECS: Record<SpriteSpecId, SpriteSpec> = {
   fighter_arcade: {
     id: "fighter_arcade",
     pixelUnit: "px1",
-    sourcePixelsPerUnit: 2,
+    sourcePixelsPerUnit: 3,
   },
   stage_prop_arcade: {
     id: "stage_prop_arcade",

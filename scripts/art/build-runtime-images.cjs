@@ -4,12 +4,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { PNG } = require("pngjs");
 
-const FRAME_WIDTH = 128;
-const FRAME_HEIGHT = 256;
 const BASE_FRAME_WIDTH = 64;
 const BASE_FRAME_HEIGHT = 128;
+const SOURCE_UPSCALE = 3;
+const DETAIL_SCALE = SOURCE_UPSCALE / 2;
+const FRAME_WIDTH = BASE_FRAME_WIDTH * SOURCE_UPSCALE;
+const FRAME_HEIGHT = BASE_FRAME_HEIGHT * SOURCE_UPSCALE;
 const FRAME_COUNT = 10;
-const PORTRAIT_SIZE = 96;
+const PORTRAIT_SIZE = 128;
 const CLIPS = [
   "idle",
   "walk",
@@ -199,13 +201,12 @@ function frameOffset(x, y) {
 function extractFrame(png, frameIndex) {
   const out = createEmptyFrame();
   const sourceStartX = frameIndex * BASE_FRAME_WIDTH;
-  // 2x Nearest Neighbor upscaling during extraction
   for (let y = 0; y < BASE_FRAME_HEIGHT; y += 1) {
     for (let x = 0; x < BASE_FRAME_WIDTH; x += 1) {
       const srcIndex = ((y * png.width) + sourceStartX + x) * 4;
-      for(let dy=0; dy<2; dy++) {
-        for(let dx=0; dx<2; dx++) {
-           const dstIndex = frameOffset(x*2 + dx, y*2 + dy);
+      for (let dy = 0; dy < SOURCE_UPSCALE; dy += 1) {
+        for (let dx = 0; dx < SOURCE_UPSCALE; dx += 1) {
+           const dstIndex = frameOffset(x * SOURCE_UPSCALE + dx, y * SOURCE_UPSCALE + dy);
            out[dstIndex] = png.data[srcIndex];
            out[dstIndex + 1] = png.data[srcIndex + 1];
            out[dstIndex + 2] = png.data[srcIndex + 2];
@@ -438,6 +439,85 @@ function drawDiagonalBlock(frameData, x, y, length, stepX, stepY, thickness, col
   }
 }
 
+function getPixel(frameData, x, y) {
+  if (x < 0 || x >= FRAME_WIDTH || y < 0 || y >= FRAME_HEIGHT) {
+    return null;
+  }
+  const idx = frameOffset(x, y);
+  return {
+    r: frameData[idx],
+    g: frameData[idx + 1],
+    b: frameData[idx + 2],
+    a: frameData[idx + 3],
+  };
+}
+
+function mixChannel(a, b, amount) {
+  return clamp(Math.round(a + (b - a) * amount), 0, 255);
+}
+
+function mixRgb(rgb, target, amount) {
+  return [
+    mixChannel(rgb[0], target[0], amount),
+    mixChannel(rgb[1], target[1], amount),
+    mixChannel(rgb[2], target[2], amount),
+  ];
+}
+
+function edgeToneFrame(frameData, highlight, shadow) {
+  const out = frameData.slice();
+  for (let y = 1; y < FRAME_HEIGHT - 1; y += 1) {
+    for (let x = 1; x < FRAME_WIDTH - 1; x += 1) {
+      const idx = frameOffset(x, y);
+      if (frameData[idx + 3] === 0) {
+        continue;
+      }
+      const hasOpenTopLeft =
+        frameData[frameOffset(x - 1, y) + 3] === 0 ||
+        frameData[frameOffset(x, y - 1) + 3] === 0;
+      const hasOpenBottomRight =
+        frameData[frameOffset(x + 1, y) + 3] === 0 ||
+        frameData[frameOffset(x, y + 1) + 3] === 0;
+      const source = [frameData[idx], frameData[idx + 1], frameData[idx + 2]];
+      const amount = hasOpenTopLeft ? 0.18 : (hasOpenBottomRight ? 0.16 : 0);
+      if (amount <= 0) {
+        continue;
+      }
+      const target = hasOpenTopLeft ? highlight : shadow;
+      const mixed = mixRgb(source, target, amount);
+      out[idx] = mixed[0];
+      out[idx + 1] = mixed[1];
+      out[idx + 2] = mixed[2];
+    }
+  }
+  return out;
+}
+
+function extractRuntimeFrame(png, frameIndex) {
+  if (png.width !== FRAME_WIDTH * FRAME_COUNT || png.height !== FRAME_HEIGHT) {
+    throw new Error(`Unexpected runtime sheet size: ${png.width}x${png.height}`);
+  }
+  const out = createEmptyFrame();
+  const sourceStartX = frameIndex * FRAME_WIDTH;
+  for (let y = 0; y < FRAME_HEIGHT; y += 1) {
+    for (let x = 0; x < FRAME_WIDTH; x += 1) {
+      const srcIndex = ((y * png.width) + sourceStartX + x) * 4;
+      const dstIndex = frameOffset(x, y);
+      out[dstIndex] = png.data[srcIndex];
+      out[dstIndex + 1] = png.data[srcIndex + 1];
+      out[dstIndex + 2] = png.data[srcIndex + 2];
+      out[dstIndex + 3] = png.data[srcIndex + 3];
+    }
+  }
+  return out;
+}
+
+function drawIfAnchored(frameData, box, relX, relY, width, height, color) {
+  const x = Math.round(box.minX + box.width * relX);
+  const y = Math.round(box.minY + box.height * relY);
+  drawRect(frameData, x, y, Math.round(width * DETAIL_SCALE), Math.round(height * DETAIL_SCALE), color);
+}
+
 function rowScaleForY(rowWarp, minY, maxY, y) {
   if (!rowWarp || rowWarp.length === 0 || maxY <= minY) {
     return 1;
@@ -480,11 +560,48 @@ function applyRowWarp(frameData, box, rowWarp) {
 }
 
 function applyCharacterSilhouette(frameData, ownerName, ownerProfile, clipName, frameIndex) {
-  void ownerName;
-  void ownerProfile;
   void clipName;
   void frameIndex;
-  return frameData;
+  const box = findBoundingBox(frameData);
+  if (!box) {
+    return frameData;
+  }
+
+  const featureColors = ownerProfile.featureColors ?? {};
+  let out = edgeToneFrame(frameData, [255, 232, 188], [12, 12, 18]);
+  const cx = Math.round((box.minX + box.maxX) * 0.5);
+  const headY = Math.round(box.minY + box.height * 0.12);
+  const torsoY = Math.round(box.minY + box.height * 0.38);
+  const beltY = Math.round(box.minY + box.height * 0.52);
+  const px = (value) => Math.round(value * DETAIL_SCALE);
+
+  if (ownerName === "kastro") {
+    drawRect(out, cx - px(13), headY - px(2), px(24), px(4), featureColors.headband);
+    drawRect(out, cx - px(18), torsoY - px(4), px(9), px(8), featureColors.glove);
+    drawRect(out, box.maxX - px(18), torsoY - px(5), px(11), px(8), featureColors.glove);
+    drawRect(out, cx - px(16), beltY, px(32), px(4), featureColors.belt);
+    drawDiagonalBlock(out, cx - px(20), torsoY - px(12), 5, px(3), px(2), px(3), featureColors.shoulder);
+    drawDiagonalBlock(out, cx + px(11), torsoY - px(10), 4, px(3), -px(1), px(3), featureColors.shoulder);
+  } else if (ownerName === "marina") {
+    drawRect(out, cx - px(18), headY + px(2), px(10), px(18), featureColors.ponytail);
+    drawRect(out, cx - px(10), headY - px(8), px(21), px(8), featureColors.hair);
+    drawRect(out, cx - px(20), headY + px(10), px(7), px(6), featureColors.ribbon);
+    drawRect(out, cx - px(22), torsoY - px(8), px(11), px(8), featureColors.jacket);
+    drawRect(out, box.maxX - px(17), torsoY - px(7), px(12), px(7), featureColors.jacket);
+    drawRect(out, cx - px(14), beltY - px(1), px(27), px(4), featureColors.waist);
+  } else if (ownerName === "meneillos") {
+    drawRect(out, cx - px(15), headY - px(10), px(27), px(8), featureColors.capTop);
+    drawRect(out, cx + px(6), headY - px(4), px(14), px(4), featureColors.capBrim);
+    drawRect(out, cx - px(18), torsoY - px(10), px(11), px(34), featureColors.coat);
+    drawRect(out, cx + px(7), torsoY - px(8), px(10), px(34), featureColors.coatDark);
+    drawRect(out, cx - px(8), torsoY + px(2), px(14), px(18), featureColors.chest);
+  } else if (ownerName === "enemy") {
+    drawIfAnchored(out, box, 0.34, 0.33, 9, 34, [60, 66, 72]);
+    drawIfAnchored(out, box, 0.56, 0.34, 8, 32, [86, 92, 96]);
+    drawIfAnchored(out, box, 0.44, 0.51, 24, 4, [36, 32, 30]);
+  }
+
+  return out;
 }
 
 function countOpaqueNeighbors(frameData, x, y) {
@@ -855,12 +972,12 @@ function renderBustFromIdleFrame(frameData, ownerProfile) {
   }
 
   const midX = Math.floor((box.minX + box.maxX) * 0.5);
-  const srcSize = 40;
+  const srcSize = 112;
   const srcX = clamp(midX - Math.floor(srcSize / 2), 0, FRAME_WIDTH - srcSize);
   const srcY = clamp(box.minY, 0, FRAME_HEIGHT - srcSize);
   const dstStartX = 8;
   const dstStartY = 10;
-  const scale = 2;
+  const scale = 1;
 
   for (let sy = 0; sy < srcSize; sy += 1) {
     for (let sx = 0; sx < srcSize; sx += 1) {
@@ -902,7 +1019,7 @@ function buildPortrait(ownerName, ownerProfile) {
     throw new Error(`Missing idle sheet for portrait generation: ${idlePath}`);
   }
   const idleSheet = readPng(idlePath);
-  const frameData = extractFrame(idleSheet, 0);
+  const frameData = extractRuntimeFrame(idleSheet, 0);
   const portrait = renderBustFromIdleFrame(frameData, ownerProfile);
   const portraitPath = path.join(UI_DIR, `portrait_${ownerName}.png`);
   writePng(portraitPath, portrait);

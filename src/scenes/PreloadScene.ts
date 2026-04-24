@@ -29,6 +29,7 @@ export class PreloadScene extends Phaser.Scene {
 
   create(): void {
     this.createDerivedTextures();
+    this.applyPixelArtTextureFilters();
     this.validateAssets();
     this.scene.start("TitleScene");
   }
@@ -113,6 +114,21 @@ export class PreloadScene extends Phaser.Scene {
         .filter((part) => part.length > 0)
         .join(" | ");
       throw new Error(message);
+    }
+  }
+
+  private applyPixelArtTextureFilters(): void {
+    for (const entry of assetManifest) {
+      if (entry.type === "audio" || !this.textures.exists(entry.key)) {
+        continue;
+      }
+      this.textures.get(entry.key).setFilter(Phaser.Textures.NEAREST);
+    }
+
+    for (const crop of derivedTextureCrops) {
+      if (this.textures.exists(crop.targetKey)) {
+        this.textures.get(crop.targetKey).setFilter(Phaser.Textures.NEAREST);
+      }
     }
   }
 

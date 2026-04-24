@@ -78,8 +78,8 @@ const CLIP_SUFFIX_BY_ID: Record<AnimationClipId, string> = {
 
 const DEFAULT_FRAME_COUNT = 10;
 const DEFAULT_FRAME_SIZE: SpriteFrameSizeSpec = {
-  width: 128,
-  height: 256,
+  width: 192,
+  height: 384,
 };
 const DEFAULT_PIVOT: SpritePivotSpec = {
   x: 0.5,

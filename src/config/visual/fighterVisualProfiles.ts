@@ -59,10 +59,12 @@ function createFrameOffsets(frameCount: number, bobAmplitude = 0): SpritePixelOf
   }));
 }
 
+const LEGACY_SOURCE_TO_LOGICAL_SCALE = 0.5;
+
 function createFootLockOffsets(bottomPaddingByFrame: number[], lockedPad: number): SpritePixelOffset[] {
   return bottomPaddingByFrame.map((bottomPad) => ({
     x: 0,
-    y: bottomPad - lockedPad,
+    y: Math.round((bottomPad - lockedPad) * LEGACY_SOURCE_TO_LOGICAL_SCALE),
   }));
 }
 

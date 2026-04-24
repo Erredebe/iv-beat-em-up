@@ -8,7 +8,7 @@ Politica aplicada:
 
 ## Runtime (`arcade_90`)
 
-### Personajes (64x128, strips de 10 frames)
+### Personajes (192x384, strips de 10 frames; renderizados a escala logica 64x128)
 `kastro_idle_strip10, kastro_walk_strip10, kastro_attack1_strip10, kastro_attack2_strip10, kastro_attack3_strip10, kastro_air_attack_strip10, kastro_special_strip10, kastro_hurt_strip10, kastro_knockdown_strip10, kastro_getup_strip10`
 
 `marina_idle_strip10, marina_walk_strip10, marina_attack1_strip10, marina_attack2_strip10, marina_attack3_strip10, marina_air_attack_strip10, marina_special_strip10, marina_hurt_strip10, marina_knockdown_strip10, marina_getup_strip10`

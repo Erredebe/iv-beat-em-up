@@ -93,7 +93,7 @@ export class CharacterSelectScene extends Phaser.Scene {
         .rectangle(62, 42, 92, 46, hexColor(theme.panel.overlayFill), 0.95)
         .setStrokeStyle(1, hexColor(theme.palette.accentBlue), 0.8)
         .setOrigin(0.5);
-      const portrait = this.add.image(62, 42, character.portraitKey).setScale(0.5).setTint(character.tint).setOrigin(0.5);
+      const portrait = this.add.image(62, 42, character.portraitKey).setScale(0.38).setTint(character.tint).setOrigin(0.5);
       const dividerTop = this.add.rectangle(62, 70, 104, 2, hexColor(theme.palette.accentBlue), 0.9).setOrigin(0.5);
       const name = this.add
         .text(12, 76, character.displayName, {
